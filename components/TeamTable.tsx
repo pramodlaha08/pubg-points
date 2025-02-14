@@ -48,7 +48,7 @@ export default function TeamTable() {
       <div className="w-[600px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden">
           <div className="flex h-12 bg-blue-900 text-white font-sans text-lg font-bold">
-            <div className="w-[60px] flex items-center justify-center">#</div>
+            <div className="w-[60px] flex items-center justify-center">RANK</div>
             <div className="flex items-center justify-start flex-1 pl-4">
               TEAM
             </div>
