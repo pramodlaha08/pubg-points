@@ -48,7 +48,9 @@ export default function TeamTable() {
       <div className="w-[600px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden">
           <div className="flex h-12 bg-blue-900 text-white font-sans text-lg font-bold">
-            <div className="w-[60px] flex items-center justify-center">RANK</div>
+            <div className="w-[60px] flex items-center justify-center">
+              RANK
+            </div>
             <div className="flex items-center justify-start flex-1 pl-4">
               TEAM
             </div>
@@ -62,7 +64,12 @@ export default function TeamTable() {
           </div>
           <div className="flex-1">
             {teams.map((team, index) => {
-              const isEliminated = team.rounds[0]?.eliminationCount >= 4;
+              // Get the latest round data
+              const currentRound = team.rounds.find(
+                (r) => r.roundNumber === team.currentRound
+              );
+
+              const isEliminated = currentRound?.eliminationCount >= 4;
 
               return (
                 <div
@@ -96,7 +103,7 @@ export default function TeamTable() {
                         <div
                           key={playerIndex}
                           className={`h-6 w-1.5 ${
-                            team.rounds[0]?.eliminatedPlayers?.includes(
+                            currentRound?.eliminatedPlayers?.includes(
                               playerIndex
                             )
                               ? "bg-red-500"
@@ -110,7 +117,7 @@ export default function TeamTable() {
                     {team.totalPoints}
                   </div>
                   <div className="flex items-center justify-center w-[80px] font-bold">
-                    {team.rounds[0]?.kills || 0}
+                    {currentRound?.kills || 0}
                   </div>
                 </div>
               );
