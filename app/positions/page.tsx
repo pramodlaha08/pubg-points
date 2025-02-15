@@ -86,7 +86,7 @@ export default function PositionUpdater() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8 justify-center md:justify-start">
           <GiTrophy className="text-4xl text-yellow-400 animate-pulse" />
@@ -96,7 +96,7 @@ export default function PositionUpdater() {
         </div>
 
         {/* Round Input */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
           <input
             type="number"
             value={roundNumber}
@@ -123,17 +123,17 @@ export default function PositionUpdater() {
         </div>
 
         {/* Teams Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => (
             <div
               key={team._id}
-              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border-2 border-blue-500/20 hover:border-blue-500/40 transition-all"
+              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border-2 border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 shadow-lg hover:shadow-blue-500/20 relative overflow-hidden flex flex-col justify-between"
             >
               <div className="flex items-center gap-4 mb-4">
                 <img
                   src={team.logo}
                   alt={team.name}
-                  className="w-12 h-12 object-contain rounded-full border-2 border-blue-500/30"
+                  className="w-16 h-16 object-contain rounded-full border-2 border-blue-500/30"
                 />
                 <div>
                   <h2 className="text-lg md:text-xl font-bold text-blue-400 truncate">
@@ -152,17 +152,23 @@ export default function PositionUpdater() {
                   onChange={(e) =>
                     handlePositionChange(team.slot, e.target.value)
                   }
-                  className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-md border-2 border-blue-500/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 text-sm"
+                  className="flex-1 bg-gray-700 text-white px-4 py-3 border-2 rounded-xl border-blue-500/30 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 text-sm"
                   placeholder="Position"
                   min="1"
                 />
                 <span className="text-xs md:text-sm text-gray-400">
-                  Current: {team.rounds[0]?.position || "-"}
+                  Current:{" "}
+                  {team.rounds.length > 0
+                    ? team.rounds[team.rounds.length - 1].position
+                    : "-"}
                 </span>
               </div>
 
               <div className="mt-2 text-xs md:text-sm text-blue-300">
-                Points: {team.rounds[0]?.positionPoints || "0"}
+                Points:{" "}
+                {team.rounds.length > 0
+                  ? team.rounds[team.rounds.length - 1].positionPoints
+                  : "0"}
               </div>
             </div>
           ))}
