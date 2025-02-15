@@ -83,10 +83,10 @@ export default function AnimatedTeamTable() {
                   <motion.div
                     key={team._id}
                     layout
-                    initial={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    transition={{ type: "spring", stiffness: 120, damping: 20 }}
                     className={`flex h-16 border-b border-[#ffd700]/30 ${
                       isEliminated
                         ? "bg-[#2c3e50]/70 text-[#ffd600]/60"
