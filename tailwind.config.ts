@@ -2,6 +2,8 @@ import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 import { withTV } from "tailwind-variants/transformer";
 import animate from "tailwindcss-animate";
+import gradients from "tailwindcss-gradients";
+
 /** @type {import('tailwindcss').Config} */
 const config: Config = {
   content: [
@@ -54,11 +56,6 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
@@ -70,7 +67,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [animate],
+  plugins: [animate, gradients], // Add tailwindcss-gradients here
 };
 
 export default withTV(config);
