@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import axios from "axios";
 
 interface Team {
   _id: string;
@@ -27,15 +28,19 @@ export default function TeamTable() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/v1/team/");
-        const data = await response.json();
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/team`
+        );
+
+        const data = response.data;
+
         if (data.success) {
           setTeams(
             data.data.sort((a: Team, b: Team) => b.totalPoints - a.totalPoints)
           );
         }
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.error("Error fetching teams:", error.message);
       }
     };
     fetchTeams();
