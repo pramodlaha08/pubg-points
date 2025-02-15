@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { GiCrossedSabres } from "react-icons/gi";
+import { useParams } from "next/navigation";
 import TeamCard from "@/components/TeamCard";
 
 interface Team {
@@ -25,8 +26,9 @@ interface Team {
   isEliminated: boolean;
 }
 
-export default function TeamsPage() {
+export default function FilteredTeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
+  const params = useParams();
 
   const fetchTeams = async () => {
     try {
@@ -41,7 +43,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     fetchTeams();
-  }, []); // Removed fetchTeams from dependencies
+  }, []); // Removed params from dependencies
 
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     try {
@@ -65,19 +67,26 @@ export default function TeamsPage() {
     }
   };
 
-  // Sort teams by slot number
-  const sortedTeams = [...teams].sort((a, b) => a.slot - b.slot);
+  // Parse slot numbers from the URL
+  const slotNumbers = Array.isArray(params.slots)
+    ? params.slots.map(Number)
+    : [];
+
+  // Filter and sort teams based on slot numbers
+  const filteredAndSortedTeams = teams
+    .filter((team) => slotNumbers.includes(team.slot))
+    .sort((a, b) => a.slot - b.slot);
 
   return (
     <div className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-[1400px] mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-red-500 mb-8 flex items-center gap-3">
           <GiCrossedSabres className="text-4xl sm:text-5xl animate-pulse" />
-          Team Dashboard
+          Filtered Team Dashboard
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {sortedTeams.map((team) => (
+          {filteredAndSortedTeams.map((team) => (
             <TeamCard
               key={team._id}
               team={team}
