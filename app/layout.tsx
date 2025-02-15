@@ -3,8 +3,8 @@ import "./globals.css";
 import { GiDeathSkull } from "react-icons/gi";
 
 export const metadata: Metadata = {
-  title: "HDC PUBG Tournament",
-  description: "Ultimate PUBG Tournament Management",
+  title: "HDC PMBC",
+  description: "Pubg Mobile Biratnagar Championship",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
             <div className="max-w-6xl mx-auto px-6 py-6 flex justify-center items-center">
               <span className="text-3xl font-extrabold text-red-500 tracking-wider animate-pulse flex items-center gap-3">
                 <GiDeathSkull className="text-3xl" />
-                HDC PUBG Tournament
+                HDC PMBC
               </span>
             </div>
           </header>

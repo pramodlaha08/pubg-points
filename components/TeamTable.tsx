@@ -53,21 +53,21 @@ export default function AnimatedTeamTable() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="w-[600px] mx-auto">
-        <div className="flex flex-col rounded-lg overflow-hidden">
-          <div className="flex h-12 bg-blue-900 text-white font-sans text-lg font-bold">
-            <div className="w-[60px] flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-screen bg-opacity-90 bg-cover bg-center bg-blend-overlay">
+      <div className="w-[700px] mx-auto">
+        <div className="flex flex-col rounded-lg overflow-hidden border-2 border-[#FBBF24] shadow-lg shadow-[#ffd700]/20">
+          <div className="flex h-14 bg-gradient-to-r from-[#2c3e50] to-[#34495e] text-[#FBBF24] font-sans text-lg font-bold">
+            <div className="w-[70px] flex items-center justify-center">
               RANK
             </div>
             <div className="flex items-center justify-start flex-1 pl-4">
               TEAM
             </div>
-            <div className="flex items-center justify-center w-[120px]">
+            <div className="flex items-center justify-center w-[140px]">
               ALIVE
             </div>
-            <div className="flex items-center justify-center w-[80px]">PTS</div>
-            <div className="flex items-center justify-center w-[80px]">
+            <div className="flex items-center justify-center w-[90px]">PTS</div>
+            <div className="flex items-center justify-center w-[90px]">
               ELIMS
             </div>
           </div>
@@ -87,49 +87,49 @@ export default function AnimatedTeamTable() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 20 }}
                     transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                    className={`flex h-14 border-b border-blue-700 ${
+                    className={`flex h-16 border-b border-[#ffd700]/30 ${
                       isEliminated
-                        ? "bg-blue-800/30 text-white/50"
-                        : "bg-blue-800/50 text-white"
-                    } font-sans text-xl hover:bg-blue-700/50 transition-colors`}
+                        ? "bg-[#2c3e50]/70 text-[#ffd600]/60"
+                        : "bg-[#2c3e50]/90 text-[#FBBF24]"
+                    } font-sans text-xl hover:bg-[#34495e]/90 transition-all duration-300 ease-in-out`}
                   >
-                    <div className="w-[60px] flex items-center justify-center font-bold text-2xl">
+                    <div className="w-[70px] flex items-center justify-center font-bold text-2xl">
                       {index + 1}
                     </div>
                     <div className="flex items-center flex-1 space-x-4 pl-4">
-                      <div className="w-10 h-10 relative flex items-center justify-center">
+                      <div className="w-12 h-12 relative flex items-center justify-center bg-[#34495e] rounded-full p-1">
                         <Image
                           src={team.logo || "/placeholder.svg"}
                           alt={team.name}
                           width={40}
                           height={40}
-                          className="object-contain"
+                          className="object-contain rounded-full"
                         />
                       </div>
                       <span className="font-bold tracking-wider">
                         {team.name.toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex items-center justify-center w-[120px]">
-                      <div className="flex gap-1.5">
+                    <div className="flex items-center justify-center w-[140px]">
+                      <div className="flex gap-2">
                         {[0, 1, 2, 3].map((playerIndex) => (
                           <div
                             key={playerIndex}
-                            className={`h-6 w-1.5 ${
+                            className={`h-8 w-2 ${
                               currentRound?.eliminatedPlayers?.includes(
                                 playerIndex
                               )
-                                ? "bg-red-500"
-                                : "bg-white"
-                            }`}
+                                ? "bg-red-600"
+                                : "bg-gray-200"
+                            } rounded-sm transition-all duration-300 ease-in-out`}
                           ></div>
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center justify-center w-[80px] font-bold">
+                    <div className="flex items-center justify-center w-[90px] font-bold">
                       {team.totalPoints}
                     </div>
-                    <div className="flex items-center justify-center w-[80px] font-bold">
+                    <div className="flex items-center justify-center w-[90px] font-bold">
                       {currentRound?.kills || 0}
                     </div>
                   </motion.div>
