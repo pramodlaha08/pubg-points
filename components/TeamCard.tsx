@@ -1,4 +1,7 @@
+"use client";
+
 import { GiDeathSkull } from "react-icons/gi";
+import { Flame, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Team {
   _id: string;
@@ -24,12 +27,16 @@ interface TeamCardProps {
   team: Team;
   updateKills: (teamId: string, action: "add" | "decrease") => Promise<void>;
   handleElimination: (teamId: string, playerIndex: number) => Promise<void>;
+  isRoundInfoExpanded: boolean;
+  toggleRoundInfo: () => void;
 }
 
 export default function TeamCard({
   team,
   updateKills,
   handleElimination,
+  isRoundInfoExpanded,
+  toggleRoundInfo,
 }: TeamCardProps) {
   const currentRound = team.rounds.find(
     (r) => r.roundNumber === team.currentRound
@@ -51,7 +58,6 @@ export default function TeamCard({
         </div>
       </div>
 
-      {/* Player Elimination and Kill Counter */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-6">
         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
           {[0, 1, 2, 3].map((playerIndex) => (
@@ -88,9 +94,29 @@ export default function TeamCard({
         </div>
       </div>
 
-      {/* Round Info */}
-      <div className="mt-6 pt-4 border-t border-red-500/20">
-        <div className="flex justify-between text-sm">
+      {/* Round Info Toggle */}
+      <div className="mt-6 flex items-center justify-between border-t border-red-500/20 pt-4">
+        <button
+          onClick={toggleRoundInfo}
+          className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors duration-200"
+        >
+          <Flame className="w-5 h-5" />
+          <span className="font-semibold">Round Info</span>
+          {isRoundInfoExpanded ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+
+      {/* Collapsible Round Info */}
+      <div
+        className={`mt-4 text-sm overflow-hidden transition-all duration-300 ${
+          isRoundInfoExpanded ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="flex justify-between">
           <div className="text-gray-400">
             <p>Current Round: {team.currentRound}</p>
             <p>Eliminations: {currentRound?.eliminationCount || 0}/4</p>

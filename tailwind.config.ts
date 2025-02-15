@@ -1,7 +1,8 @@
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
-import animatePlugin from "tailwindcss-animate";
-
+import { withTV } from "tailwind-variants/transformer";
+import animate from "tailwindcss-animate";
+/** @type {import('tailwindcss').Config} */
 const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -58,9 +59,18 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+      },
+      animation: {
+        fadeIn: "fadeIn 0.3s ease-in-out",
+      },
     },
   },
-  plugins: [animatePlugin],
+  plugins: [animate],
 };
 
-export default config;
+export default withTV(config);

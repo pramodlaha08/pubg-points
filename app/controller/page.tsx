@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { GiCrossedSabres } from "react-icons/gi";
@@ -27,6 +26,7 @@ interface Team {
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
+  const [isRoundInfoExpanded, setIsRoundInfoExpanded] = useState(false);
 
   const fetchTeams = async () => {
     try {
@@ -41,7 +41,7 @@ export default function TeamsPage() {
 
   useEffect(() => {
     fetchTeams();
-  }, []); // Removed fetchTeams from dependencies
+  }, []);
 
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     try {
@@ -57,7 +57,9 @@ export default function TeamsPage() {
     try {
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}/elimination`,
-        { playerIndex }
+        {
+          playerIndex,
+        }
       );
       fetchTeams();
     } catch (error) {
@@ -65,8 +67,10 @@ export default function TeamsPage() {
     }
   };
 
-  // Sort teams by slot number
-  const sortedTeams = [...teams].sort((a, b) => a.slot - b.slot);
+  // Toggle round info for all cards
+  const toggleRoundInfo = () => {
+    setIsRoundInfoExpanded((prev) => !prev);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
@@ -77,12 +81,14 @@ export default function TeamsPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {sortedTeams.map((team) => (
+          {teams.map((team) => (
             <TeamCard
               key={team._id}
               team={team}
               updateKills={updateKills}
               handleElimination={handleElimination}
+              isRoundInfoExpanded={isRoundInfoExpanded}
+              toggleRoundInfo={toggleRoundInfo}
             />
           ))}
         </div>

@@ -29,6 +29,7 @@ interface Team {
 export default function FilteredTeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const params = useParams();
+  const [isRoundInfoExpanded, setIsRoundInfoExpanded] = useState(false);
 
   const fetchTeams = async () => {
     try {
@@ -39,6 +40,9 @@ export default function FilteredTeamsPage() {
     } catch (error) {
       console.error("Error fetching teams:", error);
     }
+  };
+  const toggleRoundInfo = () => {
+    setIsRoundInfoExpanded((prev) => !prev);
   };
 
   useEffect(() => {
@@ -92,6 +96,8 @@ export default function FilteredTeamsPage() {
               team={team}
               updateKills={updateKills}
               handleElimination={handleElimination}
+              isRoundInfoExpanded={isRoundInfoExpanded}
+              toggleRoundInfo={toggleRoundInfo}
             />
           ))}
         </div>
