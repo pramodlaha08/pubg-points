@@ -86,7 +86,7 @@ export default function RoundManager() {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.delete("http://localhost:8000/api/v1/rounds", {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/team/rounds/delete`, {
         data: {
           slots: selectedSlots,
           roundNumber: Number(roundNumber),
