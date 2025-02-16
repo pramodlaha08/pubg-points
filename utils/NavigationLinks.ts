@@ -25,4 +25,11 @@ export const navigationLinks = [
       { name: "Delete Team", path: "/teams/delete" },
     ],
   },
+  {
+    title: "Rounds",
+    icon: "🏆",
+    links: [
+      { name: "Create/Delete", path: "/rounds" },
+    ],
+  },
 ];
