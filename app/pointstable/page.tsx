@@ -1,4 +1,4 @@
-import TeamTable from "@/components/TeamTable1";
+import TeamTable from "@/components/TeamTable2";
 
 export default function Team() {
   return (
