@@ -59,8 +59,8 @@ export default function AnimatedTeamTable() {
             data.data.sort((a: Team, b: Team) => b.totalPoints - a.totalPoints)
           );
         }
-      } catch (error) {
-        console.error("Error fetching teams:", error.message);
+      } catch  {
+        console.error("Error fetching teams:");
       }
     };
 

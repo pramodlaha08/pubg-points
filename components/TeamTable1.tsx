@@ -83,8 +83,8 @@ export default function AnimatedTeamTable() {
             return sortedTeams;
           });
         }
-      } catch (error) {
-        console.error("Error fetching teams:", error.message);
+      } catch  {
+        console.error("Error fetching teams:");
       }
     };
 
