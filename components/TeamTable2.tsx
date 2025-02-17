@@ -124,7 +124,11 @@ export default function AnimatedTeamTable() {
                         height={24}
                         className="object-contain"
                       />
-                      <span className={`${isEliminated ? "text-gray-400" : "text-gray-200"}`}>
+                      <span
+                        className={`${
+                          isEliminated ? "text-gray-400" : "text-gray-200"
+                        }`}
+                      >
                         {team.name.toUpperCase()}
                       </span>
                     </div>
@@ -134,7 +138,9 @@ export default function AnimatedTeamTable() {
                           <div
                             key={playerIndex}
                             className={`h-4 w-1 ${
-                              currentRound?.eliminatedPlayers?.includes(playerIndex)
+                              currentRound?.eliminatedPlayers?.includes(
+                                playerIndex
+                              )
                                 ? "bg-red-600"
                                 : "bg-[#76BAD7]"
                             }`}
@@ -142,10 +148,18 @@ export default function AnimatedTeamTable() {
                         ))}
                       </div>
                     </div>
-                    <div className="w-12 flex items-center justify-center font-bold">
+                    <div
+                      className={`w-12 flex items-center justify-center font-bold ${
+                        isEliminated ? "text-slate-950" : "text-gray-200"
+                      }`}
+                    >
                       {team.totalPoints}
                     </div>
-                    <div className="w-12 flex items-center justify-center font-bold text-[#F36F21]">
+                    <div
+                      className={`w-12 flex items-center justify-center font-bold   ${
+                        isEliminated ? "text-slate-950" : "text-[#F36F21]"
+                      }`}
+                    >
                       {currentRound?.kills || 0}
                     </div>
                   </motion.div>
