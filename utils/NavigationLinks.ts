@@ -4,7 +4,7 @@ export const navigationLinks = [
     icon: "⚙️",
     links: [
       { name: "Points Table", path: "/pointstable" },
-      { name: "Elimination/Kill", path: "/controller" },
+      
       // ... other admin links ...
     ],
   },
