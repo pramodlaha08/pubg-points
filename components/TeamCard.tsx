@@ -42,6 +42,8 @@ export default function TeamCard({
     (r) => r.roundNumber === team.currentRound
   );
 
+  const isKillButtonsDisabled = currentRound?.eliminationCount === 4;
+
   return (
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border-2 border-red-500/30 hover:border-red-500/50 transition-all duration-300 shadow-2xl hover:shadow-red-500/20 relative overflow-hidden">
       <div className="flex justify-between items-start mb-6">
@@ -78,7 +80,10 @@ export default function TeamCard({
         <div className="flex items-center sm:flex-col gap-1">
           <button
             onClick={() => updateKills(team._id, "decrease")}
-            className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl text-white text-xl font-bold shadow-md transition-all duration-200"
+            className={`bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl text-white text-xl font-bold shadow-md transition-all duration-200 ${
+              isKillButtonsDisabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isKillButtonsDisabled}
           >
             -
           </button>
@@ -87,7 +92,10 @@ export default function TeamCard({
           </span>
           <button
             onClick={() => updateKills(team._id, "add")}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl text-white text-xl font-bold shadow-md transition-all duration-200"
+            className={`bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl text-white text-xl font-bold shadow-md transition-all duration-200 ${
+              isKillButtonsDisabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isKillButtonsDisabled}
           >
             +
           </button>
