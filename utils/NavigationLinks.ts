@@ -4,6 +4,7 @@ export const navigationLinks = [
     icon: "⚙️",
     links: [
       { name: "Points Table", path: "/pointstable" },
+      { name: "Match Points", path: "/match" },
       
       // ... other admin links ...
     ],
