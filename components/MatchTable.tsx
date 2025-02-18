@@ -63,10 +63,9 @@ export default function MatchTable({ matchId }: MatchTableProps) {
         if (data.success) {
           setTeams(() => {
             return data.data.sort((a: Team, b: Team) => {
-              const aRound =
-                a.rounds[matchId ? matchId - 1 : a.currentRound - 1];
-              const bRound =
-                b.rounds[matchId ? matchId - 1 : b.currentRound - 1];
+              // Corrected: Use index 0 when matchId is present
+              const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
+              const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
               const aTotal =
                 (aRound?.kills || 0) + (aRound?.positionPoints || 0);
               const bTotal =
