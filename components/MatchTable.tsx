@@ -55,14 +55,14 @@ export default function MatchTable({ matchId }: MatchTableProps) {
     const fetchTeams = async () => {
       try {
         const url = matchId
-          ? `${process.env.NEXT_PUBLIC_API_URL}/match/${matchId}`
+          ? `${process.env.NEXT_PUBLIC_API_URL}/team/match/${matchId}`
           : `${process.env.NEXT_PUBLIC_API_URL}/team`;
         const response = await axios.get(url);
         const data = response.data;
 
         if (data.success) {
-          setTeams((prevTeams) => {
-            const sortedTeams = data.data.sort((a: Team, b: Team) => {
+          setTeams(() => {
+            return data.data.sort((a: Team, b: Team) => {
               const aRound =
                 a.rounds[matchId ? matchId - 1 : a.currentRound - 1];
               const bRound =
@@ -73,7 +73,6 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                 (bRound?.kills || 0) + (bRound?.positionPoints || 0);
               return bTotal - aTotal;
             });
-            return sortedTeams;
           });
         }
       } catch (error) {
@@ -93,38 +92,34 @@ export default function MatchTable({ matchId }: MatchTableProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0a1520]">
-      <div className="w-[800px] mx-auto">
+    <div className="flex items-center justify-center min-h-screen bg-green-500">
+      <div className="w-[450px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden border-2 border-[#2c3e50]">
-          <div className="flex h-14 bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-lg font-bold border-b-2 border-[#2c3e50]">
-            <div className="w-[70px] flex items-center justify-center text-gray-400">
+          <div className="flex h-12 bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
+            <div className="w-[50px] flex items-center justify-center text-[#0A6EC1]">
               #
             </div>
-            <div className="flex items-center justify-start flex-1 pl-4">
+            <div className="w-[150px] flex items-center justify-start pl-2">
               TEAM
             </div>
-            <div className="flex items-center justify-center w-[100px] text-gray-400">
+            <div className="w-[80px] flex items-center justify-center text-gray-200">
               ELIMS
             </div>
-            <div className="flex items-center justify-center w-[100px] text-gray-400">
+            <div className="w-[80px] flex items-center justify-center text-gray-200">
               PLACE PTS
             </div>
-            <div className="flex items-center justify-center w-[100px] text-[#e67e22]">
+            <div className="w-[80px] flex items-center justify-center text-[#e67e22]">
               TOTAL
             </div>
           </div>
-          <div className="flex-1">
+          <div>
             <AnimatePresence>
               {teams.map((team, index) => {
                 const currentRoundStats = team.rounds[
-                  matchId ? matchId - 1 : team.currentRound - 1
-                ] || {
-                  kills: 0,
-                  positionPoints: 0,
-                };
+                  matchId ? 0 : team.currentRound - 1
+                ] || { kills: 0, positionPoints: 0 };
                 const totalPoints =
-                  (currentRoundStats.kills || 0) +
-                  (currentRoundStats.positionPoints || 0);
+                  currentRoundStats.kills + currentRoundStats.positionPoints;
 
                 return (
                   <motion.div
@@ -134,11 +129,11 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                    className={`flex h-16 ${getRowBackground(
+                    className={`flex h-12 ${getRowBackground(
                       index
-                    )} text-white font-sans text-xl transition-all duration-300 ease-in-out border-b border-[#2c3e50]/30`}
+                    )} text-white font-sans text-sm border-b border-[#2c3e50]/30`}
                   >
-                    <div className="w-[70px] flex items-center justify-center font-bold text-xl text-gray-300">
+                    <div className="w-[50px] flex items-center justify-center font-bold text-[#0A6EC1]">
                       {index === 0 ? (
                         <motion.span
                           className="relative z-10"
@@ -152,27 +147,27 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                         `#${index + 1}`
                       )}
                     </div>
-                    <div className="flex items-center flex-1 space-x-4 pl-4">
-                      <div className="w-10 h-10 relative flex items-center justify-center bg-[#34495e] rounded-full p-1">
+                    <div className="w-[150px] flex items-center space-x-2 pl-2">
+                      <div className="w-8 h-8 relative flex items-center justify-center bg-[#34495e] rounded-full p-1">
                         <Image
                           src={team.logo || "/placeholder.svg"}
                           alt={team.name}
-                          width={32}
-                          height={32}
+                          width={28}
+                          height={28}
                           className="object-contain rounded-full"
                         />
                       </div>
-                      <span className="font-bold tracking-wider">
+                      <span className="font-bold tracking-wider truncate">
                         {team.name.toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex items-center justify-center w-[100px] font-bold text-gray-200">
+                    <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
                       {currentRoundStats.kills || 0}
                     </div>
-                    <div className="flex items-center justify-center w-[100px] font-bold text-gray-200">
+                    <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
                       {currentRoundStats.positionPoints || 0}
                     </div>
-                    <div className="flex items-center justify-center w-[100px] font-bold text-[#e67e22]">
+                    <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
                       {totalPoints}
                     </div>
                   </motion.div>
