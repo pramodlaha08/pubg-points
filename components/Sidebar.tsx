@@ -7,12 +7,12 @@ interface SidebarLink {
 }
 
 interface SidebarGroup {
-  title: string;
-  icon: string;
-  links: SidebarLink[];
+  readonly title: string;
+  readonly icon: string;
+  readonly links: SidebarLink[];
 }
 
-export default function Sidebar({ links }: { links: SidebarGroup[] }) {
+export default function Sidebar({ links }: { readonly links: SidebarGroup[] }) {
   return (
     <div className="bg-gray-900 rounded-xl p-6 shadow-2xl border-2 border-red-500/30 h-fit sticky top-8 w-full md:w-auto">
       <nav className="space-y-4">
