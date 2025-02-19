@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
 
 interface Team {
   _id: string;
@@ -19,7 +20,8 @@ export default function RoundManager() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [roundNumber, setRoundNumber] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -58,14 +60,19 @@ export default function RoundManager() {
   // Create Round
   const handleCreateRound = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedSlots.length === 0) {
+      toast.error("Please select at least one team before creating a round.");
+      return;
+    }
+
     try {
-      setLoading(true);
+      setLoadingCreate(true);
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/team/rounds`, {
         slots: selectedSlots,
         roundNumber: Number(roundNumber),
       });
       setSuccess(`Round ${roundNumber} created successfully!`);
-
+      toast.success(`Round ${roundNumber} created successfully!`);
       // Refresh data by fetching teams again
       // Refresh the page after success
       setTimeout(() => window.location.reload(), 1000);
@@ -73,38 +80,50 @@ export default function RoundManager() {
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "An error occurred");
+         toast.error(err.response.data.message || "Failed to create round.");
       } else {
         setError("Failed to create round");
+         toast.error("Failed to create round.");
       }
     } finally {
-      setLoading(false);
+      setLoadingCreate(false);
     }
   };
 
   // Delete Round
   const handleDeleteRound = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedSlots.length === 0) {
+      toast.error("Please select at least one team before deleting a round.");
+      return;
+    }
     try {
-      setLoading(true);
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/team/rounds/delete`, {
-        data: {
-          slots: selectedSlots,
-          roundNumber: Number(roundNumber),
-        },
-      });
+      setLoadingDelete(true);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/team/rounds/delete`,
+        {
+          data: {
+            slots: selectedSlots,
+            roundNumber: Number(roundNumber),
+          },
+        }
+      );
       setSuccess(`Round ${roundNumber} deleted successfully!`);
+      toast.success(`Round ${roundNumber} deleted successfully!`);
       // Refresh the page after success
       setTimeout(() => window.location.reload(), 1000);
       setTimeout(() => setSuccess(""), 5000);
     } catch {
       setError("Failed to delete round");
+       toast.error("Failed to delete round.");
     } finally {
-      setLoading(false);
+      setLoadingDelete(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-900 p-8">
+      <ToastContainer position="top-right" autoClose={3000}  />
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
@@ -194,19 +213,19 @@ export default function RoundManager() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={handleCreateRound}
-              disabled={loading}
+              disabled={loadingCreate}
               className="p-4 bg-gradient-to-r from-red-600 to-red-700 rounded-lg text-white font-bold hover:shadow-red-500/20 hover:shadow-lg transition-all"
             >
-              {loading ? "Creating..." : "Create Round"}
+              {loadingCreate ? "Creating..." : "Create Round"}
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={handleDeleteRound}
-              disabled={loading}
+              disabled={loadingDelete}
               className="p-4 bg-gradient-to-r from-gray-700 to-gray-800 rounded-lg text-red-400 font-bold border-2 border-red-500/30 hover:border-red-500 transition-all"
             >
-              {loading ? "Deleting..." : "Delete Round"}
+              {loadingDelete ? "Deleting..." : "Delete Round"}
             </motion.button>
           </div>
 
