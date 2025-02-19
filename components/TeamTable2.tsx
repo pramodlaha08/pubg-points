@@ -86,7 +86,7 @@ export default function AnimatedTeamTable() {
                 const currentRound = team.rounds.find(
                   (r) => r.roundNumber === team.currentRound
                 );
-                const isEliminated = currentRound?.eliminationCount >= 4;
+                const isEliminated = (currentRound?.eliminationCount ?? 0) >= 4;
 
                 return (
                   <motion.div
@@ -160,7 +160,7 @@ export default function AnimatedTeamTable() {
                         isEliminated ? "text-slate-950" : "text-[#F36F21]"
                       }`}
                     >
-                      {currentRound?.kills || 0}
+                      {currentRound?.kills ?? 0}
                     </div>
                   </motion.div>
                 );
