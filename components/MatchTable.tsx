@@ -45,7 +45,7 @@ const trophyVariants = {
 };
 
 interface MatchTableProps {
-  matchId?: number;
+  readonly matchId?: number;
 }
 
 export default function MatchTable({ matchId }: MatchTableProps) {
