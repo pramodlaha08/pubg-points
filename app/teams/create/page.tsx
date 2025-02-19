@@ -41,7 +41,7 @@ export default function RegisterTeam() {
       formPayload.append("slot", formData.slot);
       if (formData.logo) formPayload.append("logo", formData.logo);
 
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:8000/api/v1/team/",
         formPayload,
         {
@@ -52,7 +52,7 @@ export default function RegisterTeam() {
       setMessage({ type: "success", content: "Team registered successfully!" });
       setFormData({ name: "", slot: "", logo: null });
       setPreview(null);
-    } catch (error) {
+    } catch {
       setMessage({
         type: "error",
         content: "Registration failed. Please try again.",
@@ -160,9 +160,7 @@ export default function RegisterTeam() {
               }`}
             >
               {loading ? (
-                <>
                   <span className="animate-pulse">Registering...</span>
-                </>
               ) : (
                 <>
                   <GiDeathSkull className="text-xl" />
