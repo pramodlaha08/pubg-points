@@ -1,6 +1,6 @@
 import MatchTable from "@/components/MatchTable";
 
-export default function MatchRoundPage({ params }: { params: { id: string } }) {
+export default function MatchRoundPage({ params }: { readonly params: { id: string } }) {
   const matchId = Number.parseInt(params.id, 10);
 
   return (
