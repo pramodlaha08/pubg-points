@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { toast, ToastContainer } from "react-toastify";
+import {ToastContainer, notifyError, notifySuccess} from "@/utils/ToastifyNotification"
 
 interface Team {
   _id: string;
@@ -61,7 +61,7 @@ export default function RoundManager() {
   const handleCreateRound = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedSlots.length === 0) {
-      toast.error("Please select at least one team before creating a round.");
+      notifyError("Please select at least one team before creating a round.");
       return;
     }
 
@@ -72,7 +72,7 @@ export default function RoundManager() {
         roundNumber: Number(roundNumber),
       });
       setSuccess(`Round ${roundNumber} created successfully!`);
-      toast.success(`Round ${roundNumber} created successfully!`);
+      notifySuccess(`Round ${roundNumber} created successfully!`);
       // Refresh data by fetching teams again
       // Refresh the page after success
       setTimeout(() => window.location.reload(), 1000);
@@ -80,10 +80,10 @@ export default function RoundManager() {
     } catch (err: any) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "An error occurred");
-         toast.error(err.response.data.message || "Failed to create round.");
+         notifyError(err.response.data.message || "Failed to create round.");
       } else {
         setError("Failed to create round");
-         toast.error("Failed to create round.");
+         notifyError("Failed to create round.");
       }
     } finally {
       setLoadingCreate(false);
@@ -94,7 +94,7 @@ export default function RoundManager() {
   const handleDeleteRound = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedSlots.length === 0) {
-      toast.error("Please select at least one team before deleting a round.");
+      notifyError("Please select at least one team before deleting a round.");
       return;
     }
     try {
@@ -109,13 +109,13 @@ export default function RoundManager() {
         }
       );
       setSuccess(`Round ${roundNumber} deleted successfully!`);
-      toast.success(`Round ${roundNumber} deleted successfully!`);
+      notifySuccess(`Round ${roundNumber} deleted successfully!`);
       // Refresh the page after success
       setTimeout(() => window.location.reload(), 1000);
       setTimeout(() => setSuccess(""), 5000);
     } catch {
       setError("Failed to delete round");
-       toast.error("Failed to delete round.");
+       notifyError("Failed to delete round.");
     } finally {
       setLoadingDelete(false);
     }
@@ -123,7 +123,7 @@ export default function RoundManager() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-8">
-      <ToastContainer position="top-right" autoClose={3000}  />
+      <ToastContainer   />
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
