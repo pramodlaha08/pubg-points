@@ -59,11 +59,12 @@ export default function PositionUpdater() {
     }
 
     const slotPositions = Object.entries(positions)
-      .filter(([_, pos]) => pos > 0)
+      .filter(([, pos]) => pos > 0) // ✅ No ESLint warning
       .map(([slot, position]) => ({
         slot: parseInt(slot),
         position: position,
       }));
+
 
     if (slotPositions.length === 0) {
       alert("Please enter at least one position");
