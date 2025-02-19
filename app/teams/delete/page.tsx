@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Image from "next/image";
 import { GiDeathSkull, GiCancel } from "react-icons/gi";
 import { Flame } from "lucide-react";
 
@@ -36,7 +35,7 @@ export default function DeleteTeamsPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/team`
       );
       setTeams(response.data.data);
-    } catch (err) {
+    } catch  {
       setError("Failed to fetch teams");
     }
   };
@@ -56,7 +55,7 @@ export default function DeleteTeamsPage() {
       setSuccess("Team deleted successfully");
       setTimeout(() => setSuccess(null), 3000);
       fetchTeams();
-    } catch (err) {
+    } catch  {
       setError("Failed to delete team");
     } finally {
       setLoading(false);
