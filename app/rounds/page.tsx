@@ -34,7 +34,7 @@ export default function RoundManager() {
           `${process.env.NEXT_PUBLIC_API_URL}/team`
         );
         setTeams(response.data.data);
-      } catch (err) {
+      } catch  {
         setError("Failed to load teams");
       }
     };
@@ -77,7 +77,7 @@ export default function RoundManager() {
       // Refresh the page after success
       setTimeout(() => window.location.reload(), 1000);
       setTimeout(() => setSuccess(""), 5000);
-    } catch (err: any) {
+    } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || "An error occurred");
          notifyError(err.response.data.message || "Failed to create round.");
@@ -136,11 +136,12 @@ export default function RoundManager() {
 
           {/* Round Number Input */}
           <div className="mb-8">
-            <label className="block text-red-400 mb-2 text-lg">
+            <label htmlFor="round" className="block text-red-400 mb-2 text-lg">
               Round Number
             </label>
             <input
               type="number"
+              id="round"
               value={roundNumber}
               onChange={(e) => setRoundNumber(e.target.value)}
               className="w-full bg-gray-700 text-white p-3 rounded-lg border-2 border-red-500/30 focus:border-red-500 outline-none"
