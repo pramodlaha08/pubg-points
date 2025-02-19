@@ -24,11 +24,11 @@ interface Team {
 }
 
 interface TeamCardProps {
-  team: Team;
-  updateKills: (teamId: string, action: "add" | "decrease") => Promise<void>;
-  handleElimination: (teamId: string, playerIndex: number) => Promise<void>;
-  isRoundInfoExpanded: boolean;
-  toggleRoundInfo: () => void;
+  readonly team: Team;
+  readonly updateKills: (teamId: string, action: "add" | "decrease") => Promise<void>;
+  readonly handleElimination: (teamId: string, playerIndex: number) => Promise<void>;
+  readonly isRoundInfoExpanded: boolean;
+  readonly toggleRoundInfo: () => void;
 }
 
 export default function TeamCard({
@@ -88,7 +88,7 @@ export default function TeamCard({
             -
           </button>
           <span className="text-3xl font-bold text-white w-16 text-center">
-            {currentRound?.kills || 0}
+            {currentRound?.kills ?? 0}
           </span>
           <button
             onClick={() => updateKills(team._id, "add")}
@@ -127,12 +127,12 @@ export default function TeamCard({
         <div className="flex justify-between">
           <div className="text-gray-400">
             <p>Current Round: {team.currentRound}</p>
-            <p>Eliminations: {currentRound?.eliminationCount || 0}/4</p>
+            <p>Eliminations: {currentRound?.eliminationCount ?? 0}/4</p>
           </div>
           <div className="text-right">
-            <p className="text-red-400">+{currentRound?.killPoints || 0} KP</p>
+            <p className="text-red-400">+{currentRound?.killPoints ?? 0} KP</p>
             <p className="text-blue-400">
-              +{currentRound?.positionPoints || 0} PP
+              +{currentRound?.positionPoints ?? 0} PP
             </p>
           </div>
         </div>
