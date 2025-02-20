@@ -108,7 +108,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
       const element = contentRef.current;
 
       const canvas = await html2canvas(element, {
-        scale: 2, // Higher resolution
+        scale: 3, // Higher resolution
         backgroundColor: "#0a0e17",
         logging: false,
         allowTaint: true,
@@ -179,10 +179,12 @@ export default function MatchTable({ matchId }: MatchTableProps) {
             animate={{ opacity: 1, y: 0 }}
             className="relative inline-block"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-              HDC PMBC
+            <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] mb-2 tracking-tight">
+              HDC <span className="text-[#E76F00]">PMBC</span>
             </h1>
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
+            <div className="flex justify-center mt-8">
+              <div className="w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
+            </div>
           </motion.div>
 
           <motion.div
@@ -192,7 +194,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
             className="flex items-center justify-center gap-2 mt-4"
           >
             <Flame className="w-5 h-5 text-[#E76F00]" />
-            <h2 className="text-2xl font-semibold text-gray-300">
+            <h2 className="text-2xl -mt-[20px] font-semibold text-gray-300">
               Match {matchId}
             </h2>
             <Flame className="w-5 h-5 text-[#E76F00]" />
@@ -207,7 +209,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
           <div className="absolute inset-0 bg-gradient-to-r from-[#07559D]/20 to-[#E76F00]/20 blur-xl" />
           <div className="relative">
             <div className="flex flex-col rounded-lg overflow-hidden border-2 border-[#2c3e50]">
-              <div className="flex h-[2.5rem] bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
+              <div className="flex h-[3.5rem] bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
                 <div className="w-[50px] flex items-center justify-center text-[#07559D]">
                   #
                 </div>
@@ -277,9 +279,9 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                               className="object-contain rounded-full"
                             />
                           </div>
-                          <span className="font-bold tracking-wider truncate">
+                          <div className="font-bold h-full pt-[0.65rem] tracking-wider truncate">
                             {team.name.toUpperCase()}
-                          </span>
+                          </div>
                         </div>
                         <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
                           {currentRoundStats.kills || 0}
