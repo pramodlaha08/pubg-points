@@ -11,14 +11,7 @@ const MatchRoundPage: FC<MatchRoundPageProps> = async ({ params }) => {
   const resolvedParams = await params;
   const matchId = Number.parseInt(resolvedParams.id, 10);
 
-  return (
-    <div>
-      <h1 className="text-3xl font-bold text-center text-red-400 mb-8">
-        Match {matchId} Standings
-      </h1>
-      <MatchTable matchId={matchId} />
-    </div>
-  );
+  return <MatchTable matchId={matchId} />;
 };
 
 export default MatchRoundPage;
