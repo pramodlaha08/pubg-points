@@ -91,10 +91,10 @@ export default function MatchTable({ matchId }: MatchTableProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-green-500">
+    <div className="flex items-center justify-center min-h-screen ">
       <div className="w-[450px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden border-2 border-[#2c3e50]">
-          <div className="flex h-12 bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
+          <div className="flex h-[2.5rem] bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
             <div className="w-[50px] flex items-center justify-center text-[#0A6EC1]">
               #
             </div>
