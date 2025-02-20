@@ -22,3 +22,7 @@ body {
 
 }
 
+::selection{
+  color: #01539C;
+  background-color: #F36F21;
+}
