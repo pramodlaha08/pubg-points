@@ -126,7 +126,7 @@ export default function AnimatedTeamTable() {
                       />
                       <span
                         className={`${
-                          isEliminated ? "text-gray-400" : "text-gray-200"
+                          isEliminated ? "text-gray-400" : "text-gray-200 font-bold"
                         }`}
                       >
                         {team.name.toUpperCase()}
