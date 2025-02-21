@@ -96,7 +96,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
 
   const getRowBackground = (index: number) => {
     if (index === 0) return "bg-gradient-to-r from-[#C19A6B] to-[#CD7F32]";
-    if (index === 1) return "bg-gradient-to-r from-[#C0C0C0] to-[#A9A9A9]";
+    if (index === 1) return "bg-gradient-to-r from-[#7b7575] to-[#685c5c]";
     return "bg-gradient-to-r from-[#1a2634] to-[#2c3e50]";
   };
 
@@ -179,7 +179,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
             animate={{ opacity: 1, y: 0 }}
             className="relative inline-flex items-center gap-3" // Flex container for logo & title
           >
-            <div className="relative top-5 -left-5 w-14 h-14 md:w-16 md:h-16">
+           {/*<div className="relative top-5 -left-5 w-14 h-14 md:w-16 md:h-16">
               <Image
                 src="/logo.png" // Replace with actual logo path
                 alt="Tournament Logo"
@@ -189,13 +189,13 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                 priority
                 className="object-contain"
               />
-            </div>
+            </div>*/}
             <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] tracking-tight">
               HDC <span className="text-[#E76F00]">PMBC</span>
             </h1>
           </motion.div>
 
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center mt-8">
             <div className="w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
           </div>
 
