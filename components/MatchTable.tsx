@@ -177,15 +177,27 @@ export default function MatchTable({ matchId }: MatchTableProps) {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative inline-block"
+            className="relative inline-flex items-center gap-3" // Flex container for logo & title
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] mb-2 tracking-tight">
+            <div className="relative top-5 -left-5 w-14 h-14 md:w-16 md:h-16">
+              <Image
+                src="/logo.png" // Replace with actual logo path
+                alt="Tournament Logo"
+                layout="intrinsic"
+                width={64}
+                height={64}
+                priority
+                className="object-contain"
+              />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] tracking-tight">
               HDC <span className="text-[#E76F00]">PMBC</span>
             </h1>
-            <div className="flex justify-center mt-8">
-              <div className="w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
-            </div>
           </motion.div>
+
+          <div className="flex justify-center mt-6">
+            <div className="w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
+          </div>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -194,7 +206,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
             className="flex items-center justify-center gap-2 mt-4"
           >
             <Flame className="w-5 h-5 text-[#E76F00]" />
-            <h2 className="text-2xl -mt-[20px] font-semibold text-gray-300">
+            <h2 className="text-2xl -mt-5 font-semibold text-gray-300">
               Match {matchId}
             </h2>
             <Flame className="w-5 h-5 text-[#E76F00]" />
