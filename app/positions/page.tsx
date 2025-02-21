@@ -41,8 +41,8 @@ export default function PositionUpdater() {
 
   useEffect(() => {
     fetchTeams();
-    const interval = setInterval(fetchTeams, 2000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(fetchTeams, 2000);
+    // return () => clearInterval(interval);
   }, []);
 
   const handlePositionChange = (slot: number, value: string) => {

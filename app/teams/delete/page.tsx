@@ -42,8 +42,8 @@ export default function DeleteTeamsPage() {
 
   useEffect(() => {
     fetchTeams();
-    const interval = setInterval(fetchTeams, 2000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(fetchTeams, 2000);
+    // return () => clearInterval(interval);
   }, []);
 
   const handleDeleteTeam = async (teamId: string) => {
