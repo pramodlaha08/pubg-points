@@ -81,16 +81,18 @@ export default function TeamsPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {teams.map((team) => (
-            <TeamCard
-              key={team._id}
-              team={team}
-              updateKills={updateKills}
-              handleElimination={handleElimination}
-              isRoundInfoExpanded={isRoundInfoExpanded}
-              toggleRoundInfo={toggleRoundInfo}
-            />
-          ))}
+          {[...teams]
+            .sort((a, b) => a.slot - b.slot)
+            .map((team) => (
+              <TeamCard
+                key={team._id}
+                team={team}
+                updateKills={updateKills}
+                handleElimination={handleElimination}
+                isRoundInfoExpanded={isRoundInfoExpanded}
+                toggleRoundInfo={toggleRoundInfo}
+              />
+            ))}
         </div>
       </div>
     </div>
