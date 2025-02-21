@@ -90,8 +90,8 @@ export default function MatchTable({ matchId }: MatchTableProps) {
       }
     };
     fetchTeams();
-    const interval = setInterval(fetchTeams, 2000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(fetchTeams, 2000);
+    // return () => clearInterval(interval);
   }, [matchId]);
 
   const getRowBackground = (index: number) => {
