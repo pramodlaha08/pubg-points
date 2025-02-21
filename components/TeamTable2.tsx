@@ -98,8 +98,8 @@ export default function AnimatedTeamTable() {
                     transition={{ type: "spring", stiffness: 100, damping: 15 }}
                     className={`flex h-10 border-b border-[#F36F21] text-sm shadow-md ${
                       isEliminated
-                        ? "bg-[#b840408f] text-gray-900"
-                        : "bg-gradient-to-r from-[#111827cf] to-[#1f2937cf] text-white"
+                        ? "bg-[#cf6060b7] text-gray-950"
+                        : "bg-gradient-to-r from-[#111827b9] to-[#1f2937b9] text-white"
                     }`}
                   >
                     <div className="w-10 flex items-center justify-center font-bold text-lg text-[#76BAD7] relative">
@@ -126,7 +126,9 @@ export default function AnimatedTeamTable() {
                       />
                       <span
                         className={`${
-                          isEliminated ? "text-gray-400" : "text-gray-200 font-bold"
+                          isEliminated
+                            ? "text-gray-950 font-bold"
+                            : "text-gray-200 font-bold"
                         }`}
                       >
                         {team.name.toUpperCase()}
@@ -157,7 +159,7 @@ export default function AnimatedTeamTable() {
                     </div>
                     <div
                       className={`w-12 flex items-center justify-center font-bold   ${
-                        isEliminated ? "text-slate-950" : "text-[#F36F21]"
+                        isEliminated ? "text-slate-950" : "text-[#ffffff]"
                       }`}
                     >
                       {currentRound?.kills ?? 0}
