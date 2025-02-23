@@ -31,6 +31,7 @@ export const navigationLinks = [
     icon: "🏆",
     links: [
       { name: "Create/Delete", path: "/rounds" },
+      { name: "Leaderboard", path: "/leaderboard" },
     ],
   },
 ];
