@@ -55,9 +55,27 @@ export default  function LeaderboardPage() {
       <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
         <div className="absolute inset-0 flex flex-col">
           {/* Top section for additional content */}
+          <div className="flex justify-between items-center p-3">
+                <div className="flex flex-col space-y-3">
+
+                <h1 className="bg-gradient-to-r from-[#07559D] to-[#E76F00] bg-clip-text text-transparent text-2xl font-black uppercase">Match Rankings</h1>
+                <div className="flex items-center space-x-8 bg-gradient-to-r from-[#07559D] to-[#E76F00] w-36 px-2 py-[0.15rem] ">
+
+                <p className="text-[#FEC810] text-lg pr-6 border-r">Match</p>
+                <p className="text-lg ">1/6</p>
+                </div>
+                </div>
+                <div className="bg-gradient-to-r from-[#07559D] to-[#E76F00] bg-clip-text text-transparent text-2xl font-black text-right">
+
+                <p>PUBG Mobile </p>
+                <p>Biratnagar Championship</p>
+                </div>
+              </div>
           <div className="flex-1 p-6">
             <div className="w-full h-full rounded-lg border border-orange-500/20 bg-gradient-to-b from-[#1a1f2d]/80 to-[#2a3142]/80">
-              {/* Add your additional content here */}
+              {/* Add team one detail of this match in this box like i big form highlighting that they are first in good bg color with perect vibes of being first in this match esports pubg content here */}
+
+              
             </div>
           </div>
 
