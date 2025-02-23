@@ -122,7 +122,7 @@ export default function RegisterTeam() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full bg-gray-700/50 border-2 border-red-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all"
+                className="w-full bg-gray-700/50 border-2 border-red-500/30 rounded-lg px-4 py-3 text-white uppercase placeholder:capitalize focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all"
                 placeholder="Enter team name"
                 required
               />
@@ -140,7 +140,7 @@ export default function RegisterTeam() {
                 onChange={(e) =>
                   setFormData({ ...formData, slot: e.target.value })
                 }
-                className="w-full bg-gray-700/50 border-2 border-red-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all"
+                className="w-full bg-gray-700/50 border-2 border-red-500/30 rounded-lg px-4 py-3 text-white placeholder:capitalize focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/30 transition-all"
                 placeholder="Enter slot number"
                 min="1"
                 required
