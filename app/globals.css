@@ -33,3 +33,78 @@ body {
   color: #01539C;
   background-color: #F36F21;
 }
+
+@keyframes border-glow {
+  0% { box-shadow: 0 0 20px rgba(231, 111, 0, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(231, 111, 0, 0.6); }
+  100% { box-shadow: 0 0 20px rgba(231, 111, 0, 0.3); }
+}
+
+@keyframes border-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes text-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(254, 200, 16, 0.4);
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(254, 200, 16, 0.5);
+}
+
+.animate-border-rotate {
+  background-size: 400% 400%;
+  animation: border-rotate 6s ease infinite;
+}
+
+.animate-text-gradient {
+  background-size: 200% 200%;
+  animation: text-gradient 4s ease infinite;
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle, currentColor 0%, transparent 70%);
+}
+
+.delay-1000 {
+  animation-delay: 1s;
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-shine {
+  animation: shine 2s infinite;
+}
+
+.animate-gradient-x {
+  animation: gradient-x 15s linear infinite;
+  background-size: 200% 200%;
+}
