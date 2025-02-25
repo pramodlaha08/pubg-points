@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
   const currentRound = firstTeam?.rounds[firstTeam.currentRound - 1] || null
 
   return (
-    <main className="min-h-screen w-full bg-[#86f52c] relative overflow-hidden">
+    <main className="min-h-screen w-full bg-green-600 relative overflow-hidden">
       {/* Animated background elements */}
       {/* <div className="absolute inset-0 z-0">
         <div className="absolute w-[800px] h-[800px] -top-[400px] -left-[400px] bg-radial-gradient from-[#ff6b0030] to-transparent animate-pulse" />
