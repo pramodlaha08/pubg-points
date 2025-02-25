@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
           {/* Header Section */}
           <div className="flex justify-between items-center p-3 relative z-10">
             <div className="flex flex-col space-y-3">
-              <h1 className="bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] bg-clip-text text-transparent text-2xl font-black uppercase ">
+              <h1 className=" text-[#ff6b00]  text-2xl font-black uppercase ">
                 Match Rankings
               </h1>
               <div className="relative bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] p-0.5 rounded-lg group">
@@ -71,7 +71,7 @@ export default function LeaderboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
               </div>
             </div>
-            <div className="bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] bg-clip-text text-transparent text-2xl font-black text-right ">
+            <div className="text-[#ff6b00] text-2xl font-black text-right ">
               <p>PUBG Mobile </p>
               <p>Biratnagar Championship</p>
             </div>
