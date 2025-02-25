@@ -29,7 +29,7 @@ const trophyVariants = {
     rotate: [-10, 0, 10, 0],
     transition: {
       duration: 1.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
     },
   },
@@ -43,14 +43,14 @@ interface TeamTableProps {
 
 const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
   const slicedTeams = teams.slice(startIndex, endIndex)
-  
+
   return (
-    <div className="relative w-full max-w-md glow-border">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#07559D] via-[#FEC810] to-[#E76F00] rounded-lg animate-border-rotate" />
-      <div className="relative bg-[#0d1117] rounded-lg p-0.5">
+    <div className="relative w-full max-w-md">
+      <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] via-[#ffd700] to-[#ff6b00] rounded-lg animate-border-rotate opacity-50" />
+      <div className="relative bg-[#243042] rounded-lg p-0.5 shadow-2xl">
         <div className="relative z-10 rounded-lg overflow-hidden">
-          <div className="flex h-12 bg-gradient-to-r from-[#1a1f2d] to-[#2a3142] text-gray-200 text-sm font-bold p-2 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#07559D40] to-[#E76F0040] opacity-30" />
+          <div className="flex h-12 bg-[#1a2234] text-white text-sm font-bold p-2 relative border-b border-[#ffd700]/20">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff20] to-[#ff6b0020] opacity-30" />
             <div className="w-12 flex items-center justify-center z-10">RANK</div>
             <div className="flex-1 flex items-center justify-start pl-4 z-10">TEAM</div>
             <div className="w-20 flex items-center justify-center z-10">PLACE</div>
@@ -78,35 +78,38 @@ const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ type: "spring", stiffness: 120, damping: 12 }}
                     className={cn(
-                      "relative flex h-14 border-b border-orange-500/20 text-sm group",
-                      isFirst ? "bg-gradient-to-r from-orange-900/40 to-amber-900/40" : "bg-gradient-to-r from-[#1a1f2d]/90 to-[#2a3142]/90"
+                      "relative flex h-14 border-b border-[#ffd700]/10 text-sm group",
+                      isFirst ? "bg-gradient-to-r from-[#243042] to-[#1a2234]" : "bg-[#1a2234]",
                     )}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#07559D20] to-[#E76F0020] opacity-0 group-hover:opacity-30 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff10] to-[#ff6b0010] opacity-0 group-hover:opacity-50 transition-opacity" />
                     <div className="w-12 flex items-center justify-center font-bold text-lg z-10">
                       {isFirst ? (
                         <motion.div variants={trophyVariants} animate="animate" className="glow-gold">
-                          <Trophy className="h-6 w-6 text-yellow-500" />
+                          <Trophy className="h-6 w-6 text-[#ffd700]" />
                         </motion.div>
                       ) : (
-                        <span className="text-blue-400 glow-text">{actualRank}</span>
+                        <span className="text-[#00a8ff] glow-text">{actualRank}</span>
                       )}
                     </div>
                     <div className="flex-1 flex items-center space-x-3 pl-2 z-10">
-                      <div className="relative w-8 h-8 border border-[#FEC810]/30 rounded-sm glow-gold ">
-                        <Image src={team.logo || "/placeholder.svg"} alt={team.name} fill className="object-contain p-1" />
+                      <div className="relative w-8 h-8 border border-[#ffd700]/30 rounded-sm glow-gold bg-[#1a2234]">
+                        <Image
+                          src={team.logo || "/placeholder.svg"}
+                          alt={team.name}
+                          fill
+                          className="object-contain p-1"
+                        />
                       </div>
-                      <span className="font-bold tracking-wide text-transparent bg-gradient-to-r from-[#FEC810] to-white bg-clip-text">
-                        {team.name.toUpperCase()}
-                      </span>
+                      <span className="font-bold tracking-wide text-white">{team.name.toUpperCase()}</span>
                     </div>
-                    <div className="w-20 flex items-center justify-center font-bold text-base text-blue-400 glow-text z-10">
+                    <div className="w-20 flex items-center justify-center font-bold text-base text-[#00a8ff] glow-text z-10">
                       {placePoints}
                     </div>
-                    <div className="w-16 flex items-center justify-center font-bold text-base text-orange-400 glow-text z-10">
+                    <div className="w-16 flex items-center justify-center font-bold text-base text-[#ff6b00] glow-text z-10">
                       {elimPoints}
                     </div>
-                    <div className="w-16 flex items-center justify-center font-bold text-base text-white glow-text z-10">
+                    <div className="w-16 flex items-center justify-center font-bold text-base text-[#ffd700] glow-text z-10">
                       {roundTotal}
                     </div>
                   </motion.div>
@@ -136,3 +139,4 @@ export default function SplitLeaderboard({ teams }: { readonly teams: Team[] }) 
     </div>
   )
 }
+
