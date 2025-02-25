@@ -15,6 +15,7 @@ interface Team {
     roundNumber: number;
     position: number;
     positionPoints: number;
+    killPoints?: number;
   }>;
 }
 
@@ -85,6 +86,7 @@ export default function PositionUpdater() {
       alert("Error updating positions");
     } finally {
       setLoading(false);
+      setTimeout(() => window.location.reload(), 1000);
     }
   };
 
@@ -168,11 +170,21 @@ export default function PositionUpdater() {
                   </span>
                 </div>
 
-                <div className="text-xs md:text-sm text-blue-300">
+                <div className="text-xs md:text-sm text-blue-300 flex justify-around">
+                  <div>
+
                   Points:{" "}
                   {team.rounds.length > 0
                     ? team.rounds[team.rounds.length - 1].positionPoints
                     : "0"}
+                    </div>
+                  <div>
+
+                 Kill Points:{" "}
+                  {team.rounds.length > 0
+                    ? team.rounds[team.rounds.length - 1].killPoints
+                    : "0"}
+                    </div>
                 </div>
               </div>
             </div>
