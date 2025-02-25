@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { GiPodium, GiTrophy } from "react-icons/gi";
+import { notifyError, ToastContainer } from "@/utils/ToastifyNotification";
 
 interface Team {
   _id: string;
@@ -67,7 +68,7 @@ export default function PositionUpdater() {
 
 
     if (slotPositions.length === 0) {
-      alert("Please enter at least one position");
+      notifyError("Please enter at least one position");
       return;
     }
 
@@ -89,6 +90,7 @@ export default function PositionUpdater() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4 md:p-8">
+      <ToastContainer />
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6 justify-center md:justify-start">
@@ -139,7 +141,7 @@ export default function PositionUpdater() {
                   className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-full border-2 border-blue-500/30"
                 />
                 <div>
-                  <h2 className="text-lg md:text-xl font-bold text-blue-400 truncate">
+                  <h2 className="text-lg md:text-xl font-bold text-blue-400 truncate uppercase">
                     {team.name}
                   </h2>
                   <p className="text-sm text-gray-400 truncate">

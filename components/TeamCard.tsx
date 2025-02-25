@@ -48,7 +48,7 @@ export default function TeamCard({
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border-2 border-red-500/30 hover:border-red-500/50 transition-all duration-300 shadow-2xl hover:shadow-red-500/20 relative overflow-hidden">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-red-400 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-red-400 flex items-center gap-2 uppercase">
             <GiDeathSkull className="text-3xl" />
             {team.name}
           </h2>
