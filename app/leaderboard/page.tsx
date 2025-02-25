@@ -1,29 +1,29 @@
-"use client"
-import SplitLeaderboard from "@/components/Leaderboard"
-import axios from "axios"
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { motion } from "framer-motion"
+"use client";
+import SplitLeaderboard from "@/components/Leaderboard";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 interface Team {
-    _id: string;
-    name: string;
-    logo: string;
-    slot: number;
-    currentRound: number;
-    totalPoints: number;
-    rounds: {
-      roundNumber: number;
-      kills: number;
-      killPoints: number;
-      position: number;
-      positionPoints: number;
-      eliminationCount: number;
-      eliminatedPlayers: number[];
-      status: string;
-    }[];
+  _id: string;
+  name: string;
+  logo: string;
+  slot: number;
+  currentRound: number;
+  totalPoints: number;
+  rounds: {
+    roundNumber: number;
+    kills: number;
+    killPoints: number;
+    position: number;
+    positionPoints: number;
+    eliminationCount: number;
+    eliminatedPlayers: number[];
+    status: string;
+  }[];
 }
 
 export default function LeaderboardPage() {
@@ -40,15 +40,15 @@ export default function LeaderboardPage() {
             data.data.sort((a: Team, b: Team) => b.totalPoints - a.totalPoints)
           );
         }
-        const interval = setInterval(fetchTeams, 2000);
-    return () => clearInterval(interval);
-      } catch  {
+      } catch {
         console.error("Error fetching teams:");
       }
     };
     fetchTeams();
+    const interval = setInterval(fetchTeams, 100000);
+    return () => clearInterval(interval);
   }, []);
-  
+
   const firstTeam = teams.length > 0 ? teams[0] : null;
   const currentRound = firstTeam?.rounds[firstTeam.currentRound - 1] || null;
 
@@ -69,9 +69,13 @@ export default function LeaderboardPage() {
                 Match Rankings
               </h1>
               <div className="relative bg-gradient-to-r from-[#07559D] to-[#E76F00] p-0.5 rounded-lg group">
-                <div className="bg-[#0d1117] flex items-center space-x-8 w-36 px-2 py-[0.15rem]">
-                  <p className="text-[#FEC810] text-lg pr-6 border-r border-[#FEC810]/30">Match</p>
-                  <p className="text-lg text-white">{firstTeam?.currentRound}/6</p>
+                <div className="bg-[#0d1117] flex items-center space-x-8 w-32 rounded-md px-2 py-[0.15rem] font-bold">
+                  <p className="text-[#FEC810] text-lg text-center px-6 ">
+                    Match
+                  </p>
+                  <p className="text-lg text-white pl-8 font-bold">
+                    {firstTeam?.currentRound}/6
+                  </p>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#07559D] to-[#E76F00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
               </div>
@@ -107,10 +111,14 @@ export default function LeaderboardPage() {
                         {firstTeam.name}
                       </h2>
                       <p className="text-lg text-gray-300 mt-2">
-                        Total Points: <span className="text-white font-bold glow-text">{firstTeam.totalPoints}</span>
+                        Total Points:{" "}
+                        <span className="text-white font-bold glow-text">
+                          {firstTeam.totalPoints}
+                        </span>
                       </p>
-                      <p className="text-lg font-bold text-transparent bg-gradient-to-r from-[#FEC810] to-[#E76F00] bg-clip-text flex gap-4 items-center mt-2">
-                        Winner winner chicken dinner <GiChickenOven size="2rem" className="animate-bounce" />
+                      <p className="text-lg font-bold text-transparent bg-gradient-to-r from-[#FEC810] to-[#E76F00] bg-clip-text flex gap-4 items-center mt-2 capitalize">
+                        Winner winner chicken dinner{" "}
+                        <GiChickenOven size="2rem" className="animate-bounce" />
                       </p>
                     </div>
                   </div>
@@ -118,14 +126,34 @@ export default function LeaderboardPage() {
                     <div className="absolute inset-0 bg-gradient-to-r from-[#07559D20] to-[#E76F0020] rounded-lg" />
                     <div className="relative z-10 flex justify-between items-center">
                       {[
-                        { label: "Rank", value: <GiChickenOven className="text-yellow-400" />, color: "text-yellow-400" },
-                        { label: "Place Points", value: currentRound.positionPoints, color: "text-red-400" },
-                        { label: "Elims Points", value: currentRound.kills, color: "text-orange-400" },
-                        { label: "Total Points", value: currentRound.positionPoints + currentRound.killPoints, color: "text-green-400" },
+                        {
+                          label: "Rank",
+                          value: <GiChickenOven className="text-yellow-400" />,
+                          color: "text-yellow-400",
+                        },
+                        {
+                          label: "Place Points",
+                          value: currentRound.positionPoints,
+                          color: "text-red-400",
+                        },
+                        {
+                          label: "Elims Points",
+                          value: currentRound.kills,
+                          color: "text-orange-400",
+                        },
+                        {
+                          label: "Total Points",
+                          value:
+                            currentRound.positionPoints +
+                            currentRound.killPoints,
+                          color: "text-green-400",
+                        },
                       ].map((item, index) => (
                         <div key={index} className="text-center">
                           <p className="text-sm text-gray-400">{item.label}</p>
-                          <p className={`text-2xl font-bold ${item.color} glow-text`}>
+                          <p
+                            className={`text-2xl font-bold ${item.color} glow-text`}
+                          >
                             {item.value}
                           </p>
                         </div>
@@ -144,5 +172,5 @@ export default function LeaderboardPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }
