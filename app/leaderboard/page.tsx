@@ -1,63 +1,67 @@
-"use client"
-import SplitLeaderboard from "@/components/Leaderboard"
-import axios from "axios"
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { GiChickenOven } from "react-icons/gi"
+"use client";
+import SplitLeaderboard from "@/components/Leaderboard";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { GiChickenOven } from "react-icons/gi";
 
 interface Team {
-  _id: string
-  name: string
-  logo: string
-  slot: number
-  currentRound: number
-  totalPoints: number
+  _id: string;
+  name: string;
+  logo: string;
+  slot: number;
+  currentRound: number;
+  totalPoints: number;
   rounds: {
-    roundNumber: number
-    kills: number
-    killPoints: number
-    position: number
-    positionPoints: number
-    eliminationCount: number
-    eliminatedPlayers: number[]
-    status: string
-  }[]
+    roundNumber: number;
+    kills: number;
+    killPoints: number;
+    position: number;
+    positionPoints: number;
+    eliminationCount: number;
+    eliminatedPlayers: number[];
+    status: string;
+  }[];
 }
 
 export default function LeaderboardPage() {
-  const [teams, setTeams] = useState<Team[]>([])
+  const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/team`)
-        const data = response.data
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/team`
+        );
+        const data = response.data;
         if (data.success) {
           const sortedTeams = data.data.sort((a: Team, b: Team) => {
             const aTotal = a.rounds.reduce(
-              (acc, round) => acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0,
-            )
+              (acc, round) =>
+                acc + (round.positionPoints || 0) + (round.killPoints || 0),
+              0
+            );
             const bTotal = b.rounds.reduce(
-              (acc, round) => acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0,
-            )
-            return bTotal - aTotal
-          })
-          setTeams(sortedTeams)
+              (acc, round) =>
+                acc + (round.positionPoints || 0) + (round.killPoints || 0),
+              0
+            );
+            return bTotal - aTotal;
+          });
+          setTeams(sortedTeams);
         }
       } catch {
-        console.error("Error fetching teams:")
+        console.error("Error fetching teams:");
       }
-    }
+    };
 
-    fetchTeams()
-    const interval = setInterval(fetchTeams, 100000)
-    return () => clearInterval(interval)
-  }, [])
+    fetchTeams();
+    const interval = setInterval(fetchTeams, 100000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const firstTeam = teams.length > 0 ? teams[0] : null
+  const firstTeam = teams.length > 0 ? teams[0] : null;
   const totalStats = firstTeam
     ? firstTeam.rounds.reduce(
         (acc, round) => ({
@@ -65,9 +69,9 @@ export default function LeaderboardPage() {
           killPoints: acc.killPoints + (round.killPoints || 0),
           chickenCount: acc.chickenCount + (round.position === 1 ? 1 : 0),
         }),
-        { placePoints: 0, killPoints: 0, chickenCount: 0 },
+        { placePoints: 0, killPoints: 0, chickenCount: 0 }
       )
-    : null
+    : null;
 
   return (
     <main className="min-h-screen w-full bg-green-600 relative overflow-hidden">
@@ -76,11 +80,17 @@ export default function LeaderboardPage() {
           {/* Header Section */}
           <div className="flex justify-between items-center p-3 relative z-10">
             <div className="flex flex-col space-y-3">
-              <h1 className="text-[#ff6b00] text-2xl font-black uppercase">Match Rankings</h1>
+              <h1 className="text-[#ff6b00] text-2xl font-black uppercase">
+                Match Rankings
+              </h1>
               <div className="relative bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] p-0.5 rounded-lg group">
                 <div className="bg-[#243042] flex items-center space-x-8 w-32 rounded-md px-2 py-[0.15rem] font-bold shadow-lg">
-                  <p className="text-[#ffd700] text-lg text-center px-6">Match</p>
-                  <p className="text-lg text-[#fff] pl-8 font-bold">{firstTeam?.currentRound}/6</p>
+                  <p className="text-[#ffd700] text-lg text-center px-6">
+                    Match
+                  </p>
+                  <p className="text-lg text-[#fff] pl-8 font-bold">
+                    {firstTeam?.currentRound}/6
+                  </p>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
               </div>
@@ -119,7 +129,9 @@ export default function LeaderboardPage() {
                           <div className="flex items-center gap-1">
                             <GiChickenOven className="h-6 w-6 text-[#ffd700]" />
                             {totalStats.chickenCount > 1 && (
-                              <span className="text-[#ffd700] font-bold">x{totalStats.chickenCount}</span>
+                              <span className="text-[#ffd700] font-bold">
+                                x{totalStats.chickenCount}
+                              </span>
                             )}
                           </div>
                         )}
@@ -131,7 +143,7 @@ export default function LeaderboardPage() {
                         </span>
                       </p>
                       <p className="text-lg font-bold text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text flex gap-4 items-center mt-2 capitalize">
-                        Tournament Leaders
+                        The King of the Arena! 👑🔥
                       </p>
                     </div>
                   </div>
@@ -162,7 +174,11 @@ export default function LeaderboardPage() {
                       ].map((item, index) => (
                         <div key={index} className="text-center">
                           <p className="text-sm text-gray-400">{item.label}</p>
-                          <p className={`text-2xl font-bold ${item.color} glow-text`}>{item.value}</p>
+                          <p
+                            className={`text-2xl font-bold ${item.color} glow-text`}
+                          >
+                            {item.value}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -222,12 +238,14 @@ export default function LeaderboardPage() {
             )}
           </div>
           {/* Bottom Section: Leaderboard */}
-          <div className="p-6 relative z-10">
+          <div className="p-6 relative z-10 space-y-2">
+            <div className="text-lg text-center font-bold text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text -mt-[5px]">
+              Top 8 Guns of the Arena! 
+            </div>
             <SplitLeaderboard teams={teams} />
           </div>
         </div>
       </div>
     </main>
-  )
+  );
 }
-
