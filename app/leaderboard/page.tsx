@@ -187,7 +187,7 @@ export default function LeaderboardPage() {
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 h-full aspect-[3/4] z-0">
                   <div className="relative w-full h-full">
                     {/* Base gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#243042] to-transparent z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#24304285] to-transparent z-10" />
 
                     {/* Tactical energy glow effect */}
                     <div className="absolute -inset-2 energy-glow rounded-lg z-20" />
@@ -200,10 +200,10 @@ export default function LeaderboardPage() {
                     {/* Character image with professional animation */}
                     <div className="relative h-full w-full animate-float-pro">
                       <Image
-                        src="/character.svg"
+                        src="/character.png"
                         alt="PUBG Character"
                         fill
-                        className="object-contain object-right mix-blend-plus-lighter"
+                        className="object-contain object-right mix-blend-plus-darker"
                         priority
                       />
 
