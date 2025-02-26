@@ -108,3 +108,70 @@ body {
   animation: gradient-x 15s linear infinite;
   background-size: 200% 200%;
 }
+
+@keyframes float-pro {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-5px) translateX(2px);
+  }
+  50% {
+    transform: translateY(0) translateX(0);
+  }
+  75% {
+    transform: translateY(5px) translateX(-2px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes tactical-pulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes energy-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float-pro {
+  animation: float-pro 6s ease-in-out infinite;
+}
+
+.animate-tactical-pulse {
+  animation: tactical-pulse 3s ease-in-out infinite;
+}
+/* 
+.energy-glow {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 168, 255, 0.2),
+    rgba(255, 107, 0, 0.2),
+    rgba(255, 215, 0, 0.2),
+    rgba(0, 168, 255, 0.2)
+  );
+  background-size: 300% 100%;
+  animation: energy-flow 8s linear infinite;
+} */
+
+.character-highlight {
+  mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+}
+

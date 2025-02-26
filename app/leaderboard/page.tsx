@@ -170,16 +170,52 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 h-full aspect-[3/4] z-0">
                   <div className="relative w-full h-full">
+                    {/* Base gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-r from-[#243042] to-transparent z-10" />
-                    <div className="absolute -inset-2 bg-gradient-to-r from-[#00a8ff20] via-[#ff6b0020] to-[#ffd70020] animate-pulse rounded-lg opacity-50" />
-                    <Image
-                      src="/character.svg"
-                      alt="PUBG Character"
-                      fill
-                      className="object-contain object-right animate-float mix-blend-luminosity"
-                      priority
-                    />
+
+                    {/* Tactical energy glow effect */}
+                    <div className="absolute -inset-2 energy-glow rounded-lg z-20" />
+
+                    {/* Dynamic highlight effects */}
+                    <div className="absolute inset-0 character-highlight">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-[#00a8ff40] via-[#ffd70040] to-[#ff6b0040] animate-tactical-pulse" />
+                    </div>
+
+                    {/* Character image with professional animation */}
+                    <div className="relative h-full w-full animate-float-pro">
+                      <Image
+                        src="/character.svg"
+                        alt="PUBG Character"
+                        fill
+                        className="object-contain object-right mix-blend-plus-lighter"
+                        priority
+                      />
+
+                      {/* Intensity overlays */}
+                      <div className="absolute inset-0">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-[#00a8ff20] via-transparent to-[#ff6b0020] mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#ffd70010] to-[#243042] opacity-70" />
+                      </div>
+
+                      {/* Strategic highlight lines */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#00a8ff50] to-transparent top-1/4 -translate-y-1/2 animate-tactical-pulse" />
+                        <div
+                          className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#ffd70050] to-transparent top-2/4 -translate-y-1/2 animate-tactical-pulse"
+                          style={{ animationDelay: "-1.5s" }}
+                        />
+                        <div
+                          className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#ff6b0050] to-transparent top-3/4 -translate-y-1/2 animate-tactical-pulse"
+                          style={{ animationDelay: "-3s" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Ambient effects */}
                     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#243042] opacity-50" />
+
+                    {/* Edge highlight */}
+                    <div className="absolute -right-2 inset-y-0 w-1 bg-gradient-to-b from-transparent via-[#ffd70030] to-transparent animate-tactical-pulse" />
                   </div>
                 </div>
               </motion.div>
