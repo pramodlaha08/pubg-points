@@ -180,7 +180,7 @@ export default function RoundManager() {
                       <h3 className="text-white font-medium">
                         Slot #{team.slot}
                       </h3>
-                      <p className="text-red-300">{team.name}</p>
+                      <p className="text-red-300 uppercase">{team.name}</p>
                       <p className="text-gray-400 text-sm">
                         {team.collegeName}
                       </p>
