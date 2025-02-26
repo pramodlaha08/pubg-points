@@ -97,10 +97,10 @@ export default function LeaderboardPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="relative w-full h-full rounded-lg bg-[#243042] border-2 border-[#ffd700]/20 shadow-2xl"
+                className="relative w-full h-full rounded-lg bg-[#243042] border-2 border-[#ffd700]/20 shadow-2xl overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-[#00a8ff20] to-[#ff6b0020] opacity-30 rounded-lg" />
-                <div className="relative z-10 p-6">
+                <div className="relative z-20 p-6">
                   <div className="flex items-center space-x-6">
                     <div className="relative w-24 h-24 border-2 border-[#ffd700] rounded-full glow-gold overflow-hidden bg-[#1a2234]/80">
                       <Image
@@ -166,6 +166,20 @@ export default function LeaderboardPage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 h-full aspect-[3/4] z-0">
+                  <div className="relative w-full h-full">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#243042] to-transparent z-10" />
+                    <div className="absolute -inset-2 bg-gradient-to-r from-[#00a8ff20] via-[#ff6b0020] to-[#ffd70020] animate-pulse rounded-lg opacity-50" />
+                    <Image
+                      src="/character.svg"
+                      alt="PUBG Character"
+                      fill
+                      className="object-contain object-right animate-float mix-blend-luminosity"
+                      priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#243042] opacity-50" />
                   </div>
                 </div>
               </motion.div>
