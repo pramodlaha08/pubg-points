@@ -2,6 +2,7 @@
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy } from "lucide-react"
+import { GiChickenOven } from "react-icons/gi"
 import { cn } from "@/lib/utils"
 
 interface Team {
@@ -44,6 +45,22 @@ interface TeamTableProps {
 const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
   const slicedTeams = teams.slice(startIndex, endIndex)
 
+  const getChickenCount = (team: Team) => {
+    return team.rounds.filter((round) => round.position === 1).length
+  }
+
+  const calculateTotalStats = (team: Team) => {
+    return team.rounds.reduce(
+      (acc, round) => {
+        return {
+          placePoints: acc.placePoints + (round.positionPoints || 0),
+          elimPoints: acc.elimPoints + (round.killPoints || 0),
+        }
+      },
+      { placePoints: 0, elimPoints: 0 },
+    )
+  }
+
   return (
     <div className="relative w-full max-w-md">
       <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] via-[#ffd700] to-[#ff6b00] rounded-lg animate-border-rotate opacity-50" />
@@ -61,13 +78,10 @@ const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
             <AnimatePresence>
               {slicedTeams.map((team, index) => {
                 const actualRank = startIndex + index + 1
-                const currentRoundIndex = team.currentRound - 1
-                const currentRound = team.rounds[currentRoundIndex]
                 const isFirst = actualRank === 1
-
-                const placePoints = currentRound?.positionPoints ?? 0
-                const elimPoints = currentRound?.killPoints ?? 0
-                const roundTotal = placePoints + elimPoints
+                const chickenCount = getChickenCount(team)
+                const { placePoints, elimPoints } = calculateTotalStats(team)
+                const totalPoints = placePoints + elimPoints
 
                 return (
                   <motion.div
@@ -101,7 +115,15 @@ const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
                           className="object-contain p-1"
                         />
                       </div>
-                      <span className="font-bold tracking-wide text-white">{team.name.toUpperCase()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold tracking-wide text-white">{team.name.toUpperCase()}</span>
+                        {chickenCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <GiChickenOven className="h-4 w-4 text-[#ffd700]" />
+                            {chickenCount > 1 && <span className="text-xs text-[#ffd700]">x{chickenCount}</span>}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="w-20 flex items-center justify-center font-bold text-base text-[#00a8ff] glow-text z-10">
                       {placePoints}
@@ -110,7 +132,7 @@ const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
                       {elimPoints}
                     </div>
                     <div className="w-16 flex items-center justify-center font-bold text-base text-[#ffd700] glow-text z-10">
-                      {roundTotal}
+                      {totalPoints}
                     </div>
                   </motion.div>
                 )
@@ -125,11 +147,9 @@ const TeamTable = ({ teams, startIndex, endIndex }: TeamTableProps) => {
 
 export default function SplitLeaderboard({ teams }: { readonly teams: Team[] }) {
   const sortedTeams = [...teams].sort((a, b) => {
-    const aRound = a.rounds[a.currentRound - 1]
-    const bRound = b.rounds[b.currentRound - 1]
-    const aTotal = (aRound?.positionPoints ?? 0) + (aRound?.killPoints ?? 0)
-    const bTotal = (bRound?.positionPoints ?? 0) + (bRound?.killPoints ?? 0)
-    return bTotal - aTotal
+    const aStats = a.rounds.reduce((acc, round) => acc + (round.positionPoints || 0) + (round.killPoints || 0), 0)
+    const bStats = b.rounds.reduce((acc, round) => acc + (round.positionPoints || 0) + (round.killPoints || 0), 0)
+    return bStats - aStats
   })
 
   return (
