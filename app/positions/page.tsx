@@ -101,6 +101,7 @@ export default function PositionUpdater() {
             Position Updater
           </h1>
         </div>
+        <div className="font-bold text-red-500 text-2xl">Please verify round number before updating position</div>
 
         {/* Round Input */}
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
