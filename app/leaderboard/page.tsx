@@ -239,7 +239,7 @@ export default function LeaderboardPage() {
           </div>
           {/* Bottom Section: Leaderboard */}
           <div className="p-6 relative z-10 space-y-2">
-            <div className="text-lg text-center font-bold text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text -mt-[5px]">
+            <div className="text-xl text-center font-black text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text -mt-[5px]">
               Top 8 Guns of the Arena! 
             </div>
             <SplitLeaderboard teams={teams} />
