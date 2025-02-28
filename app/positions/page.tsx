@@ -25,7 +25,7 @@ interface PositionData {
 
 export default function PositionUpdater() {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [roundNumber, setRoundNumber] = useState<number>(0);
+  const [roundNumber, setRoundNumber] = useState<number>(1);
   const [positions, setPositions] = useState<PositionData>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
