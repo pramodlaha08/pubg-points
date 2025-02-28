@@ -73,15 +73,35 @@ export default function MatchTable({ matchId }: MatchTableProps) {
         const data = response.data;
 
         if (data.success) {
+          // setTeams(() => {  // Original sorting logic
+          //   return data.data.sort((a: Team, b: Team) => {
+          //     const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
+          //     const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
+          //     const aTotal =
+          //       (aRound?.kills || 0) + (aRound?.positionPoints || 0);
+          //     const bTotal =
+          //       (bRound?.kills || 0) + (bRound?.positionPoints || 0);
+          //     return bTotal - aTotal;
+          //   });
+          // });
+
+          // Updated sorting logic
           setTeams(() => {
             return data.data.sort((a: Team, b: Team) => {
               const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
               const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
-              const aTotal =
-                (aRound?.kills || 0) + (aRound?.positionPoints || 0);
-              const bTotal =
-                (bRound?.kills || 0) + (bRound?.positionPoints || 0);
-              return bTotal - aTotal;
+          
+              const aPositionPoints = aRound?.positionPoints || 0;
+              const bPositionPoints = bRound?.positionPoints || 0;
+          
+              const aTotal = (aRound?.kills || 0) + aPositionPoints;
+              const bTotal = (bRound?.kills || 0) + bPositionPoints;
+          
+              // Sort by position points first, then by total points
+              if (bPositionPoints !== aPositionPoints) {
+                return bPositionPoints - aPositionPoints; // Higher position points first
+              }
+              return bTotal - aTotal; // If position points are the same, sort by total points
             });
           });
         }
