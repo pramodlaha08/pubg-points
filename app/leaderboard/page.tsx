@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
     : null;
 
   return (
-    <main className="min-h-screen w-full bg-green-600 relative overflow-hidden">
+    <main className="min-h-screen w-full relative overflow-hidden">
       <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
         <div className="absolute inset-0 flex flex-col">
           {/* Header Section */}
@@ -240,7 +240,7 @@ export default function LeaderboardPage() {
           {/* Bottom Section: Leaderboard */}
           <div className="p-6 relative z-10 space-y-2">
             <div className="text-xl text-center font-black text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text -mt-[5px]">
-              Top 8 Guns of the Arena! 
+              Overall Ranking
             </div>
             <SplitLeaderboard teams={teams} />
           </div>
