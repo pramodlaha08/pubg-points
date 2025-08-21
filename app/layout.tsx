@@ -18,7 +18,7 @@ export default function RootLayout({
           <div className="max-w-6xl mx-auto px-6 py-6 flex justify-center items-center">
             <span className="text-3xl font-extrabold text-red-500 tracking-wider animate-pulse flex items-center gap-3">
               <GiDeathSkull className="text-3xl" />
-              <Link href="/">HDC PMBC</Link>
+              <Link href="/">FF WarZone</Link>
             </span>
           </div>
         </header>

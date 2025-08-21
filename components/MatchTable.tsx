@@ -211,7 +211,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
               />
             </div>*/}
             <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] tracking-tight">
-              HDC <span className="text-[#E76F00]">PMBC</span>
+              FF <span className="text-[#E76F00]">WarZone</span>
             </h1>
           </motion.div>
 

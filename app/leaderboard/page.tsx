@@ -73,6 +73,13 @@ export default function LeaderboardPage() {
       )
     : null;
 
+  const map = {
+    1: "Barmuda",
+    2: "Purgatory",
+    3: "Kalahari",
+    4: "Alpine",
+  };
+
   return (
     <main className="min-h-screen w-full relative overflow-hidden">
       <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
@@ -89,15 +96,32 @@ export default function LeaderboardPage() {
                     Match
                   </p>
                   <p className="text-lg text-[#fff] pl-8 font-bold">
-                    {firstTeam?.currentRound}/6
+                    {firstTeam?.currentRound}/4
                   </p>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
               </div>
             </div>
             <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <p>PUBG Mobile</p>
-              <p>Biratnagar Championship</p>
+              <div className="flex flex-col space-y-3">
+                <h1 className="text-[#ff6b00] text-2xl font-black uppercase">
+                  Current Map
+                </h1>
+                <div className="relative bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] p-0.5 rounded-lg group">
+                  <div className="bg-[#243042] flex items-center justify-center space-x-8 rounded-md px-2 py-[0.15rem] font-bold shadow-lg">
+                    <p className="text-[#ffd700] text-lg text-center">
+                      {(firstTeam &&
+                        map[firstTeam.currentRound as keyof typeof map]) ||
+                        "Unknown"}
+                    </p>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
+                </div>
+              </div>
+            </div>
+            <div className="text-[#ff6b00] text-2xl font-black text-right">
+              <p>FF WarZone</p>
+              <p>By StreamNepal</p>
             </div>
           </div>
           {/* Top 1 Team Highlight */}
@@ -200,10 +224,10 @@ export default function LeaderboardPage() {
                     {/* Character image with professional animation */}
                     <div className="relative h-full w-full animate-float-pro">
                       <Image
-                        src="/character.png"
+                        src="/character1.png"
                         alt="PUBG Character"
                         fill
-                        className="object-contain object-right mix-blend-plus-darker"
+                        className="object-contain object-right mix-blend-plus-darker h-[35vh]"
                         priority
                       />
 
