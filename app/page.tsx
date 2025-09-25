@@ -3,7 +3,7 @@ import {navigationLinks} from "@/utils/NavigationLinks"
 
 export default function Team() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
+    <main className="flex min-h-screen flex-col items-center justify-center relative">
       <Sidebar links={navigationLinks} />
     </main>
   );

@@ -70,7 +70,7 @@ export default function AnimatedTeamTable() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center">
       <div className="w-[360px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden">
           <div className="flex h-10 bg-gradient-to-r from-[#a3c21b] to-[#e9dc23] text-gray-200 text-sm font-bold shadow-lg">
