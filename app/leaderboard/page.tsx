@@ -74,10 +74,12 @@ export default function LeaderboardPage() {
     : null;
 
   const map = {
-    1: "Barmuda",
-    2: "Purgatory",
-    3: "Kalahari",
-    4: "Alpine",
+    1: "Erangel",
+    2: "Miramar",
+    3: "Sanhok",
+    4: "Sanhok",
+    5: "Miramar",
+    6: "Erangel",
   };
 
   return (
@@ -96,7 +98,7 @@ export default function LeaderboardPage() {
                     Match
                   </p>
                   <p className="text-lg text-[#fff] pl-8 font-bold">
-                    {firstTeam?.currentRound}/4
+                    {firstTeam?.currentRound}/{Object.keys(map).length}
                   </p>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
@@ -120,7 +122,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
             <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <p>FF WarZone</p>
+              <p>PMWC</p>
               <p>By StreamNepal</p>
             </div>
           </div>
@@ -224,7 +226,7 @@ export default function LeaderboardPage() {
                     {/* Character image with professional animation */}
                     <div className="relative h-full w-full animate-float-pro">
                       <Image
-                        src="/character1.png"
+                        src="/character.png"
                         alt="PUBG Character"
                         fill
                         className="object-contain object-right mix-blend-plus-darker h-[35vh]"
