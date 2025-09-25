@@ -73,7 +73,7 @@ export default function AnimatedTeamTable() {
     <div className="flex items-center justify-center">
       <div className="w-[360px] mx-auto">
         <div className="flex flex-col rounded-lg overflow-hidden">
-          <div className="flex h-10 bg-gradient-to-r from-[#a3c21b] to-[#e9dc23] text-gray-200 text-sm font-bold shadow-lg">
+          <div className="flex h-10 bg-gradient-to-r from-[#245aaa] to-[#b25c5c] text-gray-200 text-sm font-bold shadow-lg">
             <div className="w-10 flex items-center justify-center pl-3">RANK</div>
             <div className="flex-1 flex items-center justify-start pl-5">TEAM</div>
             <div className="w-16 flex items-center justify-center">ALIVE</div>
@@ -98,11 +98,11 @@ export default function AnimatedTeamTable() {
                     transition={{ type: "spring", stiffness: 100, damping: 15 }}
                     className={`flex h-10 border-b border-[#F36F21] text-sm shadow-md ${
                       isEliminated
-                        ? "bg-[#cf6060b7] text-gray-950"
-                        : "bg-gradient-to-r from-[#111827b9] to-[#1f2937b9] text-white"
+                        ? "bg-[#cf606083] text-gray-950"
+                        : "bg-gradient-to-r  from-[#235192d8] to-[#d45810ce] text-white"
                     }`}
                   >
-                    <div className="w-10 flex items-center justify-center font-bold text-lg text-[#76BAD7] relative">
+                    <div className="w-10 flex items-center justify-center font-bold text-lg text-[#b25c5c] relative">
                       {index === 0 ? (
                         <motion.span
                           className="relative z-10"
@@ -139,12 +139,12 @@ export default function AnimatedTeamTable() {
                         {[0, 1, 2, 3].map((playerIndex) => (
                           <div
                             key={playerIndex}
-                            className={`h-4 w-1 ${
+                            className={`h-4 w-[6px] ${
                               currentRound?.eliminatedPlayers?.includes(
                                 playerIndex
                               )
                                 ? "bg-red-600"
-                                : "bg-[#76BAD7]"
+                                : "bg-[#245aaa]"
                             }`}
                           ></div>
                         ))}
