@@ -83,7 +83,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="min-h-screen w-full relative overflow-hidden">
+    <main className="min-h-screen w-full relative">
       <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
         <div className="absolute inset-0 flex flex-col">
           {/* Header Section */}

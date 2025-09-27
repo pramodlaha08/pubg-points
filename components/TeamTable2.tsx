@@ -102,7 +102,7 @@ export default function AnimatedTeamTable() {
                         : "bg-gradient-to-r  from-[#235192d8] to-[#d45810ce] text-white"
                     }`}
                   >
-                    <div className="w-10 flex items-center justify-center font-bold text-lg text-[#b25c5c] relative">
+                    <div className="w-10 flex items-center justify-center font-bold text-lg text-gray-100 relative">
                       {index === 0 ? (
                         <motion.span
                           className="relative z-10"
