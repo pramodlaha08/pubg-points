@@ -1,8 +1,12 @@
 import TeamTable from "@/components/TeamTable2";
+import GamingEliminationNotification from "@/components/GamingEliminationNotification";
 
 export default function Team() {
   return (
     <main className="min-h-screen w-full bg-green-500 ">
+      {/* Gaming Elimination Notification System */}
+      <GamingEliminationNotification />
+
       {/* YouTube landscape ratio container (16:9) for better chroma key */}
       <div
         className="absolute inset-0 bg-green-500"
