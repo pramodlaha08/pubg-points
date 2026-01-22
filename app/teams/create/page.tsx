@@ -42,7 +42,7 @@ export default function RegisterTeam() {
       if (formData.logo) formPayload.append("logo", formData.logo);
 
       await axios.post(
-        "http://localhost:8000/api/v1/team/",
+        "https://points-backend-gu2z.onrender.com/api/v1/team/",
         formPayload,
         {
           headers: { "Content-Type": "multipart/form-data" },
