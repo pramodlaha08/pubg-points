@@ -60,7 +60,7 @@ export default function GamingEliminationNotification() {
           clearTimeout(timerRef.current);
           timerRef.current = null;
         }
-      }, 8000); // 8 seconds as safety net
+      }, 5000); // 5 seconds as safety net
 
       return () => clearTimeout(safetyTimer);
     }
@@ -262,7 +262,7 @@ export default function GamingEliminationNotification() {
         processingRef.current = false;
         timerRef.current = null;
         // Keep in pendingDisplayRef to prevent re-showing
-      }, 6000);
+      }, 5000);
     }
 
     // Cleanup function
@@ -584,64 +584,6 @@ export default function GamingEliminationNotification() {
                 />
               </div>
             </motion.div>
-
-            {/* Massive Explosion Effect */}
-            {[...Array(30)].map((_, i) => {
-              const angle = (i * Math.PI * 2) / 30;
-              const distance = 250 + Math.random() * 150;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{
-                    opacity: 1,
-                    scale: 0,
-                    x: 0,
-                    y: 0,
-                  }}
-                  animate={{
-                    opacity: [1, 0.8, 0],
-                    scale: [0, 2, 5],
-                    x: Math.cos(angle) * distance,
-                    y: Math.sin(angle) * distance,
-                    rotate: [0, 360],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    ease: "easeOut",
-                    delay: i * 0.015,
-                  }}
-                  className="absolute top-1/2 left-1/2 w-10 h-10 rounded-full"
-                  style={{
-                    background: `radial-gradient(circle, ${
-                      i % 3 === 0
-                        ? "#fbbf24"
-                        : i % 3 === 1
-                          ? "#f97316"
-                          : "#dc2626"
-                    }, transparent)`,
-                    filter: "blur(5px)",
-                  }}
-                />
-              );
-            })}
-
-            {/* Shockwave Rings */}
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0, opacity: 0.8 }}
-                animate={{
-                  scale: [0, 4],
-                  opacity: [0.8, 0],
-                }}
-                transition={{
-                  duration: 2.5,
-                  ease: "easeOut",
-                  delay: i * 0.3,
-                }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full border-4 border-red-500 rounded-full"
-              />
-            ))}
           </motion.div>
         </div>
       )}
