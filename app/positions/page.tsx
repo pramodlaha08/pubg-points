@@ -75,10 +75,13 @@ export default function PositionUpdater() {
 
     try {
       setLoading(true);
-      await axios.post("http://localhost:8000/api/v1/team/points", {
-        roundNumber,
-        slotPositions,
-      });
+      await axios.post(
+        "https://points-backend-gu2z.onrender.com//api/v1/team/points",
+        {
+          roundNumber,
+          slotPositions,
+        },
+      );
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
