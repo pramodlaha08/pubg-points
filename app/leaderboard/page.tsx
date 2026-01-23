@@ -74,12 +74,9 @@ export default function LeaderboardPage() {
     : null;
 
   const map = {
-    1: "Erangel",
-    2: "Miramar",
-    3: "Sanhok",
-    4: "Sanhok",
-    5: "Miramar",
-    6: "Erangel",
+    1: "Bermuda",
+    2: "Purgatory",
+    3: "Alpine",
   };
 
   return (
@@ -122,7 +119,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
             <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <p>PMWC</p>
+              <p>SN BattleField</p>
               <p>By StreamNepal</p>
             </div>
           </div>
