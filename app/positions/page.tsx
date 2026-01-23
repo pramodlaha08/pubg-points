@@ -76,7 +76,7 @@ export default function PositionUpdater() {
     try {
       setLoading(true);
       await axios.post(
-        "https://points-backend-gu2z.onrender.com//api/v1/team/points",
+        "https://points-backend-gu2z.onrender.com/api/v1/team/points",
         {
           roundNumber,
           slotPositions,
