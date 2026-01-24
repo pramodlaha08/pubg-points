@@ -3,7 +3,7 @@ import GamingEliminationNotification from "@/components/GamingEliminationNotific
 
 export default function Team() {
   return (
-    <main className="min-h-screen w-full bg-green-500 ">
+    <main className="fixed inset-0 w-full h-screen bg-green-500 overflow-hidden">
       {/* Gaming Elimination Notification System */}
       <GamingEliminationNotification />
 
@@ -13,7 +13,7 @@ export default function Team() {
         style={{ aspectRatio: "16/9" }}
       >
         {/* Bottom-right positioning for OBS overlay */}
-        <div className="absolute bottom-0 right-4 w-fit h-fit">
+        <div className="absolute bottom-48 right-8 w-fit h-fit">
           <div className=" backdrop-blur-sm rounded-lg shadow-2xl p-2">
             <TeamTable />
           </div>
