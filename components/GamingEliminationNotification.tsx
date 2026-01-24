@@ -514,11 +514,19 @@ export default function GamingEliminationNotification() {
                             </span>
                           </div>
 
-                          <div className="bg-yellow-500/30 border-2 border-yellow-500 px-3 py-1.5 rounded-lg">
-                            <span className="text-yellow-100 font-bold text-sm">
-                              #{currentNotification.eliminationOrder}
+                          {/* <div className="bg-yellow-500/30 border-2 border-yellow-500 px-4 py-1 rounded-lg flex items-baseline gap-0.5">
+                            <span
+                              className="text-yellow-400 font-black text-3xl leading-none"
+                              style={{
+                                WebkitTextStroke: "1px rgba(0,0,0,0.3)",
+                              }}
+                            >
+                              #
                             </span>
-                          </div>
+                            <span className="text-yellow-100 font-black text-2xl leading-none">
+                              {currentNotification.eliminationOrder}
+                            </span>
+                          </div> */}
 
                           {currentNotification.killCount > 0 && (
                             <div className="bg-orange-500/30 border-2 border-orange-500 px-3 py-1.5 rounded-lg flex items-center gap-2">
@@ -532,37 +540,24 @@ export default function GamingEliminationNotification() {
                     </div>
                   </div>
 
-                  {/* Right - Warning Icon */}
-                  <div className="relative">
-                    <motion.div
-                      animate={{
-                        rotate: [0, 360],
-                        scale: [1, 1.3, 1],
+                  {/* Right - Elimination Number */}
+                  <div className="flex items-baseline gap-1">
+                    <span
+                      className="text-yellow-400 font-black text-7xl leading-none"
+                      style={{
+                        WebkitTextStroke: "2px rgba(0,0,0,0.4)",
                       }}
-                      transition={{
-                        rotate: {
-                          duration: 4,
-                          repeat: Infinity,
-                          ease: "linear",
-                        },
-                        scale: { duration: 1.5, repeat: Infinity },
-                      }}
-                      className="text-6xl"
                     >
-                      ⚡
-                    </motion.div>
-
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.8, 1],
-                        opacity: [0.2, 0.5, 0.2],
+                      #
+                    </span>
+                    <span
+                      className="text-white font-black text-6xl leading-none"
+                      style={{
+                        WebkitTextStroke: "1.5px rgba(0,0,0,0.3)",
                       }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                      }}
-                      className="absolute inset-0 bg-yellow-500 rounded-full blur-xl"
-                    />
+                    >
+                      {currentNotification.eliminationOrder}
+                    </span>
                   </div>
                 </div>
 
