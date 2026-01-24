@@ -155,7 +155,7 @@ export default function SplitLeaderboard({ teams }: { readonly teams: Team[] }) 
   return (
     <div className="flex flex-row justify-center gap-6 w-full">
       <TeamTable teams={sortedTeams} startIndex={0} endIndex={6} />
-      <TeamTable teams={sortedTeams} startIndex={6} endIndex={11} />
+      <TeamTable teams={sortedTeams} startIndex={6} endIndex={12} />
       {/* <TeamTable teams={sortedTeams} startIndex={10} endIndex={15} /> */}
       {/* <TeamTable teams={sortedTeams} startIndex={7} endIndex={9} /> */}
       {/* <TeamTable teams={sortedTeams} startIndex={8} endIndex={13} /> */}
