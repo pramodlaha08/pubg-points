@@ -79,7 +79,7 @@ export default function LeaderboardPage() {
     3: "Sanhok",
     4: "Erangel",
     5: "Miramar",
-    6: "Sanhok",
+    6: "Erangel",
   };
 
   return (
