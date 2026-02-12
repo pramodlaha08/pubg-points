@@ -74,12 +74,12 @@ export default function LeaderboardPage() {
     : null;
 
   const map = {
-    1: "Bermuda",
-    2: "Purgatory",
-    3: "Kalahari",
-    4: "Nexterra",
-    5: "Alpine",
-    6: "Bermuda",
+    1: "Erangel",
+    2: "Miramar",
+    3: "Sanhok",
+    4: "Sanhok",
+    5: "Miramar",
+    6: "Erangel",
   };
 
   return (
@@ -122,7 +122,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
             <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <p>SN BattleField</p>
+              <p>HDC Sports Meet</p>
               <p>By StreamNepal</p>
             </div>
           </div>
@@ -226,7 +226,7 @@ export default function LeaderboardPage() {
                     {/* Character image with professional animation */}
                     <div className="relative h-full w-full animate-float-pro">
                       <Image
-                        src="/character2.png"
+                        src="/character.png"
                         alt="PUBG Character"
                         fill
                         className="object-contain object-right mix-blend-plus-darker h-[35vh]"
