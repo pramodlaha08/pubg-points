@@ -4,8 +4,8 @@ import { GiDeathSkull } from "react-icons/gi";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "HDC PMBC",
-  description: "Pubg Mobile Biratnagar Championship",
+  title: "NDPL",
+  description: "Nepal Distillery Pubg League",
 };
 
 export default function RootLayout({
