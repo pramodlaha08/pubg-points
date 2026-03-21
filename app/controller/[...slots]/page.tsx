@@ -31,6 +31,18 @@ export default function FilteredTeamsPage() {
   const params = useParams();
   const [isRoundInfoExpanded, setIsRoundInfoExpanded] = useState(false);
 
+  const upsertTeam = (updatedTeam: Team) => {
+    setTeams((prev) => {
+      const exists = prev.some((team) => team._id === updatedTeam._id);
+      if (!exists) {
+        return [...prev, updatedTeam];
+      }
+      return prev.map((team) =>
+        team._id === updatedTeam._id ? updatedTeam : team
+      );
+    });
+  };
+
   const fetchTeams = async () => {
     try {
       const response = await axios.get(
@@ -52,8 +64,13 @@ export default function FilteredTeamsPage() {
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}/${action}-kill`;
-      await axios.post(endpoint);
-      fetchTeams();
+      const response = await axios.post(endpoint);
+      const updatedTeam = response?.data?.data as Team | undefined;
+      if (updatedTeam) {
+        upsertTeam(updatedTeam);
+      } else {
+        fetchTeams();
+      }
     } catch (error) {
       console.error(`Error ${action}ing kills:`, error);
     }
@@ -61,11 +78,16 @@ export default function FilteredTeamsPage() {
 
   const handleElimination = async (teamId: string, playerIndex: number) => {
     try {
-      await axios.put(
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}/elimination`,
         { playerIndex }
       );
-      fetchTeams();
+      const updatedTeam = response?.data?.data as Team | undefined;
+      if (updatedTeam) {
+        upsertTeam(updatedTeam);
+      } else {
+        fetchTeams();
+      }
     } catch (error) {
       console.error("Error updating elimination:", error);
     }
