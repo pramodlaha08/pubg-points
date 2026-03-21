@@ -2,6 +2,7 @@
 
 import { GiDeathSkull } from "react-icons/gi";
 import { Flame, ChevronDown, ChevronUp } from "lucide-react";
+import SQUAD_CONFIG from "@/lib/squadConfig";
 
 interface Team {
   _id: string;
@@ -42,7 +43,7 @@ export default function TeamCard({
     (r) => r.roundNumber === team.currentRound
   );
 
-  const isKillButtonsDisabled = currentRound?.eliminationCount === 4;
+  const isKillButtonsDisabled = currentRound?.eliminationCount === SQUAD_CONFIG.fullEliminationCount;
 
   return (
     <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border-2 border-red-500/30 hover:border-red-500/50 transition-all duration-300 shadow-2xl hover:shadow-red-500/20 relative overflow-hidden">
@@ -62,7 +63,7 @@ export default function TeamCard({
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-6">
         <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-          {[0, 1, 2, 3].map((playerIndex) => (
+          {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
             <button
               key={playerIndex}
               onClick={() => handleElimination(team._id, playerIndex)}
@@ -72,7 +73,7 @@ export default function TeamCard({
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              P{playerIndex + 1}
+              {SQUAD_CONFIG.getPlayerLabel(playerIndex)}
             </button>
           ))}
         </div>
@@ -127,7 +128,7 @@ export default function TeamCard({
         <div className="flex justify-between">
           <div className="text-gray-400">
             <p>Current Round: {team.currentRound}</p>
-            <p>Eliminations: {currentRound?.eliminationCount ?? 0}/4</p>
+            <p>Eliminations: {currentRound?.eliminationCount ?? 0}/{SQUAD_CONFIG.fullEliminationCount}</p>
           </div>
           <div className="text-right">
             <p className="text-red-400">+{currentRound?.killPoints ?? 0} KP</p>

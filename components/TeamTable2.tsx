@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import SQUAD_CONFIG from "@/lib/squadConfig";
 
 interface Team {
   _id: string;
@@ -86,7 +87,7 @@ export default function AnimatedTeamTable() {
                 const currentRound = team.rounds.find(
                   (r) => r.roundNumber === team.currentRound
                 );
-                const isEliminated = (currentRound?.eliminationCount ?? 0) >= 4;
+                const isEliminated = (currentRound?.eliminationCount ?? 0) >= SQUAD_CONFIG.fullEliminationCount;
 
                 return (
                   <motion.div
@@ -136,7 +137,7 @@ export default function AnimatedTeamTable() {
                     </div>
                     <div className="w-16 flex items-center justify-center">
                       <div className="flex gap-1">
-                        {[0, 1, 2, 3].map((playerIndex) => (
+                        {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
                           <div
                             key={playerIndex}
                             className={`h-4 w-[6px] ${
