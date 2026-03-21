@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 
 interface Team {
@@ -44,8 +45,18 @@ const trophyVariants = {
   }
 };
 
-export default function AnimatedTeamTable() {
+interface AnimatedTeamTableProps {
+  readonly showDebug?: boolean;
+}
+
+export default function AnimatedTeamTable({ showDebug }: AnimatedTeamTableProps) {
+  // Use env var for debug mode, allow prop override
+  const debugMode = showDebug !== undefined ? showDebug : process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
   const [teams, setTeams] = useState<Team[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastEvent, setLastEvent] = useState<string>("-");
+  const [lastSyncAt, setLastSyncAt] = useState<string>("-");
+  const [updateCount, setUpdateCount] = useState(0);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -59,20 +70,75 @@ export default function AnimatedTeamTable() {
           setTeams(
             data.data.sort((a: Team, b: Team) => b.totalPoints - a.totalPoints)
           );
+          setLastSyncAt(new Date().toLocaleTimeString());
         }
       } catch  {
         console.error("Error fetching teams:");
       }
     };
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
+    const socketBase = process.env.NEXT_PUBLIC_SOCKET_URL || apiBase.replace(/\/api\/v1\/?$/, "");
+
+    let refreshTimer: NodeJS.Timeout | null = null;
+    const scheduleRefresh = (source: string) => {
+      setLastEvent(source);
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      refreshTimer = setTimeout(() => {
+        void fetchTeams();
+        setUpdateCount((prev) => prev + 1);
+        refreshTimer = null;
+      }, 120);
+    };
+
+    const socket: Socket = io(socketBase, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 800,
+      reconnectionDelayMax: 4000,
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      scheduleRefresh("connect");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+    });
+
+    socket.on("team_log_created", () => scheduleRefresh("team_log_created"));
+    socket.on("team_created", () => scheduleRefresh("team_created"));
+    socket.on("team_deleted", () => scheduleRefresh("team_deleted"));
+    socket.on("round_created", () => scheduleRefresh("round_created"));
+    socket.on("round_deleted", () => scheduleRefresh("round_deleted"));
+    socket.on("positions_updated", () => scheduleRefresh("positions_updated"));
+    socket.on("elimination_state_changed", () => scheduleRefresh("elimination_state_changed"));
+
     fetchTeams();
-    const interval = setInterval(fetchTeams, 2000);
-    return () => clearInterval(interval);
+
+    return () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      socket.disconnect();
+    };
   }, []);
 
   return (
     <div className="flex items-center justify-center">
       <div className="w-[360px] mx-auto">
+        {debugMode ? (
+          <div className="mb-2 rounded border border-white/30 bg-black/60 px-2 py-1 text-[10px] font-semibold text-white">
+            <div>SOCKET: {isConnected ? "LIVE" : "OFFLINE"}</div>
+            <div>LAST EVENT: {lastEvent}</div>
+            <div>LAST SYNC: {lastSyncAt}</div>
+            <div>UPDATES: {updateCount}</div>
+          </div>
+        ) : null}
         <div className="flex flex-col rounded-lg overflow-hidden">
           <div className="flex h-10 bg-gradient-to-r from-[#245aaa] to-[#b25c5c] text-gray-200 text-sm font-bold shadow-lg">
             <div className="w-10 flex items-center justify-center pl-3">RANK</div>
