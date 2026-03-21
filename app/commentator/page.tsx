@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
 import {
-  GiCrossedSabres,
   GiElectric,
   GiRadioTower,
   GiTargeting,
@@ -244,186 +243,170 @@ export default function CommentatorPage() {
   }, [feed]);
 
   return (
-    <section className="min-h-screen bg-slate-950 px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-8">
-      <div className="mx-auto w-full rounded-3xl border border-cyan-300/30 bg-gradient-to-br from-slate-950 via-[#091225] to-slate-900 p-5 shadow-[0_0_50px_rgba(34,211,238,0.15)] sm:p-7 lg:p-8">
-        <div className="mb-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1">
-            <h1 className="flex items-center gap-3 text-[clamp(2rem,3vw,3.2rem)] font-black uppercase tracking-wide text-cyan-100">
-              <GiRadioTower className="flex-shrink-0 text-cyan-300" />
-              Live Commentator Feed
+    <section className="min-h-screen bg-slate-950 px-3 py-4 sm:px-4 sm:py-5">
+      <div className="mx-auto w-full max-w-7xl">
+        {/* Header: Minimal and Compact */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <GiRadioTower className="h-5 w-5 text-cyan-300" />
+            <h1 className="text-lg font-bold text-cyan-100 uppercase tracking-tight">
+              Live Feed
             </h1>
-            <p className="mt-2 text-[clamp(1.05rem,1.5vw,1.5rem)] font-semibold text-slate-200">
-              Instant match stories: points gained, losses, kills, eliminations, and placement swings.
-            </p>
           </div>
 
-          <div className="grid w-full grid-cols-2 gap-3 lg:w-auto lg:grid-cols-4">
-            <div className="rounded-xl border border-emerald-300/40 bg-emerald-900/25 px-4 py-3 text-center">
-              <p className="text-xs font-bold uppercase text-emerald-100">Status</p>
-              <p className="mt-1 text-lg font-extrabold text-emerald-200">
+          {/* Status & Counts - Compact Row */}
+          <div className="flex items-center gap-2 rounded-lg border border-slate-600/30 bg-black/40 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  isConnected ? "bg-emerald-400" : "bg-yellow-500"
+                }`}
+              />
+              <span className="text-xs font-semibold text-slate-200 whitespace-nowrap">
                 {isConnected ? "Connected" : "Reconnecting"}
-              </p>
+              </span>
             </div>
-            <div className="rounded-xl border border-cyan-300/40 bg-cyan-900/20 px-4 py-3 text-center">
-              <p className="text-xs font-bold uppercase text-cyan-100">Events</p>
-              <p className="mt-1 text-lg font-extrabold text-cyan-100">
-                {feed.length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-amber-300/50 bg-amber-950/30 px-4 py-3 text-center">
-              <p className="text-xs font-bold uppercase text-amber-100">Highlights</p>
-              <p className="mt-1 text-lg font-extrabold text-amber-100">
-                {totalHighlights}
-              </p>
-            </div>
-            <div className="rounded-xl border border-red-300/60 bg-red-950/35 px-4 py-3 text-center">
-              <p className="text-xs font-bold uppercase text-red-100">Critical</p>
-              <p className="mt-1 text-lg font-extrabold text-red-100">
-                {totalCritical}
-              </p>
-            </div>
+            <div className="h-4 w-px bg-slate-600/30" />
+            <span className="text-xs font-semibold text-cyan-300 whitespace-nowrap">
+              {feed.length} Events
+            </span>
+            <span className="text-xs font-semibold text-amber-300 whitespace-nowrap">
+              {totalHighlights} ⭐
+            </span>
+            <span className="text-xs font-semibold text-red-300 whitespace-nowrap">
+              {totalCritical} 🔴
+            </span>
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col items-stretch justify-between gap-4 rounded-xl border border-slate-500/40 bg-black/25 p-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3 text-[clamp(1rem,1.2vw,1.2rem)] font-semibold text-slate-100">
-            <GiElectric className="flex-shrink-0 text-cyan-300" />
-            <span>
-              Last Event:{" "}
-              <span className="font-bold text-cyan-100">
-                {lastEventAt ? formatClock(lastEventAt) : "Waiting..."}
-              </span>
+        {/* Controls Bar - Minimal */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-600/30 bg-black/25 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <GiElectric className="h-4 w-4 text-cyan-300" />
+            <span className="text-xs font-semibold text-slate-300">
+              {lastEventAt ? formatClock(lastEventAt) : "Waiting..."}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsLive((prev) => !prev)}
-              className="rounded-lg border border-cyan-300/40 bg-cyan-950/30 px-5 py-2 text-xs font-bold uppercase tracking-wide text-cyan-100 transition-colors hover:border-cyan-300/60 hover:bg-cyan-950/50"
+              className="whitespace-nowrap rounded-md border border-cyan-500/40 bg-cyan-950/30 px-3 py-1.5 text-xs font-bold text-cyan-200 transition-colors hover:border-cyan-500/60 hover:bg-cyan-950/50"
             >
-              {isLive ? "Pause Live" : "Resume Live"}
+              {isLive ? "Pause" : "Resume"}
             </button>
             <button
               type="button"
               onClick={restoreSnapshot}
-              className="rounded-lg border border-amber-300/50 bg-amber-950/35 px-5 py-2 text-xs font-bold uppercase tracking-wide text-amber-100 transition-colors hover:border-amber-300/70 hover:bg-amber-950/50"
+              className="whitespace-nowrap rounded-md border border-amber-500/40 bg-amber-950/25 px-3 py-1.5 text-xs font-bold text-amber-200 transition-colors hover:border-amber-500/60 hover:bg-amber-950/40"
             >
-              Refresh Snapshot
+              Refresh
             </button>
           </div>
         </div>
 
+        {/* Error Banner - Compact */}
         {snapshotError ? (
-          <div className="mb-4 rounded-xl border border-red-300/60 bg-red-950/40 px-4 py-3 text-lg font-semibold text-red-100">
+          <div className="mb-3 rounded-lg border border-red-500/40 bg-red-950/25 px-3 py-2 text-sm font-semibold text-red-200">
             {snapshotError}
           </div>
         ) : null}
 
-        <div className="space-y-4">
+        {/* Feed Items - Minimal and Compact */}
+        <div className="space-y-3">
           {feed.map((item) => (
             <article
               key={item._id}
-              className={`rounded-2xl border p-5 sm:p-6 lg:p-7 ${severityClass[item.severity]} transition-all hover:shadow-lg`}
+              className={`rounded-lg border p-4 transition-all ${severityClass[item.severity]}`}
             >
-              <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div className="flex flex-wrap items-center gap-3">
+              {/* Title + Time Row */}
+              <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-md px-3 py-1.5 text-xs font-black uppercase tracking-wider ${severityBadgeClass[item.severity]}`}
+                    className={`inline-flex rounded-md px-2 py-1 text-xs font-bold tracking-wide ${severityBadgeClass[item.severity]}`}
                   >
-                    {item.severity}
+                    {item.severity.charAt(0).toUpperCase()}
                   </span>
-                  <span className="font-bold text-slate-100 text-[clamp(1rem,1.2vw,1.2rem)]">#{item.slot}</span>
-                  <span className="font-bold text-slate-200 text-[clamp(1.05rem,1.3vw,1.3rem)]">{item.teamName}</span>
+                  <span className="text-sm font-semibold text-slate-100">
+                    #{item.slot}
+                  </span>
+                  <span className="font-bold text-white text-sm">
+                    {item.teamName}
+                  </span>
                 </div>
-                <div className="whitespace-nowrap rounded-lg bg-black/20 px-3 py-1 text-sm font-semibold text-slate-300">
+                <span className="whitespace-nowrap rounded-md bg-black/30 px-2 py-1 text-xs font-semibold text-slate-300">
                   {formatClock(item.createdAt)}
-                </div>
+                </span>
               </div>
 
-              <h2 className="text-[clamp(1.35rem,2vw,2.1rem)] font-extrabold leading-tight text-white mb-2">
+              {/* Title and Message */}
+              <h2 className="mb-1 text-base font-bold text-white leading-snug break-words">
                 {item.title}
               </h2>
-              <p className="text-[clamp(1.1rem,1.5vw,1.6rem)] font-semibold leading-relaxed text-slate-50 mb-4">
+              <p className="mb-3 text-sm text-slate-100 leading-relaxed break-words">
                 {item.message}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6 mb-4">
-                <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                  <p className="text-xs font-semibold opacity-75 uppercase mb-1">Round</p>
-                  <p className="text-lg font-extrabold text-slate-50">
+              {/* Stats Grid - Compact */}
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 mb-2">
+                <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                  <p className="text-xs opacity-70 font-semibold mb-0.5">Round</p>
+                  <p className="text-sm font-bold text-slate-50">
                     {item.roundNumber ?? "-"}
                   </p>
                 </div>
-                <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                  <p className="text-xs font-semibold opacity-75 uppercase mb-1">Total Pts</p>
-                  <p className="text-lg font-extrabold text-cyan-100">
+                <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                  <p className="text-xs opacity-70 font-semibold mb-0.5">Total</p>
+                  <p className="text-sm font-bold text-cyan-100">
                     {item.totals.totalPoints}
                   </p>
                 </div>
-                <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                  <p className="text-xs font-semibold opacity-75 uppercase mb-1">Kills</p>
-                  <p className="text-lg font-extrabold text-amber-100">
+                <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                  <p className="text-xs opacity-70 font-semibold mb-0.5">Kills</p>
+                  <p className="text-sm font-bold text-amber-100">
                     {item.totals.totalKillsInRound}
                   </p>
                 </div>
-                <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                  <p className="text-xs font-semibold opacity-75 uppercase mb-1">Elims</p>
-                  <p className="text-lg font-extrabold text-red-100">
+                <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                  <p className="text-xs opacity-70 font-semibold mb-0.5">Elim</p>
+                  <p className="text-sm font-bold text-red-100">
                     {item.totals.eliminationCountInRound}
                   </p>
                 </div>
                 {item.totals.killPointsInRound > 0 && (
-                  <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                    <p className="text-xs font-semibold opacity-75 uppercase mb-1">Kill Pts</p>
-                    <p className="text-lg font-extrabold text-sky-100">
+                  <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                    <p className="text-xs opacity-70 font-semibold mb-0.5">K-Pts</p>
+                    <p className="text-sm font-bold text-sky-100">
                       {item.totals.killPointsInRound}
                     </p>
                   </div>
                 )}
                 {item.totals.positionPointsInRound > 0 && (
-                  <div className="rounded-lg bg-black/25 px-3 py-3 text-slate-100 border border-slate-500/20 hover:border-slate-500/40 transition-colors">
-                    <p className="text-xs font-semibold opacity-75 uppercase mb-1">Pos Pts</p>
-                    <p className="text-lg font-extrabold text-emerald-100">
+                  <div className="rounded-md bg-black/30 px-2 py-1.5 border border-slate-500/20">
+                    <p className="text-xs opacity-70 font-semibold mb-0.5">P-Pts</p>
+                    <p className="text-sm font-bold text-emerald-100">
                       {item.totals.positionPointsInRound}
                     </p>
                   </div>
                 )}
               </div>
 
+              {/* Changes Inline - Minimal */}
               {item.changes.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {item.changes.slice(0, 6).map((change) => (
+                <div className="flex flex-wrap gap-1">
+                  {item.changes.slice(0, 3).map((change) => (
                     <span
                       key={`${item._id}-${change.field}`}
-                      className="rounded-md border border-slate-400/40 bg-black/30 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:border-slate-400/60 transition-colors"
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-400/30 bg-black/25 px-2 py-0.5 text-xs font-semibold text-slate-200 break-words"
                     >
-                      <GiTargeting className="mr-1 inline-block text-cyan-300" />
-                      {change.field}
-                      {typeof change.delta === "number"
-                        ? ` (${change.delta > 0 ? "+" : ""}${change.delta})`
-                        : ""}
+                      <GiTargeting className="h-3 w-3 text-cyan-300 flex-shrink-0" />
+                      <span className="truncate">{change.field}</span>
                     </span>
                   ))}
                 </div>
               ) : null}
             </article>
           ))}
-        </div>
-
-        {feed.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-cyan-300/30 bg-cyan-950/20 p-8 text-center">
-            <p className="text-[clamp(1.2rem,1.8vw,1.8rem)] font-bold text-cyan-100">
-              Waiting for first commentary event...
-            </p>
-            <p className="mt-2 text-sm text-cyan-200">
-              Live updates will appear here as events happen
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-6 flex items-center gap-2 text-sm text-slate-400">
-          <GiCrossedSabres className="flex-shrink-0 text-cyan-300" />
-          <span>Use this page on tablet/desktop in landscape for maximum readability from distance.</span>
         </div>
       </div>
     </section>
