@@ -28,11 +28,25 @@ interface Team {
 export default function LeaderboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
 
+  const palette = {
+    accent: "#80171C",
+    panelFrom: "#0b1220",
+    panelTo: "#111827",
+    panelAlt: "#121a2b",
+    border: "#80171cd0",
+    borderSoft: "#80171c66",
+    textPrimary: "#f8fafc",
+    textDim: "#94a3b8",
+    highlight: "#f59e0b",
+    points: "#bae6fd",
+    kills: "#fde68a",
+  };
+
   useEffect(() => {
     const fetchTeams = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/team`
+          `${process.env.NEXT_PUBLIC_API_URL}/team`,
         );
         const data = response.data;
         if (data.success) {
@@ -40,12 +54,12 @@ export default function LeaderboardPage() {
             const aTotal = a.rounds.reduce(
               (acc, round) =>
                 acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0
+              0,
             );
             const bTotal = b.rounds.reduce(
               (acc, round) =>
                 acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0
+              0,
             );
             return bTotal - aTotal;
           });
@@ -69,7 +83,7 @@ export default function LeaderboardPage() {
           killPoints: acc.killPoints + (round.killPoints || 0),
           chickenCount: acc.chickenCount + (round.position === 1 ? 1 : 0),
         }),
-        { placePoints: 0, killPoints: 0, chickenCount: 0 }
+        { placePoints: 0, killPoints: 0, chickenCount: 0 },
       )
     : null;
 
@@ -83,125 +97,176 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="min-h-screen w-full relative">
-      <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-        <div className="absolute inset-0 flex flex-col">
-          {/* Header Section */}
-          <div className="flex justify-between items-center p-3 relative z-10">
-            <div className="flex flex-col space-y-3">
-              <h1 className="text-[#ff6b00] text-2xl font-black uppercase">
-                Match Rankings
+    <main className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
+      <div
+        className="relative min-h-[calc(100vh-5.75rem)] w-full overflow-hidden border"
+        style={{
+          borderColor: palette.border,
+          background: `linear-gradient(135deg, ${palette.panelFrom} 0%, ${palette.panelTo} 50%, ${palette.panelAlt} 100%)`,
+          boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 18px 34px rgba(0,0,0,0.45)`,
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.06) 1px, transparent 1px, transparent 7px)",
+          }}
+        />
+
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 12% 4%, rgba(56,189,248,0.12) 0%, transparent 36%), radial-gradient(circle at 88% 0%, rgba(128,23,28,0.26) 0%, transparent 44%)",
+          }}
+        />
+
+        <div className="relative z-10 px-6 py-5">
+          <div
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-2.5"
+            style={{
+              borderColor: palette.border,
+              background:
+                "linear-gradient(90deg, rgba(10,15,27,0.92) 0%, rgba(17,24,39,0.88) 100%)",
+              boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 10px 28px rgba(0,0,0,0.45)`,
+            }}
+          >
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
+                PUBG Tournament Leaderboard
+              </p>
+              <h1 className="text-3xl font-black uppercase tracking-wide text-slate-50">
+                Overall Rankings
               </h1>
-              <div className="relative bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] p-0.5 rounded-lg group">
-                <div className="bg-[#243042] flex items-center space-x-8 w-32 rounded-md px-2 py-[0.15rem] font-bold shadow-lg">
-                  <p className="text-[#ffd700] text-lg text-center px-6">
-                    Match
-                  </p>
-                  <p className="text-lg text-[#fff] pl-8 font-bold">
-                    {firstTeam?.currentRound}/{Object.keys(map).length}
-                  </p>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
-              </div>
             </div>
-            <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <div className="flex flex-col space-y-3">
-                <h1 className="text-[#ff6b00] text-2xl font-black uppercase">
+
+            <div className="flex items-center gap-3">
+              <div
+                className="rounded-xl border px-3 py-1 text-right"
+                style={{
+                  borderColor: palette.borderSoft,
+                  backgroundColor: "#00000052",
+                }}
+              >
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                  Current Match
+                </p>
+                <p className="text-xl font-black text-slate-100">
+                  {firstTeam?.currentRound ?? "-"}/{Object.keys(map).length}
+                </p>
+              </div>
+
+              <div
+                className="rounded-xl border px-3 py-1 text-right"
+                style={{
+                  borderColor: palette.borderSoft,
+                  backgroundColor: "#00000052",
+                }}
+              >
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
                   Current Map
-                </h1>
-                <div className="relative bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] p-0.5 rounded-lg group">
-                  <div className="bg-[#243042] flex items-center justify-center space-x-8 rounded-md px-2 py-[0.15rem] font-bold shadow-lg">
-                    <p className="text-[#ffd700] text-lg text-center">
-                      {(firstTeam &&
-                        map[firstTeam.currentRound as keyof typeof map]) ||
-                        "Unknown"}
-                    </p>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff] to-[#ff6b00] opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-lg" />
-                </div>
+                </p>
+                <p className="text-xl font-black text-slate-100">
+                  {(firstTeam &&
+                    map[firstTeam.currentRound as keyof typeof map]) ||
+                    "Unknown"}
+                </p>
               </div>
-            </div>
-            <div className="text-[#ff6b00] text-2xl font-black text-right">
-              <p>HDC Sports Meet</p>
-              <p>By StreamNepal</p>
             </div>
           </div>
-          {/* Top 1 Team Highlight */}
-          <div className="flex-1 p-6 relative z-10">
-            {firstTeam && totalStats && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="relative w-full h-full rounded-lg bg-[#243042] border-2 border-[#ffd700]/20 shadow-2xl overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-b from-[#00a8ff20] to-[#ff6b0020] opacity-30 rounded-lg" />
-                <div className="relative z-20 p-6">
-                  <div className="flex items-center space-x-6">
-                    <div className="relative w-24 h-24 border-2 border-[#ffd700] rounded-full glow-gold overflow-hidden bg-[#1a2234]/80">
-                      <Image
-                        src={firstTeam.logo || "/placeholder.svg"}
-                        alt={firstTeam.name}
-                        fill
-                        className="object-contain p-2 rounded-full"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-4xl font-extrabold text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text uppercase tracking-wider animate-text-gradient">
-                          {firstTeam.name}
-                        </h2>
-                        {totalStats.chickenCount > 0 && (
-                          <div className="flex items-center gap-1">
-                            <GiChickenOven className="h-6 w-6 text-[#ffd700]" />
-                            {totalStats.chickenCount > 1 && (
-                              <span className="text-[#ffd700] font-bold">
-                                x{totalStats.chickenCount}
-                              </span>
-                            )}
-                          </div>
-                        )}
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+            <div className="xl:col-span-3">
+              {firstTeam && totalStats ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: "easeOut" }}
+                  className="relative overflow-hidden rounded-2xl border"
+                  style={{
+                    borderColor: palette.border,
+                    background: `linear-gradient(160deg, rgba(15,23,42,0.98) 0%, rgba(128,23,28,0.22) 45%, rgba(13,19,34,0.98) 100%)`,
+                    boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 14px 34px rgba(0,0,0,0.56)`,
+                  }}
+                >
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 20% 0%, rgba(245,158,11,0.16) 0%, transparent 42%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 36%)",
+                    }}
+                  />
+
+                  <div className="relative z-10 flex flex-col p-5">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">
+                      Top Team
+                    </p>
+
+                    <div className="mt-3 flex items-center gap-3">
+                      <div
+                        className="relative h-24 w-24 overflow-hidden rounded-xl border"
+                        style={{
+                          borderColor: "#f7c948",
+                          backgroundColor: "#0f172acc",
+                        }}
+                      >
+                        <Image
+                          src={firstTeam.logo || "/placeholder.svg"}
+                          alt={firstTeam.name}
+                          fill
+                          className="object-contain p-2"
+                        />
                       </div>
-                      <p className="text-lg text-gray-300 mt-2">
-                        Total Points:{" "}
-                        <span className="text-[#00a8ff] font-bold glow-text">
-                          {totalStats.placePoints + totalStats.killPoints}
-                        </span>
-                      </p>
-                      <p className="text-lg font-bold text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text flex gap-4 items-center mt-2 capitalize">
-                        The King of the Arena! 👑🔥
-                      </p>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h2 className="truncate text-3xl font-black uppercase tracking-wide text-slate-50">
+                            {firstTeam.name}
+                          </h2>
+                          {totalStats.chickenCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-sm font-black text-amber-200">
+                              <GiChickenOven className="h-4.5 w-4.5" />
+                              {`x${totalStats.chickenCount}`}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-6 relative bg-[#1a2234] rounded-lg p-4 border border-[#ffd700]/20 shadow-lg">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#00a8ff20] to-[#ff6b0020] rounded-lg" />
-                    <div className="relative z-10 flex justify-between items-center">
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
                       {[
-                        {
-                          label: "Rank",
-                          value: "#1",
-                          color: "text-[#ffd700]",
-                        },
+                        { label: "Rank", value: "#1", color: "#f7c948" },
                         {
                           label: "Place Points",
                           value: totalStats.placePoints,
-                          color: "text-[#00a8ff]",
+                          color: palette.points,
                         },
                         {
                           label: "Elims Points",
                           value: totalStats.killPoints,
-                          color: "text-[#ff6b00]",
+                          color: palette.kills,
                         },
                         {
                           label: "Total Points",
                           value: totalStats.placePoints + totalStats.killPoints,
-                          color: "text-[#ffd700]",
+                          color: palette.highlight,
                         },
-                      ].map((item, index) => (
-                        <div key={index} className="text-center">
-                          <p className="text-sm text-gray-400">{item.label}</p>
+                      ].map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-xl border px-3 py-2"
+                          style={{
+                            borderColor: palette.borderSoft,
+                            backgroundColor: "#0000004d",
+                          }}
+                        >
+                          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                            {item.label}
+                          </p>
                           <p
-                            className={`text-2xl font-bold ${item.color} glow-text`}
+                            className="mt-1 text-2xl font-black"
+                            style={{ color: item.color }}
                           >
                             {item.value}
                           </p>
@@ -209,66 +274,41 @@ export default function LeaderboardPage() {
                       ))}
                     </div>
                   </div>
+                </motion.div>
+              ) : (
+                <div
+                  className="flex min-h-[300px] items-center justify-center rounded-2xl border text-base font-bold uppercase tracking-[0.16em]"
+                  style={{
+                    borderColor: palette.borderSoft,
+                    color: palette.textDim,
+                  }}
+                >
+                  Loading team standings...
                 </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 h-full aspect-[3/4] z-0">
-                  <div className="relative w-full h-full">
-                    {/* Base gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#24304285] to-transparent z-10" />
-
-                    {/* Tactical energy glow effect */}
-                    <div className="absolute -inset-2 energy-glow rounded-lg z-20" />
-
-                    {/* Dynamic highlight effects */}
-                    <div className="absolute inset-0 character-highlight">
-                      <div className="absolute inset-0 bg-gradient-to-tr from-[#00a8ff40] via-[#ffd70040] to-[#ff6b0040] animate-tactical-pulse" />
-                    </div>
-
-                    {/* Character image with professional animation */}
-                    <div className="relative h-full w-full animate-float-pro">
-                      <Image
-                        src="/character.png"
-                        alt="PUBG Character"
-                        fill
-                        className="object-contain object-right mix-blend-plus-darker h-[35vh]"
-                        priority
-                      />
-
-                      {/* Intensity overlays */}
-                      <div className="absolute inset-0">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-[#00a8ff20] via-transparent to-[#ff6b0020] mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#ffd70010] to-[#243042] opacity-70" />
-                      </div>
-
-                      {/* Strategic highlight lines */}
-                      <div className="absolute inset-0 overflow-hidden">
-                        <div className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#00a8ff50] to-transparent top-1/4 -translate-y-1/2 animate-tactical-pulse" />
-                        <div
-                          className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#ffd70050] to-transparent top-2/4 -translate-y-1/2 animate-tactical-pulse"
-                          style={{ animationDelay: "-1.5s" }}
-                        />
-                        <div
-                          className="absolute h-[2px] w-full bg-gradient-to-r from-transparent via-[#ff6b0050] to-transparent top-3/4 -translate-y-1/2 animate-tactical-pulse"
-                          style={{ animationDelay: "-3s" }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Ambient effects */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#243042] opacity-50" />
-
-                    {/* Edge highlight */}
-                    <div className="absolute -right-2 inset-y-0 w-1 bg-gradient-to-b from-transparent via-[#ffd70030] to-transparent animate-tactical-pulse" />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </div>
-          {/* Bottom Section: Leaderboard */}
-          <div className="p-6 relative z-10 space-y-2">
-            <div className="text-xl text-center font-black text-transparent bg-gradient-to-r from-[#ffd700] to-[#ff6b00] bg-clip-text -mt-[5px]">
-              Overall Ranking
+              )}
             </div>
-            <SplitLeaderboard teams={teams} />
+
+            <div className="xl:col-span-9">
+              <div
+                className="flex h-full flex-col rounded-2xl border p-4"
+                style={{
+                  borderColor: palette.border,
+                  backgroundColor: "#0a101bcc",
+                }}
+              >
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <p className="text-base font-black uppercase tracking-[0.2em] text-slate-300">
+                    Broadcast Table
+                  </p>
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
+                    Teams {teams.length}
+                  </p>
+                </div>
+                <div>
+                  <SplitLeaderboard teams={teams} themeColor={palette.accent} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
