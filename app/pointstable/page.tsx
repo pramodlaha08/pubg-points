@@ -3,7 +3,7 @@ import GamingEliminationNotification from "@/components/GamingEliminationNotific
 
 export default function Team() {
   return (
-    <main className="fixed inset-0 w-full h-screen bg-green-500 overflow-hidden">
+    <main className="broadcast-page fixed inset-0 w-full h-screen bg-green-500 overflow-hidden">
       {/* Gaming Elimination Notification System */}
       <GamingEliminationNotification />
 

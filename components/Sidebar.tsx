@@ -14,7 +14,10 @@ interface SidebarGroup {
 
 export default function Sidebar({ links }: { readonly links: SidebarGroup[] }) {
   return (
-    <div className="bg-gray-900 rounded-xl p-6 shadow-2xl border-2 border-red-500/30 h-fit sticky top-8 w-full md:w-auto">
+    <div
+      data-app-sidebar="true"
+      className="bg-gray-900 rounded-xl p-6 shadow-2xl border-2 border-red-500/30 h-fit sticky top-8 w-full md:w-auto"
+    >
       <nav className="space-y-4">
         <div className="hidden md:flex justify-center space-x-8">
           {links.map((group) => (

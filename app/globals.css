@@ -19,7 +19,22 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   @apply bg-gray-900;
+}
 
+/* Broadcast pages (leaderboard/pointstable) run edge-to-edge without app chrome. */
+body:has(.broadcast-page) header {
+  display: none;
+}
+
+body:has(.broadcast-page) > main {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body:has(.broadcast-page) [data-app-sidebar="true"] {
+  display: none !important;
 }
 
 .disable-animations * {
@@ -28,28 +43,45 @@ body {
   transform: none !important;
 }
 
-
-::selection{
-  color: #01539C;
-  background-color: #F36F21;
+::selection {
+  color: #01539c;
+  background-color: #f36f21;
 }
 
 @keyframes border-glow {
-  0% { box-shadow: 0 0 20px rgba(231, 111, 0, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(231, 111, 0, 0.6); }
-  100% { box-shadow: 0 0 20px rgba(231, 111, 0, 0.3); }
+  0% {
+    box-shadow: 0 0 20px rgba(231, 111, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(231, 111, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(231, 111, 0, 0.3);
+  }
 }
 
 @keyframes border-rotate {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 @keyframes text-gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .glow-gold {
@@ -172,6 +204,11 @@ body {
 } */
 
 .character-highlight {
-  mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20%,
+    black 80%,
+    transparent
+  );
 }
-

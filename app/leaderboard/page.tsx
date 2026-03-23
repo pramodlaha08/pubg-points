@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
+    <main className="broadcast-page relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
       <div
         className="relative min-h-[calc(100vh-5.75rem)] w-full overflow-hidden border"
         style={{
