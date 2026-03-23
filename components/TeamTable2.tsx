@@ -95,8 +95,8 @@ export default function AnimatedTeamTable({
     headerTextDim: "#94a3b8",
     rowFrom: "#0f172aeb",
     rowTo: useTheme ? `${themeColor}80` : "#80171c80",
-    rowEliminatedFrom: useTheme ? `${themeColor}5C` : "#8b1d245c",
-    rowEliminatedTo: "#2c0f1770",
+    rowEliminatedFrom: useTheme ? `${themeColor}2E` : "#8b1d242e",
+    rowEliminatedTo: "#1c0b1026",
     border: useTheme ? `${themeColor}D0` : "#80171cd0",
     borderSoft: useTheme ? `${themeColor}66` : "#80171c66",
     aliveBar: "#38bdf8",
@@ -296,14 +296,17 @@ export default function AnimatedTeamTable({
                       delay: Math.min(index * 0.015, 0.12),
                     }}
                     className={`relative flex h-10 text-sm shadow-md ${
-                      isEliminated ? "text-gray-200" : "text-white"
+                      isEliminated ? "text-gray-300" : "text-white"
                     }`}
                     style={{
                       borderBottom: `1px solid ${palette.borderSoft}`,
                       background: isEliminated
                         ? `linear-gradient(90deg, ${palette.rowEliminatedFrom} 0%, ${palette.rowEliminatedTo} 100%)`
                         : `linear-gradient(90deg, ${palette.rowFrom} 0%, ${palette.rowTo} 100%)`,
-                      filter: isEliminated ? "saturate(0.72)" : undefined,
+                      filter: isEliminated
+                        ? "grayscale(0.62) saturate(0.35) brightness(0.8)"
+                        : "saturate(1.08)",
+                      opacity: isEliminated ? 0.64 : 1,
                       boxShadow: topRankStyle
                         ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`
                         : undefined,
@@ -357,10 +360,36 @@ export default function AnimatedTeamTable({
                       />
                       <span
                         className={`truncate font-extrabold tracking-[0.02em] ${
-                          isEliminated ? "text-gray-100/90" : "text-gray-100"
+                          isEliminated
+                            ? "text-gray-300/80 line-through decoration-gray-300/60 decoration-[1.5px]"
+                            : "text-gray-100"
                         }`}
                       >
                         {team.name.toUpperCase()}
+                      </span>
+                      <span className="ml-1 inline-flex h-2 w-2 items-center justify-center">
+                        {isEliminated ? (
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-300/55" />
+                        ) : (
+                          <motion.span
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: palette.aliveBar }}
+                            animate={{
+                              scale: [1, 1.6, 1],
+                              opacity: [0.7, 1, 0.7],
+                              boxShadow: [
+                                `0 0 0 0 ${palette.hudGlow}`,
+                                `0 0 10px 3px ${palette.hudGlow}`,
+                                `0 0 0 0 ${palette.hudGlow}`,
+                              ],
+                            }}
+                            transition={{
+                              duration: 1.2,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            }}
+                          />
+                        )}
                       </span>
                     </div>
 
@@ -400,7 +429,7 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-gray-100" : "text-cyan-100"
+                        isEliminated ? "text-gray-300/80" : "text-cyan-100"
                       }`}
                       style={{
                         backgroundColor: palette.statBg,
@@ -412,7 +441,7 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-gray-100" : "text-amber-100"
+                        isEliminated ? "text-gray-300/80" : "text-amber-100"
                       }`}
                       style={{
                         backgroundColor: palette.statBg,
@@ -430,7 +459,7 @@ export default function AnimatedTeamTable({
                           : topRankStyle
                             ? topRankStyle.edge
                             : palette.accent,
-                        opacity: isEliminated ? 0.7 : 0.9,
+                        opacity: isEliminated ? 0.45 : 0.95,
                       }}
                     />
 
