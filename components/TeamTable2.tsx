@@ -95,8 +95,8 @@ export default function AnimatedTeamTable({
     headerTextDim: "#94a3b8",
     rowFrom: "#0f172aeb",
     rowTo: useTheme ? `${themeColor}80` : "#80171c80",
-    rowEliminatedFrom: useTheme ? `${themeColor}A5` : "#8b1d24a5",
-    rowEliminatedTo: "#2c0f17d9",
+    rowEliminatedFrom: useTheme ? `${themeColor}5C` : "#8b1d245c",
+    rowEliminatedTo: "#2c0f1770",
     border: useTheme ? `${themeColor}D0` : "#80171cd0",
     borderSoft: useTheme ? `${themeColor}66` : "#80171c66",
     aliveBar: "#38bdf8",
@@ -303,6 +303,7 @@ export default function AnimatedTeamTable({
                       background: isEliminated
                         ? `linear-gradient(90deg, ${palette.rowEliminatedFrom} 0%, ${palette.rowEliminatedTo} 100%)`
                         : `linear-gradient(90deg, ${palette.rowFrom} 0%, ${palette.rowTo} 100%)`,
+                      filter: isEliminated ? "saturate(0.72)" : undefined,
                       boxShadow: topRankStyle
                         ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`
                         : undefined,

@@ -218,7 +218,7 @@ const TeamTable = ({
                       className="truncate text-[14px] font-extrabold tracking-[0.01em] text-slate-100"
                       title={team.name}
                     >
-                      {team.name}
+                      {team.name.toUpperCase()}
                     </p>
                   </div>
 
@@ -276,13 +276,6 @@ const TeamTable = ({
             );
           })}
         </AnimatePresence>
-      </div>
-
-      <div
-        className="relative border-t px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em]"
-        style={{ borderColor: palette.borderSoft, color: palette.textDim }}
-      >
-        Positions {startIndex + 1}-{Math.min(endIndex, teams.length)}
       </div>
     </div>
   );

@@ -89,7 +89,7 @@ export default function LeaderboardPage() {
 
   const map = {
     1: "Erangel",
-    2: "Miramar",
+    2: "Rondo",
     3: "Sanhok",
     4: "Erangel",
     5: "Miramar",
@@ -222,7 +222,7 @@ export default function LeaderboardPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <h2 className="truncate text-3xl font-black uppercase tracking-wide text-slate-50">
-                            {firstTeam.name}
+                            {firstTeam.name.toUpperCase()}
                           </h2>
                           {totalStats.chickenCount > 0 ? (
                             <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-sm font-black text-amber-200">
