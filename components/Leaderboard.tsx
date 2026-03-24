@@ -303,7 +303,7 @@ export default function SplitLeaderboard({
   const half = Math.ceil(sortedTeams.length / 2);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-4 2xl:grid-cols-2">
+    <div className="grid w-full grid-cols-2 content-start items-start gap-4">
       <TeamTable
         teams={sortedTeams}
         startIndex={0}

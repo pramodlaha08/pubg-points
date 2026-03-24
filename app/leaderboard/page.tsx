@@ -97,9 +97,9 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="broadcast-page relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
+    <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden">
       <div
-        className="relative min-h-[calc(100vh-5.75rem)] w-full overflow-hidden border"
+        className="relative h-full w-full overflow-hidden border"
         style={{
           borderColor: palette.border,
           background: `linear-gradient(135deg, ${palette.panelFrom} 0%, ${palette.panelTo} 50%, ${palette.panelAlt} 100%)`,
@@ -122,9 +122,9 @@ export default function LeaderboardPage() {
           }}
         />
 
-        <div className="relative z-10 px-6 py-5">
+        <div className="relative z-10 flex h-full flex-col gap-4 px-6 py-5">
           <div
-            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-2.5"
+            className="flex items-center justify-between gap-3 rounded-2xl border px-5 py-3"
             style={{
               borderColor: palette.border,
               background:
@@ -176,138 +176,131 @@ export default function LeaderboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <div className="xl:col-span-3">
-              {firstTeam && totalStats ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                  className="relative overflow-hidden rounded-2xl border"
-                  style={{
-                    borderColor: palette.border,
-                    background: `linear-gradient(160deg, rgba(15,23,42,0.98) 0%, rgba(128,23,28,0.22) 45%, rgba(13,19,34,0.98) 100%)`,
-                    boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 14px 34px rgba(0,0,0,0.56)`,
-                  }}
-                >
-                  <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      background:
-                        "radial-gradient(circle at 20% 0%, rgba(245,158,11,0.16) 0%, transparent 42%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 36%)",
-                    }}
-                  />
+          {firstTeam && totalStats ? (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="relative overflow-hidden rounded-2xl border"
+              style={{
+                borderColor: palette.border,
+                background: `linear-gradient(160deg, rgba(15,23,42,0.98) 0%, rgba(128,23,28,0.22) 45%, rgba(13,19,34,0.98) 100%)`,
+                boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 14px 34px rgba(0,0,0,0.56)`,
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 20% 0%, rgba(245,158,11,0.16) 0%, transparent 42%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 36%)",
+                }}
+              />
 
-                  <div className="relative z-10 flex flex-col p-5">
+              <div className="relative z-10 flex items-center justify-between gap-6 p-5">
+                <div className="flex min-w-0 items-center gap-4">
+                  <div
+                    className="relative h-24 w-24 overflow-hidden rounded-xl border"
+                    style={{
+                      borderColor: "#f7c948",
+                      backgroundColor: "#0f172acc",
+                    }}
+                  >
+                    <Image
+                      src={firstTeam.logo || "/placeholder.svg"}
+                      alt={firstTeam.name}
+                      fill
+                      className="object-contain p-2"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
                     <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">
                       Top Team
                     </p>
-
-                    <div className="mt-3 flex items-center gap-3">
-                      <div
-                        className="relative h-24 w-24 overflow-hidden rounded-xl border"
-                        style={{
-                          borderColor: "#f7c948",
-                          backgroundColor: "#0f172acc",
-                        }}
-                      >
-                        <Image
-                          src={firstTeam.logo || "/placeholder.svg"}
-                          alt={firstTeam.name}
-                          fill
-                          className="object-contain p-2"
-                        />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="truncate text-3xl font-black uppercase tracking-wide text-slate-50">
-                            {firstTeam.name.toUpperCase()}
-                          </h2>
-                          {totalStats.chickenCount > 0 ? (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-sm font-black text-amber-200">
-                              <GiChickenOven className="h-4.5 w-4.5" />
-                              {`x${totalStats.chickenCount}`}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      {[
-                        { label: "Rank", value: "#1", color: "#f7c948" },
-                        {
-                          label: "Place Points",
-                          value: totalStats.placePoints,
-                          color: palette.points,
-                        },
-                        {
-                          label: "Elims Points",
-                          value: totalStats.killPoints,
-                          color: palette.kills,
-                        },
-                        {
-                          label: "Total Points",
-                          value: totalStats.placePoints + totalStats.killPoints,
-                          color: palette.highlight,
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="rounded-xl border px-3 py-2"
-                          style={{
-                            borderColor: palette.borderSoft,
-                            backgroundColor: "#0000004d",
-                          }}
-                        >
-                          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                            {item.label}
-                          </p>
-                          <p
-                            className="mt-1 text-2xl font-black"
-                            style={{ color: item.color }}
-                          >
-                            {item.value}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="mt-1 flex items-center gap-2">
+                      <h2 className="truncate text-4xl font-black uppercase tracking-wide text-slate-50">
+                        {firstTeam.name.toUpperCase()}
+                      </h2>
+                      {totalStats.chickenCount > 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-sm font-black text-amber-200">
+                          <GiChickenOven className="h-4.5 w-4.5" />
+                          {`x${totalStats.chickenCount}`}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
-                </motion.div>
-              ) : (
-                <div
-                  className="flex min-h-[300px] items-center justify-center rounded-2xl border text-base font-bold uppercase tracking-[0.16em]"
-                  style={{
-                    borderColor: palette.borderSoft,
-                    color: palette.textDim,
-                  }}
-                >
-                  Loading team standings...
                 </div>
-              )}
-            </div>
 
-            <div className="xl:col-span-9">
-              <div
-                className="flex h-full flex-col rounded-2xl border p-4"
-                style={{
-                  borderColor: palette.border,
-                  backgroundColor: "#0a101bcc",
-                }}
-              >
-                <div className="mb-3 flex items-center justify-between px-1">
-                  <p className="text-base font-black uppercase tracking-[0.2em] text-slate-300">
-                    Broadcast Table
-                  </p>
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
-                    Teams {teams.length}
-                  </p>
-                </div>
-                <div>
-                  <SplitLeaderboard teams={teams} themeColor={palette.accent} />
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { label: "Rank", value: "#1", color: "#f7c948" },
+                    {
+                      label: "Place Points",
+                      value: totalStats.placePoints,
+                      color: palette.points,
+                    },
+                    {
+                      label: "Elims Points",
+                      value: totalStats.killPoints,
+                      color: palette.kills,
+                    },
+                    {
+                      label: "Total Points",
+                      value: totalStats.placePoints + totalStats.killPoints,
+                      color: palette.highlight,
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-xl border px-3 py-2"
+                      style={{
+                        borderColor: palette.borderSoft,
+                        backgroundColor: "#0000004d",
+                      }}
+                    >
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        {item.label}
+                      </p>
+                      <p
+                        className="mt-1 text-2xl font-black"
+                        style={{ color: item.color }}
+                      >
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </motion.div>
+          ) : (
+            <div
+              className="flex min-h-[170px] items-center justify-center rounded-2xl border text-base font-bold uppercase tracking-[0.16em]"
+              style={{
+                borderColor: palette.borderSoft,
+                color: palette.textDim,
+              }}
+            >
+              Loading team standings...
+            </div>
+          )}
+
+          <div
+            className="flex flex-col rounded-2xl border p-4"
+            style={{
+              borderColor: palette.border,
+              backgroundColor: "#0a101bcc",
+            }}
+          >
+            <div className="mb-3 flex items-center justify-between px-1">
+              <p className="text-base font-black uppercase tracking-[0.2em] text-slate-300">
+                Broadcast Table
+              </p>
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
+                Teams {teams.length}
+              </p>
+            </div>
+            <div className="w-full">
+              <SplitLeaderboard teams={teams} themeColor={palette.accent} />
             </div>
           </div>
         </div>
