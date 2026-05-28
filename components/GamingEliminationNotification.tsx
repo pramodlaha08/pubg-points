@@ -175,8 +175,16 @@ export default function GamingEliminationNotification() {
           key={currentNotification.id}
           initial={{ opacity: 0, x: "-100%" }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: "100%", transition: { duration: 0.3 } }}
-          className="fixed top-1/3 left-1/2 -translate-x-1/2 w-full max-w-md z-50"
+          exit={{ opacity: 0, x: "-100%", transition: { duration: 0.3 } }}
+          /*
+           * To change the position of the notification, update the classes below.
+           * For top-left, use: "top-4 left-4"
+           * For top-right, use: "top-4 right-4"
+           * For bottom-left, use: "bottom-4 left-4"
+           * For bottom-right, use: "bottom-4 right-4"
+           * You can also use other values like "top-8", "left-8", etc. to adjust the spacing.
+           */
+          className="fixed top-4 left-4 w-full max-w-md z-50"
         >
           <div className="relative bg-black bg-opacity-80 border-2 border-yellow-400 p-3 rounded-lg shadow-lg overflow-hidden">
             <div
