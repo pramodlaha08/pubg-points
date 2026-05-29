@@ -86,26 +86,38 @@ export default function AnimatedTeamTable({
 
   const useTheme = Boolean(themeColor);
   const palette = {
-    accent: useTheme ? themeColor! : "#80171C",
-    panelFrom: "#0b1220",
-    panelTo: "#111827",
-    panelEdge: "#1f2937",
-    headerFrom: "#141c2e",
-    headerTo: useTheme ? `${themeColor}C8` : "#8b1d24c8",
-    headerTextDim: "#94a3b8",
-    rowFrom: "#0f172aeb",
-    rowTo: useTheme ? `${themeColor}80` : "#80171c80",
-    rowEliminatedFrom: useTheme ? `${themeColor}2E` : "#8b1d242e",
-    rowEliminatedTo: "#1c0b1026",
-    border: useTheme ? `${themeColor}D0` : "#80171cd0",
-    borderSoft: useTheme ? `${themeColor}66` : "#80171c66",
-    aliveBar: "#38bdf8",
-    deadBar: "#ef4444",
-    liveChip: "#f59e0b",
-    hudGlow: "rgba(56,189,248,0.32)",
-    textPrimary: "#f8fafc",
-    textDim: "#cbd5e1",
-    statBg: "#0000004d",
+    // Light esports blue theme
+    accent: useTheme ? themeColor! : "#4D78D6",
+    panelFrom: "#F5F8FF",
+    panelTo: "#EAF2FF",
+    panelEdge: "#D9E6FF",
+    // Header gradient uses the provided header colors for an esports look
+    headerFrom: "#4D78D6",
+    headerTo: "#5A6EFF",
+    headerTextDim: "#EFF6FF",
+    // Row backgrounds (subtle light blues / whites)
+    rowFrom: "#FFFFFF",
+    rowTo: "#F4F9FF",
+    rowEliminatedFrom: "#FBFBFD",
+    rowEliminatedTo: "#F1F5FF",
+    // Borders and dividers
+    border: "#3A3E5A",
+    borderSoft: "#E6EEFF",
+    // Column-specific gradients (stronger blue for visible columns)
+    rankFrom: "#4D78D6",
+    rankTo: "#5A6EFF",
+    teamFrom: "#5A6EFF",
+    teamTo: "#DDEEFF",
+    statsFrom: "#FFFFFF",
+    statsTo: "#F8FBFF",
+    // Stats
+    aliveBar: "#60A5FA",
+    deadBar: "#EF4444",
+    liveChip: "#60A5FA",
+    hudGlow: "rgba(77,120,214,0.28)",
+    textPrimary: "#0F172A",
+    textDim: "#334155",
+    statBg: "#FFFFFFAA",
   };
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -224,7 +236,7 @@ export default function AnimatedTeamTable({
             }}
           />
 
-          <div
+          {/* <div
             className="relative flex items-center justify-between border-b px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
             style={{
               borderColor: palette.borderSoft,
@@ -244,7 +256,7 @@ export default function AnimatedTeamTable({
               <span>Live</span>
             </div>
             <div className="text-slate-300">Teams {teams.length}</div>
-          </div>
+          </div> */}
 
           <div
             className="relative flex h-9 text-xs font-bold shadow-lg"
@@ -254,10 +266,23 @@ export default function AnimatedTeamTable({
               borderBottom: `1px solid ${palette.border}`,
             }}
           >
-            <div className="w-9 flex items-center justify-center pl-2 tracking-wide">
+            <div
+              className="w-9 flex items-center justify-center pl-2 tracking-wide font-semibold"
+              style={{
+                background: `linear-gradient(90deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
+                borderRight: `1px solid ${palette.border}`,
+                color: "#FFFFFF",
+              }}
+            >
               RANK
             </div>
-            <div className="flex-1 flex items-center justify-start pl-3 tracking-wide">
+            <div
+              className="flex-1 flex items-center justify-start pl-3 tracking-wide font-semibold"
+              style={{
+                background: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
+                color: "#FFFFFF",
+              }}
+            >
               TEAM
             </div>
             <div className="w-14 flex items-center justify-center tracking-wide">
@@ -296,13 +321,14 @@ export default function AnimatedTeamTable({
                       delay: Math.min(index * 0.015, 0.12),
                     }}
                     className={`relative flex h-9 text-xs shadow-md ${
-                      isEliminated ? "text-gray-300" : "text-white"
+                      isEliminated ? "text-gray-400" : "text-slate-900"
                     }`}
                     style={{
                       borderBottom: `1px solid ${palette.borderSoft}`,
+                      // make row background transparent so column gradients show through
                       background: isEliminated
                         ? `linear-gradient(90deg, ${palette.rowEliminatedFrom} 0%, ${palette.rowEliminatedTo} 100%)`
-                        : `linear-gradient(90deg, ${palette.rowFrom} 0%, ${palette.rowTo} 100%)`,
+                        : "transparent",
                       filter: isEliminated
                         ? "grayscale(0.62) saturate(0.35) brightness(0.8)"
                         : "saturate(1.08)",
@@ -312,7 +338,14 @@ export default function AnimatedTeamTable({
                         : undefined,
                     }}
                   >
-                    <div className="w-9 relative flex items-center justify-center font-bold text-base">
+                    <div
+                      className="w-9 relative flex items-center justify-center font-bold text-base"
+                      style={{
+                        background: `linear-gradient(180deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
+                        borderRight: `1px solid ${palette.border}`,
+                        minHeight: "100%",
+                      }}
+                    >
                       {topRankStyle ? (
                         <span
                           className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[9px] font-black"
@@ -350,7 +383,14 @@ export default function AnimatedTeamTable({
                       ) : null}
                     </div>
 
-                    <div className="flex-1 flex min-w-0 items-center space-x-2 pl-2">
+                    <div
+                      className="flex-1 flex min-w-0 items-center space-x-2 pl-2"
+                      style={{
+                        background: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
+                        paddingLeft: 8,
+                        minHeight: "100%",
+                      }}
+                    >
                       <Image
                         src={team.logo || "/placeholder.svg"}
                         alt={team.name}
@@ -361,8 +401,8 @@ export default function AnimatedTeamTable({
                       <span
                         className={`truncate font-extrabold tracking-[0.02em] ${
                           isEliminated
-                            ? "text-gray-300/80 line-through decoration-gray-300/60 decoration-[1.5px]"
-                            : "text-gray-100"
+                            ? "text-gray-400/80 line-through decoration-gray-300/60 decoration-[1.5px]"
+                            : "text-white"
                         }`}
                       >
                         {team.name.toUpperCase()}
@@ -396,7 +436,10 @@ export default function AnimatedTeamTable({
                     <div className="w-14 flex items-center justify-center">
                       <div
                         className="flex gap-1 rounded-md px-1 py-[2px]"
-                        style={{ backgroundColor: palette.statBg }}
+                        style={{
+                          background: `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
+                          border: `1px solid ${palette.borderSoft}`,
+                        }}
                       >
                         {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
                           <div
@@ -429,10 +472,10 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-gray-300/80" : "text-cyan-100"
+                        isEliminated ? "text-gray-400/80" : "text-sky-700"
                       }`}
                       style={{
-                        backgroundColor: palette.statBg,
+                        background: `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
                         borderLeft: `1px solid ${palette.borderSoft}`,
                       }}
                     >
@@ -441,10 +484,10 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-gray-300/80" : "text-amber-100"
+                        isEliminated ? "text-gray-400/80" : "text-amber-600"
                       }`}
                       style={{
-                        backgroundColor: palette.statBg,
+                        background: `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
                         borderLeft: `1px solid ${palette.borderSoft}`,
                       }}
                     >
