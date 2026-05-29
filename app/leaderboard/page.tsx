@@ -114,11 +114,11 @@ export default function LeaderboardPage() {
         />
 
         <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(circle at 12% 4%, rgba(56,189,248,0.08) 0%, transparent 36%), radial-gradient(circle at 88% 0%, rgba(77,120,214,0.1) 0%, transparent 44%)",
-          }}
+          className="pointer-events-none absolute inset-0 bg-green-800"
+          // style={{
+          //   background:
+          //     "radial-gradient(circle at 12% 4%, rgba(56,189,248,0.08) 0%, transparent 36%), radial-gradient(circle at 88% 0%, rgba(77,120,214,0.1) 0%, transparent 44%)",
+          // }}
         />
 
         {/* Central container to reduce table width for a tighter, more attractive look */}
