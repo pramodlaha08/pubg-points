@@ -89,11 +89,9 @@ export default function LeaderboardPage() {
 
   const map = {
     1: "Erangel",
-    2: "Rondo",
-    3: "Sanhok",
+    2: "Miramar",
+    3: "Rondo",
     4: "Erangel",
-    5: "Miramar",
-    6: "Erangel",
   };
 
   return (
@@ -134,7 +132,7 @@ export default function LeaderboardPage() {
           >
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
-                PUBG Tournament Leaderboard
+                PUBG Mobile Campus League
               </p>
               <h1 className="text-3xl font-black uppercase tracking-wide text-slate-50">
                 Overall Rankings
@@ -292,9 +290,7 @@ export default function LeaderboardPage() {
             }}
           >
             <div className="mb-3 flex items-center justify-between px-1">
-              <p className="text-base font-black uppercase tracking-[0.2em] text-slate-300">
-                Broadcast Table
-              </p>
+            
               <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
                 Teams {teams.length}
               </p>
