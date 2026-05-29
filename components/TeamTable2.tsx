@@ -111,7 +111,7 @@ export default function AnimatedTeamTable({
     statsFrom: "#FFFFFF",
     statsTo: "#F8FBFF",
     // Stats
-    aliveBar: "#C8D60D",
+    aliveBar: "#0000FF",
     deadBar: "#EF4444",
     liveChip: "#60A5FA",
     hudGlow: "rgba(77,120,214,0.28)",
