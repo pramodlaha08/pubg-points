@@ -15,7 +15,7 @@ export default function Team() {
         {/* Bottom-right positioning for OBS overlay */}
         <div className="absolute top-[250px] -right-[4px] w-fit h-fit">
           <div className=" backdrop-blur-sm rounded-lg shadow-2xl p-2">
-            <TeamTable themeColor="#80171C" />
+            <TeamTable themeColor="" />
           </div>
         </div>
       </div>
