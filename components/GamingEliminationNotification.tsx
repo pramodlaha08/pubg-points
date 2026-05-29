@@ -184,7 +184,7 @@ export default function GamingEliminationNotification() {
            * For bottom-right, use: "bottom-4 right-4"
            * You can also use other values like "top-8", "left-8", etc. to adjust the spacing.
            */
-          className="fixed top-4 left-4 w-full max-w-md z-50"
+          className="fixed top-64 left-96 w-full max-w-md z-50"
         >
           <div className="relative bg-black bg-opacity-80 border-2 border-yellow-400 p-3 rounded-lg shadow-lg overflow-hidden">
             <div
