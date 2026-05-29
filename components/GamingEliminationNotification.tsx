@@ -212,14 +212,14 @@ export default function GamingEliminationNotification() {
                     {currentNotification.teamName}
                   </h3>
                   <p className="text-yellow-400 text-sm">
-                    Finished #{currentNotification.position} with{" "}
+                    Finished #{currentNotification.eliminationOrder} with{" "}
                     {currentNotification.killCount} Kills
                   </p>
                 </div>
               </div>
               <div className="text-center">
                 <p className="text-4xl font-black text-white">
-                  #{currentNotification.position}
+                  #{currentNotification.eliminationOrder}
                 </p>
               </div>
             </div>
