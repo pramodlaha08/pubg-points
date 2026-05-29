@@ -51,7 +51,7 @@ interface TeamTableProps {
   readonly teams: Team[];
   readonly startIndex: number;
   readonly endIndex: number;
-  readonly themeColor: string;
+  readonly themeColor?: string;
 }
 
 interface SplitLeaderboardProps {
@@ -68,21 +68,30 @@ const TeamTable = ({
   const slicedTeams = teams.slice(startIndex, endIndex);
 
   const palette = {
-    accent: themeColor,
-    panelFrom: "#0b1220",
-    panelTo: "#111827",
-    headerFrom: "#141c2e",
-    headerTo: `${themeColor}C8`,
-    rowFrom: "#0f172aeb",
-    rowTo: `${themeColor}70`,
-    border: `${themeColor}D0`,
-    borderSoft: `${themeColor}66`,
-    textPrimary: "#f8fafc",
-    textDim: "#94a3b8",
-    placeColor: "#bae6fd",
-    elimColor: "#fde68a",
-    totalColor: "#f59e0b",
-    statBg: "#00000052",
+    // Professional bright esports blue theme matching page
+    accent: themeColor || "#001FFF",
+    panelFrom: "#F5F8FF",
+    panelTo: "#EAF2FF",
+    panelEdge: "#D9E6FF",
+    headerFrom: "rgb(0,31,255)", // bright blue
+    headerTo: "rgb(90,150,230)", // light blue
+    headerTextDim: "#EFF6FF",
+    rowFrom: "#FFFFFF",
+    rowTo: "#F4F9FF",
+    border: "#93C5FD", // blue-300
+    borderSoft: "#BFDBFE", // blue-200
+    rankFrom: "rgb(0,31,255)",
+    rankTo: "rgb(90,150,230)",
+    teamFrom: "rgb(0,31,255)",
+    teamTo: "rgb(90,150,230)",
+    statsFrom: "#FFFFFF",
+    statsTo: "#F8FBFF",
+    textPrimary: "#0F172A",
+    textDim: "#334155",
+    statBg: "#FFF",
+    placeColor: "#2563EB", // blue-600
+    elimColor: "#D97706", // amber-600
+    totalColor: "#0F172A", // slate-900
   };
 
   const getChickenCount = (team: Team) => {
@@ -103,39 +112,56 @@ const TeamTable = ({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl border"
+      className="relative w-full overflow-hidden rounded-xl border shadow-2xl"
       style={{
         borderColor: palette.border,
-        background: `linear-gradient(145deg, ${palette.panelFrom} 0%, ${palette.panelTo} 100%)`,
-        boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 10px 30px rgba(0,0,0,0.45)`,
+        background: `linear-gradient(140deg, ${palette.panelFrom} 0%, ${palette.panelTo} 100%)`,
+        boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 16px 36px rgba(0,0,0,0.25)`,
       }}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-20"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.06) 1px, transparent 1px, transparent 6px)",
+            "repeating-linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.7) 1px, transparent 1px, transparent 6px)",
         }}
       />
 
       <div
-        className="relative flex h-12 text-[12px] font-black uppercase tracking-[0.14em]"
+        className="relative flex h-10 text-xs font-bold uppercase tracking-wide shadow-lg"
         style={{
           color: palette.textPrimary,
           background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
           borderBottom: `1px solid ${palette.border}`,
         }}
       >
-        <div className="flex w-10 items-center justify-center">Rk</div>
-        <div className="flex flex-1 items-center pl-4">Team</div>
-        <div className="flex w-[3.75rem] items-center justify-center">
-          Place
+        <div
+          className="flex w-12 items-center justify-center font-semibold"
+          style={{
+            background: `linear-gradient(90deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
+            borderRight: `1px solid ${palette.border}`,
+            color: "#FFFFFF",
+          }}
+        >
+          RANK
         </div>
-        <div className="flex w-[3.75rem] items-center justify-center">
-          Elims
+        <div
+          className="flex flex-1 items-center justify-start pl-3 font-semibold"
+          style={{
+            background: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
+            color: "#FFFFFF",
+          }}
+        >
+          TEAM
         </div>
-        <div className="flex w-[3.75rem] items-center justify-center">
-          Total
+        <div className="flex w-14 items-center justify-center text-white">
+          PLACE
+        </div>
+        <div className="flex w-14 items-center justify-center text-white">
+          ELIMS
+        </div>
+        <div className="flex w-14 items-center justify-center pr-1 text-white">
+          TOTAL
         </div>
       </div>
 
@@ -159,21 +185,27 @@ const TeamTable = ({
                   type: "spring",
                   stiffness: 105,
                   damping: 15,
-                  delay: Math.min(index * 0.02, 0.12),
+                  delay: Math.min(index * 0.015, 0.12),
                 }}
-                className="relative flex h-12 text-sm"
+                className="relative flex h-10 text-xs shadow-md text-slate-900"
                 style={{
                   borderBottom: `1px solid ${palette.borderSoft}`,
-                  background: `linear-gradient(90deg, ${palette.rowFrom} 0%, ${palette.rowTo} 100%)`,
+                  background: "transparent",
                   boxShadow: topRankStyle
-                    ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.05)`
+                    ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`
                     : undefined,
                 }}
               >
-                <div className="relative flex w-10 items-center justify-center">
+                <div
+                  className="relative z-10 flex w-12 items-center justify-center font-bold text-base"
+                  style={{
+                    background: `linear-gradient(180deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
+                    borderRight: `1px solid ${palette.border}`,
+                  }}
+                >
                   {topRankStyle ? (
                     <span
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[12px] font-black"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-black"
                       style={{
                         color: topRankStyle.badgeText,
                         background: topRankStyle.badgeBg,
@@ -185,11 +217,11 @@ const TeamTable = ({
                     </span>
                   ) : (
                     <span
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[12px] font-black"
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-black shadow-sm"
                       style={{
-                        color: palette.textPrimary,
-                        backgroundColor: palette.statBg,
-                        border: `1px solid ${palette.borderSoft}`,
+                        color: "#FFFFFF",
+                        backgroundColor: "transparent",
+                        border: "none",
                       }}
                     >
                       {actualRank}
@@ -197,44 +229,42 @@ const TeamTable = ({
                   )}
                 </div>
 
-                <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3">
-                  <div
-                    className="relative h-8 w-8 overflow-hidden rounded-sm border"
-                    style={{
-                      borderColor: palette.borderSoft,
-                      backgroundColor: "#0f172acc",
-                    }}
-                  >
-                    <Image
-                      src={team.logo || "/placeholder.svg"}
-                      alt={team.name}
-                      fill
-                      className="object-contain p-[2px]"
-                    />
-                  </div>
+                <div
+                  className="relative z-10 flex min-w-0 flex-1 items-center gap-2 pl-3"
+                  style={{
+                    background: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
+                  }}
+                >
+                  <Image
+                    src={team.logo || "/placeholder.svg"}
+                    alt={team.name}
+                    width={22}
+                    height={22}
+                    className="object-contain rounded-sm"
+                  />
 
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className="truncate text-[14px] font-extrabold tracking-[0.01em] text-slate-100"
+                  <div className="min-w-0 flex-1 flex items-center pr-2">
+                    <span
+                      className="truncate font-extrabold tracking-[0.02em] text-white"
                       title={team.name}
                     >
                       {team.name.toUpperCase()}
-                    </p>
-                  </div>
-
-                  {chickenCount > 0 ? (
-                    <span className="inline-flex items-center gap-1 rounded border border-amber-300/40 bg-amber-300/10 px-1.5 py-[2px] text-[11px] font-black text-amber-200">
-                      <GiChickenOven className="h-4 w-4" />
-                      {`x${chickenCount}`}
                     </span>
-                  ) : null}
+
+                    {chickenCount > 0 ? (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded bg-[#EAB308] px-1 py-0.5 text-[9px] font-black text-white shadow-sm border border-yellow-400">
+                        <GiChickenOven className="h-3 w-3" />
+                        {`x${chickenCount}`}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div
-                  className="flex w-[3.75rem] items-center justify-center text-[15px] font-black"
+                  className="relative z-10 flex w-14 items-center justify-center font-black"
                   style={{
                     color: palette.placeColor,
-                    backgroundColor: palette.statBg,
+                    backgroundColor: palette.statsFrom,
                     borderLeft: `1px solid ${palette.borderSoft}`,
                   }}
                 >
@@ -242,10 +272,10 @@ const TeamTable = ({
                 </div>
 
                 <div
-                  className="flex w-[3.75rem] items-center justify-center text-[15px] font-black"
+                  className="relative z-10 flex w-14 items-center justify-center font-black"
                   style={{
                     color: palette.elimColor,
-                    backgroundColor: palette.statBg,
+                    backgroundColor: palette.statsFrom,
                     borderLeft: `1px solid ${palette.borderSoft}`,
                   }}
                 >
@@ -253,10 +283,10 @@ const TeamTable = ({
                 </div>
 
                 <div
-                  className="flex w-[3.75rem] items-center justify-center text-[15px] font-black"
+                  className="relative z-10 flex w-14 items-center justify-center font-black"
                   style={{
                     color: palette.totalColor,
-                    backgroundColor: palette.statBg,
+                    backgroundColor: palette.statsFrom,
                     borderLeft: `1px solid ${palette.borderSoft}`,
                   }}
                 >
@@ -269,7 +299,7 @@ const TeamTable = ({
                     backgroundColor: topRankStyle
                       ? topRankStyle.edge
                       : palette.accent,
-                    opacity: 0.9,
+                    opacity: 0.95,
                   }}
                 />
               </motion.div>
@@ -283,7 +313,7 @@ const TeamTable = ({
 
 export default function SplitLeaderboard({
   teams,
-  themeColor = "#80171C",
+  themeColor,
 }: SplitLeaderboardProps) {
   const sortedTeams = [...teams].sort((a, b) => {
     const aStats = a.rounds.reduce(
@@ -303,7 +333,7 @@ export default function SplitLeaderboard({
   const half = Math.ceil(sortedTeams.length / 2);
 
   return (
-    <div className="grid w-full grid-cols-2 content-start items-start gap-4">
+    <div className="grid w-full grid-cols-2 content-start items-start gap-6 px-4">
       <TeamTable
         teams={sortedTeams}
         startIndex={0}

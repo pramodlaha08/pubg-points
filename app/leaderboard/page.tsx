@@ -29,17 +29,18 @@ export default function LeaderboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
 
   const palette = {
-    accent: "#80171C",
-    panelFrom: "#0b1220",
-    panelTo: "#111827",
-    panelAlt: "#121a2b",
-    border: "#80171cd0",
-    borderSoft: "#80171c66",
-    textPrimary: "#f8fafc",
-    textDim: "#94a3b8",
-    highlight: "#f59e0b",
-    points: "#bae6fd",
-    kills: "#fde68a",
+    // Premium Amber & Silver Esports Theme
+    accent: "#F59E0B",
+    panelFrom: "#FFFFFF",
+    panelTo: "#F8FAFC",
+    panelAlt: "#E2E8F0",
+    border: "#CBD5E1",
+    borderSoft: "#E2E8F0",
+    textPrimary: "#0F172A",
+    textDim: "#475569",
+    highlight: "#1E293B", // dark slate
+    points: "#3b82f6", // blue-500
+    kills: "#d97706", // amber-600
   };
 
   useEffect(() => {
@@ -95,20 +96,20 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden">
+    <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden bg-slate-100">
       <div
         className="relative h-full w-full overflow-hidden border"
         style={{
-          borderColor: palette.border,
+          borderColor: palette.borderSoft,
           background: `linear-gradient(135deg, ${palette.panelFrom} 0%, ${palette.panelTo} 50%, ${palette.panelAlt} 100%)`,
-          boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 18px 34px rgba(0,0,0,0.45)`,
+          boxShadow: `inset 0 0 0 1px ${palette.borderSoft}`,
         }}
       >
         <div
-          className="pointer-events-none absolute inset-0 opacity-25"
+          className="pointer-events-none absolute inset-0 opacity-15"
           style={{
             backgroundImage:
-              "repeating-linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.06) 1px, transparent 1px, transparent 7px)",
+              "repeating-linear-gradient(180deg, rgba(0,0,0,0.03), rgba(0,0,0,0.03) 1px, transparent 1px, transparent 7px)",
           }}
         />
 
@@ -116,56 +117,48 @@ export default function LeaderboardPage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(circle at 12% 4%, rgba(56,189,248,0.12) 0%, transparent 36%), radial-gradient(circle at 88% 0%, rgba(128,23,28,0.26) 0%, transparent 44%)",
+              "radial-gradient(circle at 12% 4%, rgba(56,189,248,0.08) 0%, transparent 36%), radial-gradient(circle at 88% 0%, rgba(77,120,214,0.1) 0%, transparent 44%)",
           }}
         />
 
-        <div className="relative z-10 flex h-full flex-col gap-4 px-6 py-5">
+        {/* Central container to reduce table width for a tighter, more attractive look */}
+        <div className="relative z-10 flex h-full flex-col gap-3 px-6 py-4 mx-auto max-w-[1300px]">
           <div
-            className="flex items-center justify-between gap-3 rounded-2xl border px-5 py-3"
+            className="flex items-center justify-between gap-3 rounded-xl border px-5 py-3 shadow-sm bg-white"
             style={{
               borderColor: palette.border,
-              background:
-                "linear-gradient(90deg, rgba(10,15,27,0.92) 0%, rgba(17,24,39,0.88) 100%)",
-              boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 10px 28px rgba(0,0,0,0.45)`,
             }}
           >
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-300">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
                 PUBG Mobile Campus League
               </p>
-              <h1 className="text-3xl font-black uppercase tracking-wide text-slate-50">
+              <h1 className="text-3xl font-black uppercase tracking-wide text-slate-800">
                 Overall Rankings
               </h1>
             </div>
 
             <div className="flex items-center gap-3">
               <div
-                className="rounded-xl border px-3 py-1 text-right"
-                style={{
-                  borderColor: palette.borderSoft,
-                  backgroundColor: "#00000052",
-                }}
+                className="rounded-xl border px-3 py-1 text-right bg-blue-50"
+                style={{ borderColor: palette.borderSoft }}
               >
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">
                   Current Match
                 </p>
-                <p className="text-xl font-black text-slate-100">
+                <p className="text-xl font-black text-slate-800">
                   {firstTeam?.currentRound ?? "-"}/{Object.keys(map).length}
                 </p>
               </div>
 
               <div
-                className="rounded-xl border px-3 py-1 text-right"
-                style={{
-                  borderColor: palette.borderSoft,
-                  backgroundColor: "#00000052",
-                }}
+                className="rounded-xl border px-3 py-1 text-right bg-blue-50"
+                style={{ borderColor: palette.borderSoft }}
               >
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">
                   Current Map
                 </p>
-                <p className="text-xl font-black text-slate-100">
+                <p className="text-xl font-black text-slate-800">
                   {(firstTeam &&
                     map[firstTeam.currentRound as keyof typeof map]) ||
                     "Unknown"}
@@ -179,28 +172,51 @@ export default function LeaderboardPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: "easeOut" }}
-              className="relative overflow-hidden rounded-2xl border"
+              className="relative overflow-visible rounded-2xl border bg-white shadow-sm"
               style={{
                 borderColor: palette.border,
-                background: `linear-gradient(160deg, rgba(15,23,42,0.98) 0%, rgba(128,23,28,0.22) 45%, rgba(13,19,34,0.98) 100%)`,
-                boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 14px 34px rgba(0,0,0,0.56)`,
               }}
             >
+              {/* Animated Character Background/Overlay */}
+              <div className="absolute right-0 top-[100%] -translate-y-1/2 translate-x-12 z-0 pr-8 opacity-90 mix-blend-multiply pointer-events-none">
+                <motion.div
+                  animate={{
+                    y: [0, -8, 0],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  {/* Replace source with actual character once uploaded to public/ */}
+                  <Image
+                    src="/pubg-character.png"
+                    alt="PUBG Character"
+                    width={350}
+                    height={350}
+                    className="object-contain drop-shadow-2xl grayscale-[20%]"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </motion.div>
+              </div>
+
               <div
-                className="pointer-events-none absolute inset-0"
+                className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden"
                 style={{
                   background:
-                    "radial-gradient(circle at 20% 0%, rgba(245,158,11,0.16) 0%, transparent 42%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.15) 0%, transparent 36%)",
+                    "radial-gradient(circle at 20% 0%, rgba(245,158,11,0.06) 0%, transparent 42%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.06) 0%, transparent 36%)",
                 }}
               />
 
               <div className="relative z-10 flex items-center justify-between gap-6 p-5">
                 <div className="flex min-w-0 items-center gap-4">
                   <div
-                    className="relative h-24 w-24 overflow-hidden rounded-xl border"
+                    className="relative h-24 w-24 overflow-hidden rounded-xl border bg-slate-50"
                     style={{
                       borderColor: "#f7c948",
-                      backgroundColor: "#0f172acc",
                     }}
                   >
                     <Image
@@ -212,15 +228,15 @@ export default function LeaderboardPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
                       Top Team
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <h2 className="truncate text-4xl font-black uppercase tracking-wide text-slate-50">
+                      <h2 className="truncate text-4xl font-black uppercase tracking-wide text-slate-800">
                         {firstTeam.name.toUpperCase()}
                       </h2>
                       {totalStats.chickenCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-300/45 bg-amber-300/10 px-2 py-1 text-sm font-black text-amber-200">
+                        <span className="inline-flex items-center gap-1 rounded-md border border-blue-400 bg-[#2563EB] px-2 py-1 text-sm font-black text-white shadow-sm">
                           <GiChickenOven className="h-4.5 w-4.5" />
                           {`x${totalStats.chickenCount}`}
                         </span>
@@ -229,9 +245,9 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-3 relative z-10 bg-white/60 backdrop-blur-md rounded-xl p-1 border border-white">
                   {[
-                    { label: "Rank", value: "#1", color: "#f7c948" },
+                    { label: "Rank", value: "#1", color: palette.highlight },
                     {
                       label: "Place Points",
                       value: totalStats.placePoints,
@@ -250,13 +266,12 @@ export default function LeaderboardPage() {
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-xl border px-3 py-2"
+                      className="rounded-xl border px-3 py-2 bg-blue-50/50 shadow-sm"
                       style={{
                         borderColor: palette.borderSoft,
-                        backgroundColor: "#0000004d",
                       }}
                     >
-                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">
                         {item.label}
                       </p>
                       <p
@@ -272,7 +287,7 @@ export default function LeaderboardPage() {
             </motion.div>
           ) : (
             <div
-              className="flex min-h-[170px] items-center justify-center rounded-2xl border text-base font-bold uppercase tracking-[0.16em]"
+              className="flex min-h-[170px] items-center justify-center rounded-2xl border text-base font-bold uppercase tracking-[0.16em] bg-white"
               style={{
                 borderColor: palette.borderSoft,
                 color: palette.textDim,
@@ -283,15 +298,13 @@ export default function LeaderboardPage() {
           )}
 
           <div
-            className="flex flex-col rounded-2xl border p-4"
+            className="flex flex-col rounded-2xl border p-4 bg-white/70 shadow-inner"
             style={{
               borderColor: palette.border,
-              backgroundColor: "#0a101bcc",
             }}
           >
             <div className="mb-3 flex items-center justify-between px-1">
-            
-              <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-400">
+              <p className="text-sm font-bold uppercase tracking-[0.16em] text-blue-600">
                 Teams {teams.length}
               </p>
             </div>
