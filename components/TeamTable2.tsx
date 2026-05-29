@@ -190,9 +190,9 @@ export default function AnimatedTeamTable({
 
   return (
     <div className="flex items-center justify-center">
-      <div className="w-[360px] mx-auto">
+      <div className="w-[300px] mx-auto">
         {debugMode ? (
-          <div className="mb-2 rounded border border-white/30 bg-black/60 px-2 py-1 text-[10px] font-semibold text-white">
+          <div className="mb-2 rounded border border-white/30 bg-black/60 px-2 py-1 text-[9px] font-semibold text-white">
             <div>SOCKET: {isConnected ? "LIVE" : "OFFLINE"}</div>
             <div>LAST EVENT: {lastEvent}</div>
             <div>LAST SYNC: {lastSyncAt}</div>
@@ -247,26 +247,26 @@ export default function AnimatedTeamTable({
           </div>
 
           <div
-            className="relative flex h-10 text-sm font-bold shadow-lg"
+            className="relative flex h-9 text-xs font-bold shadow-lg"
             style={{
               color: palette.textPrimary,
               background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
               borderBottom: `1px solid ${palette.border}`,
             }}
           >
-            <div className="w-10 flex items-center justify-center pl-3 tracking-wide">
+            <div className="w-9 flex items-center justify-center pl-2 tracking-wide">
               RANK
             </div>
-            <div className="flex-1 flex items-center justify-start pl-5 tracking-wide">
+            <div className="flex-1 flex items-center justify-start pl-3 tracking-wide">
               TEAM
             </div>
-            <div className="w-16 flex items-center justify-center tracking-wide">
+            <div className="w-14 flex items-center justify-center tracking-wide">
               ALIVE
             </div>
-            <div className="w-12 flex items-center justify-center tracking-wide">
+            <div className="w-11 flex items-center justify-center tracking-wide">
               PTS
             </div>
-            <div className="w-12 flex items-center justify-center pr-2 tracking-wide">
+            <div className="w-11 flex items-center justify-center pr-1 tracking-wide">
               ELIMS
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function AnimatedTeamTable({
                       damping: 15,
                       delay: Math.min(index * 0.015, 0.12),
                     }}
-                    className={`relative flex h-10 text-sm shadow-md ${
+                    className={`relative flex h-9 text-xs shadow-md ${
                       isEliminated ? "text-gray-300" : "text-white"
                     }`}
                     style={{
@@ -312,10 +312,10 @@ export default function AnimatedTeamTable({
                         : undefined,
                     }}
                   >
-                    <div className="w-10 relative flex items-center justify-center font-bold text-lg">
+                    <div className="w-9 relative flex items-center justify-center font-bold text-base">
                       {topRankStyle ? (
                         <span
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-black"
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[9px] font-black"
                           style={{
                             color: topRankStyle.badgeText,
                             background: topRankStyle.badgeBg,
@@ -328,7 +328,7 @@ export default function AnimatedTeamTable({
                         </span>
                       ) : (
                         <span
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-black"
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-md text-[9px] font-black"
                           style={{
                             color: palette.textPrimary,
                             backgroundColor: palette.statBg,
@@ -340,7 +340,7 @@ export default function AnimatedTeamTable({
                       )}
                       {index === 0 && !isEliminated ? (
                         <motion.span
-                          className="pointer-events-none absolute -top-1 -right-1 z-10 text-[10px]"
+                          className="pointer-events-none absolute -top-1 -right-1 z-10 text-[9px]"
                           variants={trophyVariants}
                           initial="initial"
                           animate="animate"
@@ -354,8 +354,8 @@ export default function AnimatedTeamTable({
                       <Image
                         src={team.logo || "/placeholder.svg"}
                         alt={team.name}
-                        width={24}
-                        height={24}
+                        width={20}
+                        height={20}
                         className="object-contain rounded-sm"
                       />
                       <span
@@ -393,7 +393,7 @@ export default function AnimatedTeamTable({
                       </span>
                     </div>
 
-                    <div className="w-16 flex items-center justify-center">
+                    <div className="w-14 flex items-center justify-center">
                       <div
                         className="flex gap-1 rounded-md px-1 py-[2px]"
                         style={{ backgroundColor: palette.statBg }}
@@ -401,7 +401,7 @@ export default function AnimatedTeamTable({
                         {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
                           <div
                             key={playerIndex}
-                            className={`h-4 w-[6px] rounded-sm ${
+                            className={`h-3 w-[5px] rounded-sm ${
                               currentRound?.eliminatedPlayers?.includes(
                                 playerIndex,
                               )
