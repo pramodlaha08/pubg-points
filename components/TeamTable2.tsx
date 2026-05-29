@@ -284,14 +284,18 @@ export default function AnimatedTeamTable({
                       delay: Math.min(index * 0.015, 0.12),
                     }}
                     className={`relative flex h-9 text-xs shadow-md ${
-                      isEliminated ? "text-slate-500" : "text-slate-900"
+                      isEliminated
+                        ? "text-slate-600 font-bold"
+                        : "text-slate-900"
                     }`}
                     style={{
                       borderBottom: `1px solid ${palette.borderSoft}`,
-                      // Pure white background for eliminated rows
-                      background: isEliminated ? "" : "transparent",
-                      filter: "none",
-                      opacity: isEliminated ? 0.3 : 1,
+                      // Little faded grayed and slightly transparent background
+                      background: isEliminated
+                        ? "rgba(226, 232, 240, 0.75)" // matching tailwind slate-200 with 85% opacity
+                        : "transparent",
+                      filter: isEliminated ? "grayscale(100%)" : "none",
+                      opacity: isEliminated ? 0.95 : 1, // High opacity to keep text clearly visible
                       boxShadow: topRankStyle
                         ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`
                         : undefined,
@@ -364,7 +368,7 @@ export default function AnimatedTeamTable({
                       <span
                         className={`truncate font-extrabold tracking-[0.02em] ${
                           isEliminated
-                            ? "text-slate-500 line-through decoration-slate-400 decoration-[1.5px]"
+                            ? "text-slate-600 line-through decoration-slate-400 decoration-[1.5px]"
                             : "text-white"
                         }`}
                       >
@@ -396,16 +400,14 @@ export default function AnimatedTeamTable({
                       </span>
                     </div>
 
-                    <div className="relative z-10 w-14 flex items-center justify-center">
-                      <div
-                        className="flex gap-1 rounded-md px-1 py-[2px]"
-                        style={{
-                          background: isEliminated
-                            ? "transparent"
-                            : `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
-                          border: `1px solid ${palette.borderSoft}`,
-                        }}
-                      >
+                    <div
+                      className="relative z-10 w-14 flex items-center justify-center"
+                      style={{
+                        background: isEliminated ? "transparent" : "#FFFFFF",
+                        borderLeft: `1px solid ${palette.borderSoft}`,
+                      }}
+                    >
+                      <div className="flex gap-1">
                         {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
                           <div
                             key={playerIndex}
@@ -437,12 +439,10 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-slate-500" : "text-sky-700"
+                        isEliminated ? "text-slate-600" : "text-sky-700"
                       }`}
                       style={{
-                        background: isEliminated
-                          ? "transparent"
-                          : `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
+                        background: isEliminated ? "transparent" : "#FFFFFF",
                         borderLeft: `1px solid ${palette.borderSoft}`,
                       }}
                     >
@@ -451,12 +451,10 @@ export default function AnimatedTeamTable({
 
                     <div
                       className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-slate-500" : "text-amber-600"
+                        isEliminated ? "text-slate-600" : "text-amber-600"
                       }`}
                       style={{
-                        background: isEliminated
-                          ? "transparent"
-                          : `linear-gradient(180deg, ${palette.statsFrom} 0%, ${palette.statsTo} 100%)`,
+                        background: isEliminated ? "transparent" : "#FFFFFF",
                         borderLeft: `1px solid ${palette.borderSoft}`,
                       }}
                     >
