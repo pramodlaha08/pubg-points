@@ -103,15 +103,15 @@ export default function AnimatedTeamTable({
     // Borders and dividers
     border: "#3A3E5A",
     borderSoft: "#E6EEFF",
-    // Column-specific gradients (stronger blue for visible columns)
-    rankFrom: "#4D78D6",
-    rankTo: "#5A6EFF",
-    teamFrom: "#5A6EFF",
-    teamTo: "#DDEEFF",
+    // Column-specific gradients (user-specified blues, slightly darkened)
+    rankFrom: "rgb(0,31,255)",
+    rankTo: "rgb(90,150,230)",
+    teamFrom: "rgb(0,31,255)",
+    teamTo: "rgb(90,150,230)",
     statsFrom: "#FFFFFF",
     statsTo: "#F8FBFF",
     // Stats
-    aliveBar: "#60A5FA",
+    aliveBar: "#C8D60D",
     deadBar: "#EF4444",
     liveChip: "#60A5FA",
     hudGlow: "rgba(77,120,214,0.28)",
@@ -267,7 +267,7 @@ export default function AnimatedTeamTable({
             }}
           >
             <div
-              className="w-9 flex items-center justify-center pl-2 tracking-wide font-semibold"
+              className="w-12 flex items-center justify-center tracking-tighter font-semibold"
               style={{
                 background: `linear-gradient(90deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
                 borderRight: `1px solid ${palette.border}`,
@@ -339,7 +339,7 @@ export default function AnimatedTeamTable({
                     }}
                   >
                     <div
-                      className="w-9 relative flex items-center justify-center font-bold text-base"
+                      className="w-12 relative flex items-center justify-center font-bold text-base"
                       style={{
                         background: `linear-gradient(180deg, ${palette.rankFrom} 0%, ${palette.rankTo} 100%)`,
                         borderRight: `1px solid ${palette.border}`,
