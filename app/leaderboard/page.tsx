@@ -89,10 +89,12 @@ export default function LeaderboardPage() {
     : null;
 
   const map = {
-    1: "Erangel",
-    2: "Miramar",
-    3: "Rondo",
+    1: "Rondo",
+    2: "Erangel",
+    3: "Erangel",
     4: "Erangel",
+    5: "Miramar",
+    6: "Miramar",
   };
 
   return (
