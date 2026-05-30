@@ -173,9 +173,14 @@ export default function GamingEliminationNotification() {
       {currentNotification && (
         <motion.div
           key={currentNotification.id}
-          initial={{ opacity: 0, x: "-100%" }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: "-100%", transition: { duration: 0.3 } }}
+          initial={{ opacity: 0, x: "-100%", scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{
+            opacity: 0,
+            x: "-100%",
+            transition: { duration: 0.4, ease: "easeIn" },
+          }}
+          transition={{ type: "spring", stiffness: 110, damping: 15 }}
           /*
            * To change the position of the notification, update the classes below.
            * For top-left, use: "top-4 left-4"
@@ -184,45 +189,60 @@ export default function GamingEliminationNotification() {
            * For bottom-right, use: "bottom-4 right-4"
            * You can also use other values like "top-8", "left-8", etc. to adjust the spacing.
            */
-          className="fixed top-64 left-96 w-full max-w-md z-50"
+          className="fixed bottom-72 left-12 w-full max-w-sm z-[100]"
         >
-          <div className="relative bg-black bg-opacity-80 border-2 border-yellow-400 p-3 rounded-lg shadow-lg overflow-hidden">
-            <div
-              className="absolute top-0 left-0 w-full h-full bg-yellow-400 opacity-10"
-              style={{
-                clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
-              }}
-            ></div>
-            <div className="relative flex items-center justify-between">
+          <div className="relative bg-white border border-blue-200 p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden">
+            {/* Decorative background gradients */}
+            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-blue-600/10 to-transparent pointer-events-none" />
+            <div className="absolute left-0 bottom-0 w-full h-1/2 bg-gradient-to-t from-slate-50 to-transparent pointer-events-none" />
+
+            <div className="relative flex items-center justify-between z-10">
               <div className="flex items-center space-x-4">
-                <div className="relative w-16 h-16">
+                {/* Logo wrapper */}
+                <div className="relative w-16 h-16 bg-slate-50 rounded-xl border border-blue-100 shadow-sm flex items-center justify-center p-1">
                   <Image
-                    src={
-                      currentNotification.teamLogo ||
-                      "/path/to/default/logo.png"
-                    }
+                    src={currentNotification.teamLogo || "/placeholder.svg"}
                     alt={`${currentNotification.teamName} logo`}
                     layout="fill"
                     objectFit="contain"
-                    className="rounded-full border-2 border-yellow-400"
+                    className="p-1 rounded-xl drop-shadow-sm grayscale-[15%]"
                   />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white uppercase tracking-wider">
+
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mb-0.5">
+                    Team Eliminated
+                  </p>
+                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-wide leading-none truncate max-w-[150px]">
                     {currentNotification.teamName}
                   </h3>
-                  <p className="text-yellow-400 text-sm">
-                    Finished #{currentNotification.eliminationOrder} with{" "}
-                    {currentNotification.killCount} Kills
-                  </p>
+
+                  <div className="flex items-center mt-2.5">
+                    <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-600 border border-amber-200">
+                      Elims: {currentNotification.killCount}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="text-center">
-                <p className="text-4xl font-black text-white">
+
+              {/* Rank Block */}
+              <div className="flex flex-col items-center justify-center h-16 w-16 rounded-xl bg-gradient-to-br from-[#001FFF] to-[#5A96E6] shadow-md border border-blue-400 flex-shrink-0">
+                <span className="text-[9px] font-bold text-blue-100 uppercase tracking-widest mb-[-2px]">
+                  Rank
+                </span>
+                <p className="text-3xl font-black text-white leading-none">
                   #{currentNotification.eliminationOrder}
                 </p>
               </div>
             </div>
+
+            {/* Auto-dismiss progress bar line */}
+            <motion.div
+              initial={{ width: "100%" }}
+              animate={{ width: "0%" }}
+              transition={{ duration: 5, ease: "linear" }}
+              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#001FFF] to-[#5A96E6]"
+            />
           </div>
         </motion.div>
       )}
