@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { GiCrossedSabres } from "react-icons/gi";
 import { useParams } from "next/navigation";
 import TeamCard from "@/components/TeamCard";
@@ -45,9 +45,7 @@ export default function FilteredTeamsPage() {
 
   const fetchTeams = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/team`
-      );
+      const response = await api.get("/team");
       setTeams(response.data.data);
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -63,8 +61,8 @@ export default function FilteredTeamsPage() {
 
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}/${action}-kill`;
-      const response = await axios.post(endpoint);
+      const endpoint = `/team/${teamId}/${action}-kill`;
+      const response = await api.post(endpoint);
       const updatedTeam = response?.data?.data as Team | undefined;
       if (updatedTeam) {
         upsertTeam(updatedTeam);
@@ -78,10 +76,9 @@ export default function FilteredTeamsPage() {
 
   const handleElimination = async (teamId: string, playerIndex: number) => {
     try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}/elimination`,
-        { playerIndex }
-      );
+      const response = await api.put(`/team/${teamId}/elimination`, {
+        playerIndex,
+      });
       const updatedTeam = response?.data?.data as Team | undefined;
       if (updatedTeam) {
         upsertTeam(updatedTeam);

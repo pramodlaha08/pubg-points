@@ -1,10 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
+import { api } from "@/lib/api";
+import {
+  DEFAULT_POINTS_TABLE,
+  hexToRgba,
+  mergePointsTable,
+  type PointsTableSettings,
+} from "@/lib/tableSettings";
 
 interface Team {
   _id: string;
@@ -72,11 +78,13 @@ const topRankStyles = {
 interface AnimatedTeamTableProps {
   readonly showDebug?: boolean;
   readonly themeColor?: string;
+  readonly previewSettings?: PointsTableSettings;
 }
 
 export default function AnimatedTeamTable({
   showDebug,
   themeColor,
+  previewSettings,
 }: AnimatedTeamTableProps) {
   // Use env var for debug mode, allow prop override
   const debugMode =
@@ -84,41 +92,38 @@ export default function AnimatedTeamTable({
       ? showDebug
       : process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
 
-  const useTheme = Boolean(themeColor);
+  const [settings, setSettings] = useState<PointsTableSettings>(
+    previewSettings ?? DEFAULT_POINTS_TABLE
+  );
+
+  useEffect(() => {
+    if (previewSettings) {
+      setSettings(previewSettings);
+    }
+  }, [previewSettings]);
+
+  const colors = settings.colors;
+  const accent = themeColor || colors.accent;
   const palette = {
-    // Light esports blue theme
-    accent: useTheme ? themeColor! : "#4D78D6",
-    panelFrom: "#F5F8FF",
-    panelTo: "#EAF2FF",
-    panelEdge: "#D9E6FF",
-    // Header gradient uses the provided header colors for an esports look
-    headerFrom: "#4D78D6",
-    headerTo: "#5A6EFF",
-    headerTextDim: "#EFF6FF",
-    // Row backgrounds (subtle light blues / whites)
-    rowFrom: "#FFFFFF",
-    rowTo: "#F4F9FF",
-    rowEliminatedFrom: "#FBFBFD",
-    rowEliminatedTo: "#F1F5FF",
-    // Borders and dividers
-    border: "#3A3E5A",
-    borderSoft: "#E6EEFF",
-    // Column-specific gradients (user-specified blues, slightly darkened)
-    rankFrom: "rgb(0,31,255)",
-    rankTo: "rgb(90,150,230)",
-    teamFrom: "rgb(0,31,255)",
-    teamTo: "rgb(90,150,230)",
-    statsFrom: "#FFFFFF",
-    statsTo: "#F8FBFF",
-    // Stats
-    aliveBar: "#0000FF",
-    deadBar: "#EF4444",
-    liveChip: "#60A5FA",
-    hudGlow: "rgba(77,120,214,0.28)",
-    textPrimary: "#0F172A",
-    textDim: "#334155",
-    statBg: "#FFFFFFAA",
+    accent,
+    panelEdge: colors.borderSoft,
+    headerFrom: colors.headerFrom,
+    headerTo: colors.headerTo,
+    border: colors.border,
+    borderSoft: colors.borderSoft,
+    rankFrom: colors.rankFrom,
+    rankTo: colors.rankTo,
+    teamFrom: colors.teamFrom,
+    teamTo: colors.teamTo,
+    cellBg: colors.cellBg,
+    aliveBar: colors.aliveBar,
+    deadBar: colors.deadBar,
+    hudGlow: hexToRgba(accent, 0.28),
+    textPrimary: colors.textPrimary,
   };
+
+  const { columns, header, layout } = settings;
+  const rowFontSize = 12 * layout.fontScale;
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -127,11 +132,21 @@ export default function AnimatedTeamTable({
   const [updateCount, setUpdateCount] = useState(0);
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      if (previewSettings) return;
+      try {
+        const response = await api.get("/settings");
+        if (response.data?.success) {
+          setSettings(mergePointsTable(response.data.data?.pointsTable));
+        }
+      } catch {
+        console.error("Error fetching table settings:");
+      }
+    };
+
     const fetchTeams = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/team`,
-        );
+        const response = await api.get("/team");
         const data = response.data;
 
         if (data.success) {
@@ -189,7 +204,14 @@ export default function AnimatedTeamTable({
     socket.on("elimination_state_changed", () =>
       scheduleRefresh("elimination_state_changed"),
     );
+    socket.on("settings_updated", (payload) => {
+      if (!previewSettings) {
+        setSettings(mergePointsTable(payload?.pointsTable));
+      }
+      scheduleRefresh("settings_updated");
+    });
 
+    fetchSettings();
     fetchTeams();
 
     return () => {
@@ -198,11 +220,13 @@ export default function AnimatedTeamTable({
       }
       socket.disconnect();
     };
-  }, []);
+  }, [previewSettings]);
+
+  const showTitleStrip = Boolean(header.title || header.logoUrl);
 
   return (
     <div className="flex items-center justify-center">
-      <div className="w-[300px] mx-auto">
+      <div className="mx-auto" style={{ width: layout.width }}>
         {debugMode ? (
           <div className="mb-2 rounded border border-white/30 bg-black/60 px-2 py-1 text-[9px] font-semibold text-white">
             <div>SOCKET: {isConnected ? "LIVE" : "OFFLINE"}</div>
@@ -220,10 +244,43 @@ export default function AnimatedTeamTable({
             boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 16px 36px rgba(0,0,0,0.55)`,
           }}
         >
+          {/* Optional tournament title / logo strip */}
+          {showTitleStrip ? (
+            <div
+              className="relative flex items-center justify-center gap-2 px-2"
+              style={{
+                height: Math.max(layout.rowHeight - 6, 24),
+                background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+                borderBottom: `1px solid ${palette.border}`,
+              }}
+            >
+              {header.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={header.logoUrl}
+                  alt={header.title || "Tournament"}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              ) : null}
+              {header.title ? (
+                <span
+                  className="font-black tracking-widest text-white drop-shadow"
+                  style={{ fontSize: 13 * layout.fontScale }}
+                >
+                  {header.title}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
           {/* Decorative overlays removed so they don't tint the green chroma key transparent background */}
           <div
-            className="relative flex h-9 text-xs font-bold shadow-lg"
+            className="relative flex text-xs font-bold shadow-lg"
             style={{
+              height: layout.rowHeight,
+              fontSize: rowFontSize,
               color: palette.textPrimary,
               background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
               borderBottom: `1px solid ${palette.border}`,
@@ -248,15 +305,21 @@ export default function AnimatedTeamTable({
             >
               TEAM
             </div>
-            <div className="w-14 flex items-center justify-center tracking-wide text-white">
-              ALIVE
-            </div>
-            <div className="w-11 flex items-center justify-center tracking-wide text-white">
-              PTS
-            </div>
-            <div className="w-11 flex items-center justify-center pr-1 tracking-wide text-white">
-              ELIMS
-            </div>
+            {columns.alive ? (
+              <div className="w-14 flex items-center justify-center tracking-wide text-white">
+                ALIVE
+              </div>
+            ) : null}
+            {columns.pts ? (
+              <div className="w-11 flex items-center justify-center tracking-wide text-white">
+                PTS
+              </div>
+            ) : null}
+            {columns.elims ? (
+              <div className="w-11 flex items-center justify-center pr-1 tracking-wide text-white">
+                ELIMS
+              </div>
+            ) : null}
           </div>
 
           <div className="relative flex-1 overflow-hidden">
@@ -283,12 +346,14 @@ export default function AnimatedTeamTable({
                       damping: 15,
                       delay: Math.min(index * 0.015, 0.12),
                     }}
-                    className={`relative flex h-9 text-xs shadow-md ${
+                    className={`relative flex shadow-md ${
                       isEliminated
                         ? "text-slate-600 font-bold"
                         : "text-slate-900"
                     }`}
                     style={{
+                      height: layout.rowHeight,
+                      fontSize: rowFontSize,
                       borderBottom: `1px solid ${palette.borderSoft}`,
                       // Little faded grayed and slightly transparent background
                       background: isEliminated
@@ -329,14 +394,14 @@ export default function AnimatedTeamTable({
                           className="inline-flex h-5 w-5 items-center justify-center rounded-md text-[9px] font-black"
                           style={{
                             color: palette.textPrimary,
-                            backgroundColor: palette.statBg,
+                            backgroundColor: palette.cellBg,
                             border: `1px solid ${palette.borderSoft}`,
                           }}
                         >
                           {index + 1}
                         </span>
                       )}
-                      {index === 0 && !isEliminated ? (
+                      {index === 0 && !isEliminated && layout.showTrophy ? (
                         <motion.span
                           className="pointer-events-none absolute -top-1 -right-1 z-10 text-[9px]"
                           variants={trophyVariants}
@@ -400,66 +465,66 @@ export default function AnimatedTeamTable({
                       </span>
                     </div>
 
-                    <div
-                      className="relative z-10 w-14 flex items-center justify-center"
-                      style={{
-                        background: isEliminated ? "transparent" : "#FFFFFF",
-                        borderLeft: `1px solid ${palette.borderSoft}`,
-                      }}
-                    >
-                      <div className="flex gap-1">
-                        {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
-                          <div
-                            key={playerIndex}
-                            className={`h-3 w-[5px] rounded-sm ${
-                              currentRound?.eliminatedPlayers?.includes(
-                                playerIndex,
-                              )
-                                ? ""
-                                : ""
-                            }`}
-                            style={{
-                              backgroundColor:
-                                currentRound?.eliminatedPlayers?.includes(
-                                  playerIndex,
-                                )
-                                  ? palette.deadBar
-                                  : palette.aliveBar,
-                              boxShadow:
-                                currentRound?.eliminatedPlayers?.includes(
-                                  playerIndex,
-                                )
-                                  ? "0 0 8px rgba(239,68,68,0.35)"
-                                  : `0 0 10px ${palette.hudGlow}`,
-                            }}
-                          ></div>
-                        ))}
+                    {columns.alive ? (
+                      <div
+                        className="relative z-10 w-14 flex items-center justify-center"
+                        style={{
+                          background: isEliminated ? "transparent" : palette.cellBg,
+                          borderLeft: `1px solid ${palette.borderSoft}`,
+                        }}
+                      >
+                        <div className="flex gap-1">
+                          {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
+                            <div
+                              key={playerIndex}
+                              className="h-3 w-[5px] rounded-sm"
+                              style={{
+                                backgroundColor:
+                                  currentRound?.eliminatedPlayers?.includes(
+                                    playerIndex,
+                                  )
+                                    ? palette.deadBar
+                                    : palette.aliveBar,
+                                boxShadow:
+                                  currentRound?.eliminatedPlayers?.includes(
+                                    playerIndex,
+                                  )
+                                    ? `0 0 8px ${hexToRgba(palette.deadBar, 0.35)}`
+                                    : `0 0 10px ${palette.hudGlow}`,
+                              }}
+                            ></div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    ) : null}
 
-                    <div
-                      className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-slate-600" : "text-sky-700"
-                      }`}
-                      style={{
-                        background: isEliminated ? "transparent" : "#FFFFFF",
-                        borderLeft: `1px solid ${palette.borderSoft}`,
-                      }}
-                    >
-                      {team.totalPoints}
-                    </div>
+                    {columns.pts ? (
+                      <div
+                        className={`relative z-10 w-12 flex items-center justify-center font-black ${
+                          isEliminated ? "text-slate-600" : "text-sky-700"
+                        }`}
+                        style={{
+                          background: isEliminated ? "transparent" : palette.cellBg,
+                          borderLeft: `1px solid ${palette.borderSoft}`,
+                        }}
+                      >
+                        {team.totalPoints}
+                      </div>
+                    ) : null}
 
-                    <div
-                      className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                        isEliminated ? "text-slate-600" : "text-amber-600"
-                      }`}
-                      style={{
-                        background: isEliminated ? "transparent" : "#FFFFFF",
-                        borderLeft: `1px solid ${palette.borderSoft}`,
-                      }}
-                    >
-                      {currentRound?.kills ?? 0}
-                    </div>
+                    {columns.elims ? (
+                      <div
+                        className={`relative z-10 w-12 flex items-center justify-center font-black ${
+                          isEliminated ? "text-slate-600" : "text-amber-600"
+                        }`}
+                        style={{
+                          background: isEliminated ? "transparent" : palette.cellBg,
+                          borderLeft: `1px solid ${palette.borderSoft}`,
+                        }}
+                      >
+                        {currentRound?.kills ?? 0}
+                      </div>
+                    ) : null}
 
                     <div
                       className="pointer-events-none absolute left-0 top-0 h-full w-[3px]"

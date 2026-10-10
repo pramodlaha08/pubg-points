@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { isAxiosError } from "axios";
+import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import {ToastContainer, notifyError, notifySuccess} from "@/utils/ToastifyNotification"
 
@@ -30,9 +31,7 @@ export default function RoundManager() {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/team`
-        );
+        const response = await api.get("/team");
         setTeams(response.data.data);
       } catch  {
         setError("Failed to load teams");
@@ -67,7 +66,7 @@ export default function RoundManager() {
 
     try {
       setLoadingCreate(true);
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/team/rounds`, {
+      await api.post("/team/rounds", {
         slots: selectedSlots,
         roundNumber: Number(roundNumber),
       });
@@ -78,7 +77,7 @@ export default function RoundManager() {
       setTimeout(() => window.location.reload(), 1000);
       setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response) {
+      if (isAxiosError(err) && err.response) {
         setError(err.response.data.message || "An error occurred");
          notifyError(err.response.data.message || "Failed to create round.");
       } else {
@@ -99,15 +98,12 @@ export default function RoundManager() {
     }
     try {
       setLoadingDelete(true);
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/team/rounds/delete`,
-        {
-          data: {
-            slots: selectedSlots,
-            roundNumber: Number(roundNumber),
-          },
-        }
-      );
+      await api.delete("/team/rounds/delete", {
+        data: {
+          slots: selectedSlots,
+          roundNumber: Number(roundNumber),
+        },
+      });
       setSuccess(`Round ${roundNumber} deleted successfully!`);
       notifySuccess(`Round ${roundNumber} deleted successfully!`);
       // Refresh the page after success

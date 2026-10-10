@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { GiDeathSkull } from "react-icons/gi";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { GiDeathSkull, GiPowerLightning } from "react-icons/gi";
+import { clearAdminSession, isAdminLoggedIn } from "@/lib/api";
 
 interface SidebarLink {
   name: string;
@@ -13,6 +18,19 @@ interface SidebarGroup {
 }
 
 export default function Sidebar({ links }: { readonly links: SidebarGroup[] }) {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setLoggedIn(isAdminLoggedIn());
+  }, []);
+
+  const handleLogout = () => {
+    clearAdminSession();
+    setLoggedIn(false);
+    router.replace("/login");
+  };
+
   return (
     <div
       data-app-sidebar="true"
@@ -61,6 +79,27 @@ export default function Sidebar({ links }: { readonly links: SidebarGroup[] }) {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="pt-4 border-t-2 border-red-500/20 flex justify-center">
+          {loggedIn ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-2 py-2 px-6 font-semibold text-red-300 hover:text-white bg-red-600/20 hover:bg-red-600/40 rounded-lg transition-all duration-200 border-2 border-red-500/40"
+            >
+              <GiPowerLightning className="text-xl" />
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 py-2 px-6 font-semibold text-red-300 hover:text-white bg-red-600/20 hover:bg-red-600/40 rounded-lg transition-all duration-200 border-2 border-red-500/40"
+            >
+              <GiPowerLightning className="text-xl" />
+              Admin Login
+            </Link>
+          )}
         </div>
       </nav>
     </div>

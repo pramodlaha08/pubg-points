@@ -5,6 +5,7 @@ export const navigationLinks = [
     links: [
       { name: "Points Table", path: "/pointstable" },
       { name: "Match Points", path: "/match" },
+      { name: "Design Settings", path: "/settings" },
 
       // ... other admin links ...
     ],
