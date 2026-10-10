@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { GiPodium, GiTrophy } from "react-icons/gi";
 import { notifyError, ToastContainer } from "@/utils/ToastifyNotification";
 
@@ -32,9 +32,7 @@ export default function PositionUpdater() {
 
   const fetchTeams = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/team`
-      );
+      const response = await api.get("/team");
       setTeams(response.data.data);
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -75,13 +73,10 @@ export default function PositionUpdater() {
 
     try {
       setLoading(true);
-      await axios.post(
-        "https://points-backend-gu2z.onrender.com/api/v1/team/points",
-        {
-          roundNumber,
-          slotPositions,
-        },
-      );
+      await api.post("/team/points", {
+        roundNumber,
+        slotPositions,
+      });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {

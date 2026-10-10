@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { GiDeathSkull, GiCancel } from "react-icons/gi";
 import { Flame } from "lucide-react";
 
@@ -31,9 +31,7 @@ export default function DeleteTeamsPage() {
 
   const fetchTeams = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/team`
-      );
+      const response = await api.get("/team");
       setTeams(response.data.data);
     } catch  {
       setError("Failed to fetch teams");
@@ -51,7 +49,7 @@ export default function DeleteTeamsPage() {
 
     try {
       setLoading(true);
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/team/${teamId}`);
+      await api.delete(`/team/${teamId}`);
       setSuccess("Team deleted successfully");
       setTimeout(() => setSuccess(null), 3000);
       fetchTeams();

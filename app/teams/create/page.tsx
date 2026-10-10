@@ -1,6 +1,6 @@
 "use client";
 import { useState, useCallback } from "react";
-import axios from "axios";
+import { api } from "@/lib/api";
 import { GiDeathSkull, GiSpikedDragonHead } from "react-icons/gi";
 import { Flame } from "lucide-react";
 
@@ -41,13 +41,9 @@ export default function RegisterTeam() {
       formPayload.append("slot", formData.slot);
       if (formData.logo) formPayload.append("logo", formData.logo);
 
-      await axios.post(
-        "https://points-backend-gu2z.onrender.com/api/v1/team/",
-        formPayload,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
+      await api.post("/team", formPayload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       setMessage({ type: "success", content: "Team registered successfully!" });
       setFormData({ name: "", slot: "", logo: null });
