@@ -25,7 +25,7 @@ function LoginForm() {
       }
       setAdminSession(token);
       const next = searchParams.get("next");
-      router.replace(next && next.startsWith("/") ? next : "/controller");
+      router.replace(next && next.startsWith("/") ? next : "/admin/overview");
     } catch (error) {
       const message = isAxiosError(error)
         ? (error.response?.data?.message as string | undefined)

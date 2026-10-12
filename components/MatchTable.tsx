@@ -1,10 +1,17 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Camera } from "lucide-react";
 import html2canvas from "html2canvas";
+import { api } from "@/lib/api";
+import { useSettings } from "@/hooks/useSettings";
+import {
+  DEFAULT_POINTS_TABLE,
+  hexToRgba,
+  mergePointsTable,
+  type PointsTableSettings,
+} from "@/lib/tableSettings";
 
 const styles = {
   screenshot: `
@@ -54,54 +61,70 @@ const trophyVariants = {
   },
 };
 
+const PREVIEW_TEAMS: Team[] = [
+  { _id: "p1", name: "TEAM ALPHA", logo: "/placeholder.svg", slot: 1, currentRound: 1, totalPoints: 16, rounds: [{ roundNumber: 1, kills: 6, killPoints: 6, position: 1, positionPoints: 10, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
+  { _id: "p2", name: "TEAM BRAVO", logo: "/placeholder.svg", slot: 2, currentRound: 1, totalPoints: 12, rounds: [{ roundNumber: 1, kills: 4, killPoints: 4, position: 2, positionPoints: 8, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
+  { _id: "p3", name: "TEAM CHARLIE", logo: "/placeholder.svg", slot: 3, currentRound: 1, totalPoints: 9, rounds: [{ roundNumber: 1, kills: 6, killPoints: 6, position: 5, positionPoints: 3, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
+  { _id: "p4", name: "TEAM DELTA", logo: "/placeholder.svg", slot: 4, currentRound: 1, totalPoints: 7, rounds: [{ roundNumber: 1, kills: 5, killPoints: 5, position: 8, positionPoints: 2, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
+  { _id: "p5", name: "TEAM ECHO", logo: "/placeholder.svg", slot: 5, currentRound: 1, totalPoints: 4, rounds: [{ roundNumber: 1, kills: 4, killPoints: 4, position: 12, positionPoints: 0, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
+];
+
 interface MatchTableProps {
   readonly matchId?: number;
+  readonly previewSettings?: PointsTableSettings;
+  readonly preview?: boolean;
+  readonly inline?: boolean;
 }
 
-export default function MatchTable({ matchId }: MatchTableProps) {
+export default function MatchTable({
+  matchId,
+  previewSettings,
+  preview = false,
+  inline = false,
+}: MatchTableProps) {
   const [teams, setTeams] = useState<Team[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
 
+  const { settings: remoteSettings } = useSettings();
+
+  const settings = useMemo<PointsTableSettings>(
+    () =>
+      mergePointsTable(
+        previewSettings ?? remoteSettings?.pointsTable ?? DEFAULT_POINTS_TABLE
+      ),
+    [previewSettings, remoteSettings]
+  );
+
+  const { colors, match } = settings;
+  const displayTeams = preview ? PREVIEW_TEAMS : teams;
+
   useEffect(() => {
+    if (preview) return;
     const fetchTeams = async () => {
       try {
         const url = matchId
-          ? `${process.env.NEXT_PUBLIC_API_URL}/team/match/${matchId}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/team`;
-        const response = await axios.get(url);
+          ? `/team/match/${matchId}`
+          : `/team`;
+        const response = await api.get(url);
         const data = response.data;
 
         if (data.success) {
-          // setTeams(() => {  // Original sorting logic
-          //   return data.data.sort((a: Team, b: Team) => {
-          //     const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
-          //     const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
-          //     const aTotal =
-          //       (aRound?.kills || 0) + (aRound?.positionPoints || 0);
-          //     const bTotal =
-          //       (bRound?.kills || 0) + (bRound?.positionPoints || 0);
-          //     return bTotal - aTotal;
-          //   });
-          // });
-
-          // Updated sorting logic
           setTeams(() => {
             return data.data.sort((a: Team, b: Team) => {
               const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
               const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
-          
+
               const aPositionPoints = aRound?.positionPoints || 0;
               const bPositionPoints = bRound?.positionPoints || 0;
-          
+
               const aTotal = (aRound?.kills || 0) + aPositionPoints;
               const bTotal = (bRound?.kills || 0) + bPositionPoints;
-          
-              // Sort by position points first, then by total points
+
               if (bPositionPoints !== aPositionPoints) {
-                return bPositionPoints - aPositionPoints; // Higher position points first
+                return bPositionPoints - aPositionPoints;
               }
-              return bTotal - aTotal; // If position points are the same, sort by total points
+              return bTotal - aTotal;
             });
           });
         }
@@ -110,15 +133,7 @@ export default function MatchTable({ matchId }: MatchTableProps) {
       }
     };
     fetchTeams();
-    // const interval = setInterval(fetchTeams, 2000);
-    // return () => clearInterval(interval);
-  }, [matchId]);
-
-  const getRowBackground = (index: number) => {
-    if (index === 0) return "bg-gradient-to-r from-[#C19A6B] to-[#CD7F32]";
-    if (index === 1) return "bg-gradient-to-r from-[#7b7575] to-[#685c5c]";
-    return "bg-gradient-to-r from-[#1a2634] to-[#2c3e50]";
-  };
+  }, [matchId, preview]);
 
   const captureScreenshot = async () => {
     if (!contentRef.current || isCapturing) return;
@@ -128,8 +143,8 @@ export default function MatchTable({ matchId }: MatchTableProps) {
       const element = contentRef.current;
 
       const canvas = await html2canvas(element, {
-        scale: 3, // Higher resolution
-        backgroundColor: "#0a0e17",
+        scale: 3,
+        backgroundColor: colors.panelTo,
         logging: false,
         allowTaint: true,
         useCORS: true,
@@ -142,10 +157,9 @@ export default function MatchTable({ matchId }: MatchTableProps) {
         x: 0,
         y: 0,
         width: element.offsetWidth,
-        height: element.offsetHeight + 40, // Small padding at bottom
+        height: element.offsetHeight + 40,
       });
 
-      // Convert to blob
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob(
           (blob) => {
@@ -156,7 +170,6 @@ export default function MatchTable({ matchId }: MatchTableProps) {
         );
       });
 
-      // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -173,20 +186,29 @@ export default function MatchTable({ matchId }: MatchTableProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#0a0e17] bg-[url('/grid.svg')] bg-fixed bg-center">
+    <div
+      className={inline ? "relative" : "relative min-h-screen bg-fixed bg-center"}
+      style={{
+        background: `linear-gradient(135deg, ${colors.panelFrom} 0%, ${colors.panelTo} 100%)`,
+      }}
+    >
       <style>{styles.screenshot}</style>
 
-      {/* Screenshot Button */}
-      <motion.button
-        onClick={captureScreenshot}
-        disabled={isCapturing}
-        className="fixed right-4 top-4 z-50 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#07559D] to-[#E76F00] rounded-lg text-white font-semibold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Camera className="w-5 h-5" />
-        {isCapturing ? "Capturing..." : "Screenshot"}
-      </motion.button>
+      {!preview ? (
+        <motion.button
+          onClick={captureScreenshot}
+          disabled={isCapturing}
+          className="fixed right-4 top-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          style={{
+            background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Camera className="w-5 h-5" />
+          {isCapturing ? "Capturing..." : "Screenshot"}
+        </motion.button>
+      ) : null}
 
       <div
         ref={contentRef}
@@ -197,26 +219,24 @@ export default function MatchTable({ matchId }: MatchTableProps) {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative inline-flex items-center gap-3" // Flex container for logo & title
+            className="relative inline-flex items-center gap-3"
           >
-           {/*<div className="relative top-5 -left-5 w-14 h-14 md:w-16 md:h-16">
-              <Image
-                src="/logo.png" // Replace with actual logo path
-                alt="Tournament Logo"
-                layout="intrinsic"
-                width={64}
-                height={64}
-                priority
-                className="object-contain"
-              />
-            </div>*/}
-            <h1 className="text-4xl md:text-6xl font-bold text-[#07559D] tracking-tight">
-               PUBG Mobile <span className="text-[#E76F00]">Campus League</span>
+            <h1
+              className="text-4xl md:text-6xl font-bold tracking-tight"
+              style={{ color: colors.accent }}
+            >
+              PUBG Mobile{" "}
+              <span style={{ color: colors.warning }}>Campus League</span>
             </h1>
           </motion.div>
 
           <div className="flex justify-center mt-8">
-            <div className="w-24 h-1 bg-gradient-to-r from-[#07559D] to-[#E76F00]" />
+            <div
+              className="w-24 h-1"
+              style={{
+                background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+              }}
+            />
           </div>
 
           <motion.div
@@ -225,11 +245,14 @@ export default function MatchTable({ matchId }: MatchTableProps) {
             transition={{ delay: 0.2 }}
             className="flex items-center justify-center gap-2 mt-4"
           >
-            <Flame className="w-5 h-5 text-[#E76F00]" />
-            <h2 className="text-2xl -mt-5 font-semibold text-gray-300">
+            <Flame className="w-5 h-5" style={{ color: colors.warning }} />
+            <h2
+              className="text-2xl -mt-5 font-semibold"
+              style={{ color: colors.textPrimary, opacity: 0.75 }}
+            >
               Match {matchId}
             </h2>
-            <Flame className="w-5 h-5 text-[#E76F00]" />
+            <Flame className="w-5 h-5" style={{ color: colors.warning }} />
           </motion.div>
         </div>
 
@@ -238,29 +261,64 @@ export default function MatchTable({ matchId }: MatchTableProps) {
           animate={{ opacity: 1, y: 0 }}
           className="w-[450px] mx-auto relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07559D]/20 to-[#E76F00]/20 blur-xl" />
+          <div
+            className="absolute inset-0 blur-xl"
+            style={{
+              background: `linear-gradient(90deg, ${hexToRgba(
+                colors.headerFrom,
+                0.2
+              )} 0%, ${hexToRgba(colors.headerTo, 0.2)} 100%)`,
+            }}
+          />
           <div className="relative">
-            <div className="flex flex-col rounded-lg overflow-hidden border-2 border-[#2c3e50]">
-              <div className="flex h-[3.5rem] bg-gradient-to-r from-[#1a2634] to-[#2c3e50] text-white font-sans text-sm font-bold border-b-2 border-[#2c3e50]">
-                <div className="w-[50px] flex items-center justify-center text-[#07559D]">
-                  #
-                </div>
+            <div
+              className="flex flex-col rounded-lg overflow-hidden border-2"
+              style={{ borderColor: colors.border }}
+            >
+              <div
+                className="flex h-[3.5rem] font-sans text-sm font-bold border-b-2"
+                style={{
+                  color: "#FFFFFF",
+                  borderColor: colors.border,
+                  background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+                }}
+              >
+                {match.showRank ? (
+                  <div className="w-[50px] flex items-center justify-center">
+                    #
+                  </div>
+                ) : null}
                 <div className="w-[150px] flex items-center justify-start pl-2">
                   TEAM
                 </div>
-                <div className="w-[80px] flex items-center justify-center text-gray-200">
-                  ELIMS
-                </div>
-                <div className="w-[80px] flex items-center justify-center text-gray-200">
-                  PLACE PTS
-                </div>
-                <div className="w-[80px] flex items-center justify-center text-[#E76F00]">
-                  TOTAL
-                </div>
+                {match.showElims ? (
+                  <div
+                    className="w-[80px] flex items-center justify-center"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    ELIMS
+                  </div>
+                ) : null}
+                {match.showPlace ? (
+                  <div
+                    className="w-[80px] flex items-center justify-center"
+                    style={{ color: colors.textPrimary }}
+                  >
+                    PLACE PTS
+                  </div>
+                ) : null}
+                {match.showTotal ? (
+                  <div
+                    className="w-[80px] flex items-center justify-center"
+                    style={{ color: colors.warning }}
+                  >
+                    TOTAL
+                  </div>
+                ) : null}
               </div>
               <div>
                 <AnimatePresence>
-                  {teams.map((team, index) => {
+                  {displayTeams.map((team, index) => {
                     const currentRoundStats = team.rounds[
                       matchId ? 0 : team.currentRound - 1
                     ] || {
@@ -283,47 +341,84 @@ export default function MatchTable({ matchId }: MatchTableProps) {
                           stiffness: 100,
                           damping: 15,
                         }}
-                        className={`flex h-12 ${getRowBackground(
-                          index
-                        )} text-white font-sans text-sm border-b border-[#2c3e50]/30`}
+                        className="flex h-12 font-sans text-sm border-b"
+                        style={{
+                          color: "#FFFFFF",
+                          background: `linear-gradient(90deg, ${colors.teamFrom} 0%, ${colors.teamTo} 100%)`,
+                          borderColor: hexToRgba(colors.border, 0.3),
+                        }}
                       >
-                        <div className="w-[50px] flex items-center justify-center font-bold text-[#07559D]">
-                          {index === 0 ? (
-                            <motion.span
-                              className="relative z-10"
-                              variants={trophyVariants}
-                              initial="initial"
-                              animate="animate"
-                            >
-                              🏆
-                            </motion.span>
-                          ) : (
-                            `#${index + 1}`
-                          )}
-                        </div>
-                        <div className="w-[150px] flex items-center space-x-2 pl-2">
-                          <div className="w-8 h-8 relative flex items-center justify-center bg-[#34495e] rounded-full p-1">
-                            <Image
-                              src={team.logo || "/placeholder.svg"}
-                              alt={team.name}
-                              width={28}
-                              height={28}
-                              className="object-contain rounded-full"
-                            />
+                        {match.showRank ? (
+                          <div
+                            className="w-[50px] flex items-center justify-center font-bold"
+                            style={{ color: "#FFFFFF" }}
+                          >
+                            {index === 0 ? (
+                              <motion.span
+                                className="relative z-10"
+                                variants={trophyVariants}
+                                initial="initial"
+                                animate="animate"
+                              >
+                                🏆
+                              </motion.span>
+                            ) : (
+                              `#${index + 1}`
+                            )}
                           </div>
+                        ) : null}
+                        <div className="w-[150px] flex items-center space-x-2 pl-2">
+                          {match.showLogo ? (
+                            <div
+                              className="w-8 h-8 relative flex items-center justify-center rounded-full p-1"
+                              style={{ background: colors.rankFrom }}
+                            >
+                              <Image
+                                src={team.logo || "/placeholder.svg"}
+                                alt={team.name}
+                                width={28}
+                                height={28}
+                                className="object-contain rounded-full"
+                              />
+                            </div>
+                          ) : null}
                           <div className="font-bold h-full pt-[0.65rem] tracking-wider truncate">
                             {team.name.toUpperCase()}
                           </div>
                         </div>
-                        <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
-                          {currentRoundStats.kills || 0}
-                        </div>
-                        <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
-                          {currentRoundStats.positionPoints || 0}
-                        </div>
-                        <div className="w-[80px] flex items-center justify-center font-bold text-gray-200">
-                          {totalPoints}
-                        </div>
+                        {match.showElims ? (
+                          <div
+                            className="w-[80px] flex items-center justify-center font-bold"
+                            style={{
+                              color: colors.elimColor,
+                              backgroundColor: colors.cellBg,
+                            }}
+                          >
+                            {currentRoundStats.kills || 0}
+                          </div>
+                        ) : null}
+                        {match.showPlace ? (
+                          <div
+                            className="w-[80px] flex items-center justify-center font-bold"
+                            style={{
+                              color: colors.placeColor,
+                              backgroundColor: colors.cellBg,
+                            }}
+                          >
+                            {currentRoundStats.positionPoints || 0}
+                          </div>
+                        ) : null}
+                        {match.showTotal ? (
+                          <div
+                            className="w-[80px] flex items-center justify-center font-bold"
+                            style={{
+                              color: colors.totalColor,
+                              backgroundColor: colors.cellBg,
+                            }}
+                          >
+                            {totalPoints}
+                          </div>
+                        ) : null}
                       </motion.div>
                     );
                   })}

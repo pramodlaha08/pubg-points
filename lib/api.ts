@@ -2,15 +2,35 @@ import axios from "axios";
 
 export const ADMIN_TOKEN_KEY = "pubg_admin_token";
 export const ADMIN_COOKIE = "pubg_admin";
+export const TOURNAMENT_STORAGE_KEY = "pubg_tournament_id";
 const COOKIE_MAX_AGE = 60 * 60 * 12;
 
-export const PROTECTED_PREFIXES = [
-  "/controller",
-  "/teams",
-  "/rounds",
-  "/positions",
-  "/settings",
-];
+export const PROTECTED_PREFIXES = ["/admin"];
+
+// Tournament scope resolution priority:
+//   1. explicit ?tournamentId= in the current URL (OBS overlays pin this)
+//   2. id selected in the admin switcher (module level) or persisted
+//   3. none -> backend falls back to the default tournament
+let explicitTournamentId: string | null = null;
+
+export function setApiTournamentId(id: string | null) {
+  explicitTournamentId = id || null;
+}
+
+export function getApiTournamentId(): string | null {
+  if (typeof window !== "undefined") {
+    const fromUrl = new URLSearchParams(window.location.search).get(
+      "tournamentId"
+    );
+    if (fromUrl) return fromUrl;
+  }
+  if (explicitTournamentId) return explicitTournamentId;
+  if (typeof window !== "undefined") {
+    const stored = window.localStorage.getItem(TOURNAMENT_STORAGE_KEY);
+    if (stored) return stored;
+  }
+  return null;
+}
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -21,6 +41,10 @@ api.interceptors.request.use((config) => {
     const token = window.localStorage.getItem(ADMIN_TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    const tournamentId = getApiTournamentId();
+    if (tournamentId) {
+      config.headers["X-Tournament-Id"] = tournamentId;
     }
   }
   return config;

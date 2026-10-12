@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
-import { api } from "@/lib/api";
+import { api, getApiTournamentId } from "@/lib/api";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
@@ -120,6 +120,9 @@ export default function AnimatedTeamTable({
     deadBar: colors.deadBar,
     hudGlow: hexToRgba(accent, 0.28),
     textPrimary: colors.textPrimary,
+    totalColor: colors.totalColor,
+    elimColor: colors.elimColor,
+    placeColor: colors.placeColor,
   };
 
   const { columns, header, layout } = settings;
@@ -188,6 +191,8 @@ export default function AnimatedTeamTable({
 
     socket.on("connect", () => {
       setIsConnected(true);
+      const scope = getApiTournamentId();
+      if (scope) socket.emit("join_tournament", scope);
       scheduleRefresh("connect");
     });
 
@@ -204,9 +209,9 @@ export default function AnimatedTeamTable({
     socket.on("elimination_state_changed", () =>
       scheduleRefresh("elimination_state_changed"),
     );
-    socket.on("settings_updated", (payload) => {
+    socket.on("settings_updated", () => {
       if (!previewSettings) {
-        setSettings(mergePointsTable(payload?.pointsTable));
+        void fetchSettings();
       }
       scheduleRefresh("settings_updated");
     });
@@ -423,13 +428,15 @@ export default function AnimatedTeamTable({
                         minHeight: "100%",
                       }}
                     >
-                      <Image
-                        src={team.logo || "/placeholder.svg"}
-                        alt={team.name}
-                        width={20}
-                        height={20}
-                        className="object-contain rounded-sm"
-                      />
+                      {columns.logo ? (
+                        <Image
+                          src={team.logo || "/placeholder.svg"}
+                          alt={team.name}
+                          width={20}
+                          height={20}
+                          className="object-contain rounded-sm"
+                        />
+                      ) : null}
                       <span
                         className={`truncate font-extrabold tracking-[0.02em] ${
                           isEliminated
@@ -501,11 +508,12 @@ export default function AnimatedTeamTable({
                     {columns.pts ? (
                       <div
                         className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                          isEliminated ? "text-slate-600" : "text-sky-700"
+                          isEliminated ? "text-slate-600" : ""
                         }`}
                         style={{
                           background: isEliminated ? "transparent" : palette.cellBg,
                           borderLeft: `1px solid ${palette.borderSoft}`,
+                          color: isEliminated ? undefined : palette.totalColor,
                         }}
                       >
                         {team.totalPoints}
@@ -515,11 +523,12 @@ export default function AnimatedTeamTable({
                     {columns.elims ? (
                       <div
                         className={`relative z-10 w-12 flex items-center justify-center font-black ${
-                          isEliminated ? "text-slate-600" : "text-amber-600"
+                          isEliminated ? "text-slate-600" : ""
                         }`}
                         style={{
                           background: isEliminated ? "transparent" : palette.cellBg,
                           borderLeft: `1px solid ${palette.borderSoft}`,
+                          color: isEliminated ? undefined : palette.elimColor,
                         }}
                       >
                         {currentRound?.kills ?? 0}

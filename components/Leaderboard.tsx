@@ -1,8 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
+import { useSettings } from "@/hooks/useSettings";
+import {
+  DEFAULT_POINTS_TABLE,
+  mergePointsTable,
+  type PointsTableSettings,
+} from "@/lib/tableSettings";
 
 interface Team {
   _id: string;
@@ -51,64 +58,56 @@ interface TeamTableProps {
   readonly teams: Team[];
   readonly startIndex: number;
   readonly endIndex: number;
-  readonly themeColor?: string;
+  readonly settings: PointsTableSettings;
 }
 
 interface SplitLeaderboardProps {
   readonly teams: Team[];
   readonly themeColor?: string;
+  readonly settings?: PointsTableSettings;
 }
 
 const TeamTable = ({
   teams,
   startIndex,
   endIndex,
-  themeColor,
+  settings,
 }: TeamTableProps) => {
   const slicedTeams = teams.slice(startIndex, endIndex);
+  const { colors, leaderboard } = settings;
 
   const palette = {
-    // Professional bright esports blue theme matching page
-    accent: themeColor || "#001FFF",
-    panelFrom: "#F5F8FF",
-    panelTo: "#EAF2FF",
-    panelEdge: "#D9E6FF",
-    headerFrom: "rgb(0,31,255)", // bright blue
-    headerTo: "rgb(90,150,230)", // light blue
-    headerTextDim: "#EFF6FF",
-    rowFrom: "#FFFFFF",
-    rowTo: "#F4F9FF",
-    border: "#93C5FD", // blue-300
-    borderSoft: "#BFDBFE", // blue-200
-    rankFrom: "rgb(0,31,255)",
-    rankTo: "rgb(90,150,230)",
-    teamFrom: "rgb(0,31,255)",
-    teamTo: "rgb(90,150,230)",
-    statsFrom: "#FFFFFF",
-    statsTo: "#F8FBFF",
-    textPrimary: "#0F172A",
-    textDim: "#334155",
-    statBg: "#FFF",
-    placeColor: "#2563EB", // blue-600
-    elimColor: "#D97706", // amber-600
-    totalColor: "#0F172A", // slate-900
+    accent: colors.accent,
+    panelFrom: colors.panelFrom,
+    panelTo: colors.panelTo,
+    panelEdge: colors.borderSoft,
+    headerFrom: colors.headerFrom,
+    headerTo: colors.headerTo,
+    border: colors.border,
+    borderSoft: colors.borderSoft,
+    rankFrom: colors.rankFrom,
+    rankTo: colors.rankTo,
+    teamFrom: colors.teamFrom,
+    teamTo: colors.teamTo,
+    textPrimary: colors.textPrimary,
+    statBg: colors.cellBg,
+    placeColor: colors.placeColor,
+    elimColor: colors.elimColor,
+    totalColor: colors.totalColor,
+    warning: colors.warning,
   };
 
-  const getChickenCount = (team: Team) => {
-    return team.rounds.filter((round) => round.position === 1).length;
-  };
+  const getChickenCount = (team: Team) =>
+    team.rounds.filter((round) => round.position === 1).length;
 
-  const calculateTotalStats = (team: Team) => {
-    return team.rounds.reduce(
-      (acc, round) => {
-        return {
-          placePoints: acc.placePoints + (round.positionPoints || 0),
-          elimPoints: acc.elimPoints + (round.killPoints || 0),
-        };
-      },
-      { placePoints: 0, elimPoints: 0 },
+  const calculateTotalStats = (team: Team) =>
+    team.rounds.reduce(
+      (acc, round) => ({
+        placePoints: acc.placePoints + (round.positionPoints || 0),
+        elimPoints: acc.elimPoints + (round.killPoints || 0),
+      }),
+      { placePoints: 0, elimPoints: 0 }
     );
-  };
 
   return (
     <div
@@ -154,15 +153,21 @@ const TeamTable = ({
         >
           TEAM
         </div>
-        <div className="flex w-14 items-center justify-center text-white">
-          PLACE
-        </div>
-        <div className="flex w-14 items-center justify-center text-white">
-          ELIMS
-        </div>
-        <div className="flex w-14 items-center justify-center pr-1 text-white">
-          TOTAL
-        </div>
+        {leaderboard.showPlace ? (
+          <div className="flex w-14 items-center justify-center text-white">
+            PLACE
+          </div>
+        ) : null}
+        {leaderboard.showElims ? (
+          <div className="flex w-14 items-center justify-center text-white">
+            ELIMS
+          </div>
+        ) : null}
+        {leaderboard.showTotal ? (
+          <div className="flex w-14 items-center justify-center pr-1 text-white">
+            TOTAL
+          </div>
+        ) : null}
       </div>
 
       <div className="relative overflow-hidden">
@@ -187,10 +192,11 @@ const TeamTable = ({
                   damping: 15,
                   delay: Math.min(index * 0.015, 0.12),
                 }}
-                className="relative flex h-10 text-xs shadow-md text-slate-900"
+                className="relative flex h-10 text-xs shadow-md"
                 style={{
                   borderBottom: `1px solid ${palette.borderSoft}`,
                   background: "transparent",
+                  color: palette.textPrimary,
                   boxShadow: topRankStyle
                     ? `${topRankStyle.glow}, inset 0 0 0 1px rgba(255,255,255,0.06)`
                     : undefined,
@@ -216,14 +222,7 @@ const TeamTable = ({
                       {actualRank}
                     </span>
                   ) : (
-                    <span
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-black shadow-sm"
-                      style={{
-                        color: "#FFFFFF",
-                        backgroundColor: "transparent",
-                        border: "none",
-                      }}
-                    >
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-black text-white">
                       {actualRank}
                     </span>
                   )}
@@ -235,13 +234,15 @@ const TeamTable = ({
                     background: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
                   }}
                 >
-                  <Image
-                    src={team.logo || "/placeholder.svg"}
-                    alt={team.name}
-                    width={22}
-                    height={22}
-                    className="object-contain rounded-sm"
-                  />
+                  {leaderboard.showLogo ? (
+                    <Image
+                      src={team.logo || "/placeholder.svg"}
+                      alt={team.name}
+                      width={22}
+                      height={22}
+                      className="object-contain rounded-sm"
+                    />
+                  ) : null}
 
                   <div className="min-w-0 flex-1 flex items-center pr-2">
                     <span
@@ -251,8 +252,14 @@ const TeamTable = ({
                       {team.name.toUpperCase()}
                     </span>
 
-                    {chickenCount > 0 ? (
-                      <span className="ml-2 inline-flex items-center gap-1 rounded bg-[#EAB308] px-1 py-0.5 text-[9px] font-black text-white shadow-sm border border-yellow-400">
+                    {leaderboard.showChickens && chickenCount > 0 ? (
+                      <span
+                        className="ml-2 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[9px] font-black text-white shadow-sm border"
+                        style={{
+                          background: palette.warning,
+                          borderColor: palette.warning,
+                        }}
+                      >
                         <GiChickenOven className="h-3 w-3" />
                         {`x${chickenCount}`}
                       </span>
@@ -260,38 +267,44 @@ const TeamTable = ({
                   </div>
                 </div>
 
-                <div
-                  className="relative z-10 flex w-14 items-center justify-center font-black"
-                  style={{
-                    color: palette.placeColor,
-                    backgroundColor: palette.statsFrom,
-                    borderLeft: `1px solid ${palette.borderSoft}`,
-                  }}
-                >
-                  {placePoints}
-                </div>
+                {leaderboard.showPlace ? (
+                  <div
+                    className="relative z-10 flex w-14 items-center justify-center font-black"
+                    style={{
+                      color: palette.placeColor,
+                      backgroundColor: palette.statBg,
+                      borderLeft: `1px solid ${palette.borderSoft}`,
+                    }}
+                  >
+                    {placePoints}
+                  </div>
+                ) : null}
 
-                <div
-                  className="relative z-10 flex w-14 items-center justify-center font-black"
-                  style={{
-                    color: palette.elimColor,
-                    backgroundColor: palette.statsFrom,
-                    borderLeft: `1px solid ${palette.borderSoft}`,
-                  }}
-                >
-                  {elimPoints}
-                </div>
+                {leaderboard.showElims ? (
+                  <div
+                    className="relative z-10 flex w-14 items-center justify-center font-black"
+                    style={{
+                      color: palette.elimColor,
+                      backgroundColor: palette.statBg,
+                      borderLeft: `1px solid ${palette.borderSoft}`,
+                    }}
+                  >
+                    {elimPoints}
+                  </div>
+                ) : null}
 
-                <div
-                  className="relative z-10 flex w-14 items-center justify-center font-black"
-                  style={{
-                    color: palette.totalColor,
-                    backgroundColor: palette.statsFrom,
-                    borderLeft: `1px solid ${palette.borderSoft}`,
-                  }}
-                >
-                  {totalPoints}
-                </div>
+                {leaderboard.showTotal ? (
+                  <div
+                    className="relative z-10 flex w-14 items-center justify-center font-black"
+                    style={{
+                      color: palette.totalColor,
+                      backgroundColor: palette.statBg,
+                      borderLeft: `1px solid ${palette.borderSoft}`,
+                    }}
+                  >
+                    {totalPoints}
+                  </div>
+                ) : null}
 
                 <div
                   className="pointer-events-none absolute left-0 top-0 h-full w-[3px]"
@@ -313,20 +326,29 @@ const TeamTable = ({
 
 export default function SplitLeaderboard({
   teams,
-  themeColor,
+  settings: settingsProp,
 }: SplitLeaderboardProps) {
+  const { settings: remoteSettings } = useSettings();
+
+  const settings = useMemo<PointsTableSettings>(
+    () =>
+      mergePointsTable(
+        settingsProp ?? remoteSettings?.pointsTable ?? DEFAULT_POINTS_TABLE
+      ),
+    [settingsProp, remoteSettings]
+  );
+
   const sortedTeams = [...teams].sort((a, b) => {
     const aStats = a.rounds.reduce(
       (acc, round) =>
         acc + (round.positionPoints || 0) + (round.killPoints || 0),
-      0,
+      0
     );
     const bStats = b.rounds.reduce(
       (acc, round) =>
         acc + (round.positionPoints || 0) + (round.killPoints || 0),
-      0,
+      0
     );
-
     return bStats - aStats;
   });
 
@@ -338,13 +360,13 @@ export default function SplitLeaderboard({
         teams={sortedTeams}
         startIndex={0}
         endIndex={half}
-        themeColor={themeColor}
+        settings={settings}
       />
       <TeamTable
         teams={sortedTeams}
         startIndex={half}
         endIndex={sortedTeams.length}
-        themeColor={themeColor}
+        settings={settings}
       />
     </div>
   );
