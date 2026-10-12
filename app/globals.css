@@ -21,6 +21,37 @@ body {
   @apply bg-gray-900;
 }
 
+/* Neutral admin panel theme (light default, dark via .dark on <html>). */
+.admin-theme {
+  --adm-bg: #f1f5f9;
+  --adm-surface: #ffffff;
+  --adm-surface-2: #f8fafc;
+  --adm-border: #e2e8f0;
+  --adm-fg: #0f172a;
+  --adm-muted: #64748b;
+  --adm-primary: #dc2626;
+  --adm-primary-fg: #ffffff;
+  --adm-ring: #dc2626;
+  --adm-sidebar: #0b1220;
+  --adm-sidebar-fg: #cbd5e1;
+  --adm-sidebar-active: rgba(220, 38, 38, 0.16);
+}
+
+.dark .admin-theme {
+  --adm-bg: #0b1220;
+  --adm-surface: #111827;
+  --adm-surface-2: #0f172a;
+  --adm-border: #1f2937;
+  --adm-fg: #e5e7eb;
+  --adm-muted: #94a3b8;
+  --adm-primary: #ef4444;
+  --adm-primary-fg: #ffffff;
+  --adm-ring: #ef4444;
+  --adm-sidebar: #060b16;
+  --adm-sidebar-fg: #94a3b8;
+  --adm-sidebar-active: rgba(239, 68, 68, 0.18);
+}
+
 /* Broadcast pages (leaderboard/pointstable) run edge-to-edge without app chrome. */
 body:has(.broadcast-page) header {
   display: none;
@@ -32,7 +63,6 @@ body:has(.broadcast-page) > main {
   margin: 0 !important;
   padding: 0 !important;
 }
-
 body:has(.broadcast-page) [data-app-sidebar="true"] {
   display: none !important;
 }

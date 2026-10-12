@@ -1,13 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const ADMIN_COOKIE = "pubg_admin";
-const PROTECTED_PREFIXES = [
-  "/controller",
-  "/teams",
-  "/rounds",
-  "/positions",
-  "/settings",
-];
+const PROTECTED_PREFIXES = ["/admin"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,7 +9,7 @@ export function middleware(request: NextRequest) {
 
   if (pathname === "/login") {
     if (loggedIn) {
-      return NextResponse.redirect(new URL("/controller", request.url));
+      return NextResponse.redirect(new URL("/admin/overview", request.url));
     }
     return NextResponse.next();
   }
@@ -34,12 +28,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/login",
-    "/controller/:path*",
-    "/teams/:path*",
-    "/rounds/:path*",
-    "/positions/:path*",
-    "/settings/:path*",
-  ],
+  matcher: ["/login", "/admin", "/admin/:path*"],
 };

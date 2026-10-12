@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Default team logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f4653"/>
+      <stop offset="1" stop-color="#262b34"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="28" fill="url(#bg)"/>
+  <path d="M64 20 100 34v30c0 22-14 38-36 46-22-8-36-24-36-46V34z" fill="none" stroke="#8b93a3" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="64" cy="55" r="12" fill="#8b93a3"/>
+  <path d="M42 86c2-12 11-19 22-19s20 7 22 19" fill="#8b93a3"/>
+</svg>
