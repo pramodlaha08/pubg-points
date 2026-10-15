@@ -136,6 +136,7 @@ export default function AutoScoringPage() {
   const [resultHash, setResultHash] = useState("");
   const [resultRaw, setResultRaw] = useState("");
   const [resultWarnings, setResultWarnings] = useState<string[]>([]);
+  const [resultEngine, setResultEngine] = useState("");
   const [resultImages, setResultImages] = useState(0);
   const [serverResultsMapping, setServerResultsMapping] = useState<
     ResultsMappingRow[]
@@ -295,6 +296,7 @@ export default function AutoScoringPage() {
       setResultHash(data.imageHash ?? "");
       setResultRaw(data.rawText ?? "");
       setResultWarnings(data.warnings ?? []);
+      setResultEngine(data.ocr?.engine ?? "tesseract");
       setResultImages(data.ocr?.images ?? files.length);
       setServerResultsMapping(data.mapping ?? []);
       setUnmatched(data.unmatched ?? []);
@@ -353,6 +355,7 @@ export default function AutoScoringPage() {
     setResultHash("");
     setResultRaw("");
     setResultWarnings([]);
+    setResultEngine("");
     setResultImages(0);
     setServerResultsMapping([]);
     setComparison([]);
@@ -528,6 +531,9 @@ export default function AutoScoringPage() {
             )}
             {lobbyEngine.startsWith("ai:") && (
               <Badge variant="info">AI assist</Badge>
+            )}
+            {lobbyEngine === "tesseract" && (
+              <Badge variant="warning">OCR fallback</Badge>
             )}
           </div>
 
@@ -740,6 +746,12 @@ export default function AutoScoringPage() {
             )}
             {resultImages > 0 && !resultBusy && (
               <Badge variant="muted">{resultImages} image(s)</Badge>
+            )}
+            {resultEngine.startsWith("ai:") && (
+              <Badge variant="info">AI assist</Badge>
+            )}
+            {resultEngine === "tesseract" && (
+              <Badge variant="warning">OCR fallback</Badge>
             )}
           </div>
 
