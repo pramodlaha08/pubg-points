@@ -24,6 +24,14 @@ interface Team {
   isEliminated: boolean;
 }
 
+// Alive teams first (so their boxes rise), fully-eliminated teams last.
+// Slot order is preserved within each group.
+const orderTeams = (a: Team, b: Team) => {
+  const eliminatedDiff = Number(a.isEliminated) - Number(b.isEliminated);
+  if (eliminatedDiff !== 0) return eliminatedDiff;
+  return a.slot - b.slot;
+};
+
 export default function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [isRoundInfoExpanded, setIsRoundInfoExpanded] = useState(false);
@@ -98,9 +106,7 @@ export default function TeamsPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {[...teams]
-            .sort((a, b) => a.slot - b.slot)
-            .map((team) => (
+          {[...teams].sort(orderTeams).map((team) => (
               <TeamCard
                 key={team._id}
                 team={team}

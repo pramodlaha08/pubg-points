@@ -6,12 +6,15 @@ import { Flame, Camera } from "lucide-react";
 import html2canvas from "html2canvas";
 import { api } from "@/lib/api";
 import { useSettings } from "@/hooks/useSettings";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useBranding } from "@/components/providers/BrandingProvider";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
   mergePointsTable,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
+import { GAMING_FX_CSS, Shine, fxPan } from "@/components/GamingFx";
 
 const styles = {
   screenshot: `
@@ -87,6 +90,8 @@ export default function MatchTable({
   const [isCapturing, setIsCapturing] = useState(false);
 
   const { settings: remoteSettings } = useSettings();
+  const { mapByRound } = useRoundInfo();
+  const { branding } = useBranding();
 
   const settings = useMemo<PointsTableSettings>(
     () =>
@@ -98,6 +103,13 @@ export default function MatchTable({
 
   const { colors, match } = settings;
   const displayTeams = preview ? PREVIEW_TEAMS : teams;
+
+  const latestRound = Object.keys(mapByRound).reduce(
+    (max, key) => Math.max(max, Number(key)),
+    0
+  );
+  const activeMapRound = matchId ?? (latestRound || undefined);
+  const activeMap = activeMapRound ? mapByRound[activeMapRound] : undefined;
 
   useEffect(() => {
     if (preview) return;
@@ -173,7 +185,11 @@ export default function MatchTable({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `HDC-PMBC-Match-${matchId || "standings"}.png`;
+      const brandSlug =
+        (branding.systemName || "Tournament")
+          .replace(/[^a-z0-9]+/gi, "-")
+          .replace(/^-+|-+$/g, "") || "Tournament";
+      link.download = `${brandSlug}-Match-${matchId || "standings"}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -193,6 +209,7 @@ export default function MatchTable({
       }}
     >
       <style>{styles.screenshot}</style>
+      <style>{GAMING_FX_CSS}</style>
 
       {!preview ? (
         <motion.button
@@ -216,25 +233,47 @@ export default function MatchTable({
         className="relative w-[500px] mx-auto px-4 py-8"
       >
         <div className="text-center mb-12 relative">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative inline-flex items-center gap-3"
-          >
-            <h1
-              className="text-4xl md:text-6xl font-bold tracking-tight"
-              style={{ color: colors.accent }}
+          {match.showTitle ? (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative inline-flex items-center gap-3"
             >
-              PUBG Mobile{" "}
-              <span style={{ color: colors.warning }}>Campus League</span>
-            </h1>
-          </motion.div>
+              <h1
+                className="text-4xl font-bold tracking-tight md:text-6xl"
+                style={{
+                  backgroundImage: `linear-gradient(90deg, ${colors.accent} 0%, ${colors.warning} 50%, ${colors.accent} 100%)`,
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  animation: "fxPan 5s linear infinite",
+                }}
+              >
+                {match.title || branding.systemName || "Tournament Standings"}
+              </h1>
+            </motion.div>
+          ) : null}
+
+          {match.subtitle ? (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-3 text-lg font-semibold uppercase tracking-widest"
+              style={{ color: colors.textPrimary, opacity: 0.7 }}
+            >
+              {match.subtitle}
+            </motion.p>
+          ) : null}
 
           <div className="flex justify-center mt-8">
             <div
-              className="w-24 h-1"
+              className="h-1 w-40 rounded-full"
               style={{
-                background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+                backgroundImage: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.warning} 50%, ${colors.headerTo} 100%)`,
+                backgroundSize: "200% 100%",
+                animation: "fxPan 4s linear infinite",
+                boxShadow: `0 0 14px ${hexToRgba(colors.warning, 0.6)}`,
               }}
             />
           </div>
@@ -254,6 +293,18 @@ export default function MatchTable({
             </h2>
             <Flame className="w-5 h-5" style={{ color: colors.warning }} />
           </motion.div>
+
+          {activeMap ? (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-lg font-bold uppercase tracking-widest mt-2"
+              style={{ color: colors.accent }}
+            >
+              Map: {activeMap}
+            </motion.p>
+          ) : null}
         </div>
 
         <motion.div
@@ -264,10 +315,15 @@ export default function MatchTable({
           <div
             className="absolute inset-0 blur-xl"
             style={{
-              background: `linear-gradient(90deg, ${hexToRgba(
+              backgroundImage: `linear-gradient(90deg, ${hexToRgba(
                 colors.headerFrom,
-                0.2
-              )} 0%, ${hexToRgba(colors.headerTo, 0.2)} 100%)`,
+                0.25
+              )} 0%, ${hexToRgba(colors.accent, 0.25)} 50%, ${hexToRgba(
+                colors.headerTo,
+                0.25
+              )} 100%)`,
+              backgroundSize: "200% 200%",
+              animation: "fxPan 8s linear infinite, fxPulse 3s ease-in-out infinite",
             }}
           />
           <div className="relative">
@@ -276,13 +332,15 @@ export default function MatchTable({
               style={{ borderColor: colors.border }}
             >
               <div
-                className="flex h-[3.5rem] font-sans text-sm font-bold border-b-2"
+                className="relative flex h-[3.5rem] overflow-hidden border-b-2 font-sans text-sm font-bold"
                 style={{
                   color: "#FFFFFF",
                   borderColor: colors.border,
-                  background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+                  backgroundImage: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+                  ...fxPan(9),
                 }}
               >
+                <Shine duration={4.6} />
                 {match.showRank ? (
                   <div className="w-[50px] flex items-center justify-center">
                     #

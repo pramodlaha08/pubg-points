@@ -172,7 +172,7 @@ export default function TournamentsPage() {
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. PMWC Season 2"
+                placeholder="e.g. Summer Championship"
               />
             </div>
             <div className="space-y-1">

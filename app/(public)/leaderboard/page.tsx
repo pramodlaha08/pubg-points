@@ -6,6 +6,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
 import { useSettings } from "@/hooks/useSettings";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useBranding } from "@/components/providers/BrandingProvider";
 import {
   DEFAULT_POINTS_TABLE,
   mergePointsTable,
@@ -33,6 +35,8 @@ interface Team {
 export default function LeaderboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const { settings: remoteSettings } = useSettings();
+  const { mapByRound } = useRoundInfo();
+  const { branding } = useBranding();
 
   const settings = useMemo(
     () => mergePointsTable(remoteSettings?.pointsTable ?? DEFAULT_POINTS_TABLE),
@@ -99,14 +103,11 @@ export default function LeaderboardPage() {
       )
     : null;
 
-  const map = {
-    1: "Rondo",
-    2: "Erangel",
-    3: "Erangel",
-    4: "Erangel",
-    5: "Miramar",
-    6: "Miramar",
-  };
+  const totalRounds = Math.max(
+    Object.keys(mapByRound).length,
+    firstTeam?.currentRound ?? 0
+  );
+  const currentMap = firstTeam ? mapByRound[firstTeam.currentRound] : undefined;
 
   return (
     <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden bg-slate-100">
@@ -148,14 +149,24 @@ export default function LeaderboardPage() {
                 className="text-xs font-bold uppercase tracking-[0.22em]"
                 style={{ color: palette.textDim }}
               >
-                PUBG Mobile Campus League
+                {branding.systemName || "Tournament"}
               </p>
-              <h1
-                className="text-3xl font-black uppercase tracking-wide"
-                style={{ color: palette.textPrimary }}
-              >
-                Overall Rankings
-              </h1>
+              {settings.leaderboard.showTitle ? (
+                <h1
+                  className="text-3xl font-black uppercase tracking-wide"
+                  style={{ color: palette.textPrimary }}
+                >
+                  {settings.leaderboard.title || "Overall Rankings"}
+                </h1>
+              ) : null}
+              {settings.leaderboard.subtitle ? (
+                <p
+                  className="text-sm font-semibold uppercase tracking-[0.2em]"
+                  style={{ color: palette.textDim }}
+                >
+                  {settings.leaderboard.subtitle}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-3">
@@ -176,7 +187,7 @@ export default function LeaderboardPage() {
                   className="text-xl font-black"
                   style={{ color: palette.textPrimary }}
                 >
-                  {firstTeam?.currentRound ?? "-"}/{Object.keys(map).length}
+                  {firstTeam?.currentRound ?? "-"}/{totalRounds}
                 </p>
               </div>
 
@@ -197,9 +208,7 @@ export default function LeaderboardPage() {
                   className="text-xl font-black"
                   style={{ color: palette.textPrimary }}
                 >
-                  {(firstTeam &&
-                    map[firstTeam.currentRound as keyof typeof map]) ||
-                    "Unknown"}
+                  {currentMap || "Unknown"}
                 </p>
               </div>
             </div>
@@ -231,7 +240,7 @@ export default function LeaderboardPage() {
                   {/* Replace source with actual character once uploaded to public/ */}
                   <Image
                     src="/pubg-character.png"
-                    alt="PUBG Character"
+                    alt="Tournament character"
                     width={350}
                     height={350}
                     className="object-contain drop-shadow-2xl grayscale-[20%]"

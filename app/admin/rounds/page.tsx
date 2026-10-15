@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
+import { PUBG_MAPS } from "@/lib/maps";
+import type { RoundInfo } from "@/types/roundInfo";
 import {ToastContainer, notifyError, notifySuccess} from "@/utils/ToastifyNotification"
 
 interface Team {
@@ -21,6 +23,9 @@ export default function RoundManager() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [roundNumber, setRoundNumber] = useState("");
+  const [mapName, setMapName] = useState("");
+  const [roundInfo, setRoundInfo] = useState<RoundInfo[]>([]);
+  const [loadingMap, setLoadingMap] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [error, setError] = useState("");
@@ -37,8 +42,23 @@ export default function RoundManager() {
         setError("Failed to load teams");
       }
     };
+    const fetchRoundInfo = async () => {
+      try {
+        const response = await api.get("/roundinfo");
+        setRoundInfo(response.data.data);
+      } catch {
+        setError("Failed to load round maps");
+      }
+    };
     fetchTeams();
+    fetchRoundInfo();
   }, []);
+
+  // Prefill the map field whenever the selected round changes
+  useEffect(() => {
+    const found = roundInfo.find((r) => r.roundNumber === Number(roundNumber));
+    setMapName(found?.mapName ?? "");
+  }, [roundNumber, roundInfo]);
 
   // Handle checkbox changes
   const handleCheckboxChange = (slot: number) => {
@@ -53,6 +73,32 @@ export default function RoundManager() {
       setSelectedSlots([]);
     } else {
       setSelectedSlots(teams.map((t) => t.slot));
+    }
+  };
+
+  // Save the map name for the selected round
+  const handleSaveMap = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!roundNumber) {
+      notifyError("Please enter a round number first.");
+      return;
+    }
+    try {
+      setLoadingMap(true);
+      await api.put("/roundinfo", {
+        roundNumber: Number(roundNumber),
+        mapName,
+      });
+      setSuccess(`Map for round ${roundNumber} saved!`);
+      notifySuccess(`Map for round ${roundNumber} saved!`);
+      const response = await api.get("/roundinfo");
+      setRoundInfo(response.data.data);
+      setTimeout(() => setSuccess(""), 5000);
+    } catch {
+      setError("Failed to save map");
+      notifyError("Failed to save map.");
+    } finally {
+      setLoadingMap(false);
     }
   };
 
@@ -142,6 +188,51 @@ export default function RoundManager() {
               onChange={(e) => setRoundNumber(e.target.value)}
               className="w-full bg-gray-700 text-white p-3 rounded-lg border-2 border-red-500/30 focus:border-red-500 outline-none"
             />
+          </div>
+
+          {/* Round Map */}
+          <div className="mb-8">
+            <label htmlFor="map" className="block text-red-400 mb-2 text-lg">
+              Round Map
+            </label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                id="map"
+                list="pubg-maps"
+                value={mapName}
+                onChange={(e) => setMapName(e.target.value)}
+                placeholder="Erangel / Miramar / Rondo / Sanhok"
+                className="flex-1 bg-gray-700 text-white p-3 rounded-lg border-2 border-red-500/30 focus:border-red-500 outline-none"
+              />
+              <datalist id="pubg-maps">
+                {PUBG_MAPS.map((map) => (
+                  <option key={map} value={map} />
+                ))}
+              </datalist>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                type="button"
+                onClick={handleSaveMap}
+                disabled={loadingMap}
+                className="px-6 p-3 bg-gradient-to-r from-red-600 to-red-700 rounded-lg text-white font-bold hover:shadow-red-500/20 hover:shadow-lg transition-all"
+              >
+                {loadingMap ? "Saving..." : "Save Map"}
+              </motion.button>
+            </div>
+
+            {roundInfo.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {roundInfo.map((info) => (
+                  <span
+                    key={info._id}
+                    className="rounded-lg border border-red-500/30 bg-gray-700 px-3 py-1 text-sm text-gray-200"
+                  >
+                    R{info.roundNumber}: {info.mapName || "—"}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {/* Team Selection */}

@@ -9,6 +9,7 @@ import { useTournament } from "@/components/providers/TournamentProvider";
 import {
   COLOR_FIELDS,
   DEFAULT_POINTS_TABLE,
+  GAME_LABELS,
   TABLE_PRESETS,
   mergePointsTable,
   type LeaderboardSettings,
@@ -104,18 +105,18 @@ export default function SettingsPage() {
 
   const updateLeaderboard = (
     key: keyof LeaderboardSettings,
-    value: boolean
+    value: boolean | string
   ) => {
     setDraft((prev) => ({
       ...prev,
-      leaderboard: { ...prev.leaderboard, [key]: value },
+      leaderboard: { ...prev.leaderboard, [key]: value } as LeaderboardSettings,
     }));
   };
 
-  const updateMatch = (key: keyof MatchSettings, value: boolean) => {
+  const updateMatch = (key: keyof MatchSettings, value: boolean | string) => {
     setDraft((prev) => ({
       ...prev,
-      match: { ...prev.match, [key]: value },
+      match: { ...prev.match, [key]: value } as MatchSettings,
     }));
   };
 
@@ -253,6 +254,18 @@ export default function SettingsPage() {
             />
             <input
               type="text"
+              value={draft.header.subtitle}
+              onChange={(e) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  header: { ...prev.header, subtitle: e.target.value },
+                }))
+              }
+              placeholder="Subtitle / stage label (optional)"
+              className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+            />
+            <input
+              type="text"
               value={draft.header.logoUrl}
               onChange={(e) =>
                 setDraft((prev) => ({
@@ -361,6 +374,7 @@ export default function SettingsPage() {
           <div className="flex flex-wrap gap-4">
             {(
               [
+                ["showTitle", "Show title / heading"],
                 ["showLogo", "Show team logo"],
                 ["showPlace", "Show place points"],
                 ["showElims", "Show elims"],
@@ -372,6 +386,22 @@ export default function SettingsPage() {
                 updateLeaderboard(key, v)
               )
             )}
+          </div>
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={draft.leaderboard.title}
+              onChange={(e) => updateLeaderboard("title", e.target.value)}
+              placeholder="Heading (default: Overall Rankings)"
+              className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+            />
+            <input
+              type="text"
+              value={draft.leaderboard.subtitle}
+              onChange={(e) => updateLeaderboard("subtitle", e.target.value)}
+              placeholder="Subtitle (optional)"
+              className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+            />
           </div>
           <p className="text-xs text-gray-400">
             Colors come from the shared theme. Adjust them in the Points Table
@@ -389,6 +419,7 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-4">
           {(
             [
+              ["showTitle", "Show title / heading"],
               ["showLogo", "Show team logo"],
               ["showRank", "Show rank column"],
               ["showElims", "Show elims"],
@@ -398,6 +429,22 @@ export default function SettingsPage() {
           ).map(([key, label]) =>
             checkboxRow(label, draft.match[key], (v) => updateMatch(key, v))
           )}
+        </div>
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={draft.match.title}
+            onChange={(e) => updateMatch("title", e.target.value)}
+            placeholder="Title (default: brand name)"
+            className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+          />
+          <input
+            type="text"
+            value={draft.match.subtitle}
+            onChange={(e) => updateMatch("subtitle", e.target.value)}
+            placeholder="Subtitle (optional)"
+            className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+          />
         </div>
         <p className="text-xs text-gray-400">
           Colors come from the shared theme. Adjust them in the Points Table
@@ -433,6 +480,26 @@ export default function SettingsPage() {
     if (tab === "leaderboard") {
       return (
         <div className="bg-slate-100 rounded-xl p-4 border-2 border-red-500/30 overflow-auto">
+          {draft.leaderboard.showTitle || draft.leaderboard.subtitle ? (
+            <div className="mb-3 text-center">
+              {draft.leaderboard.showTitle ? (
+                <h2
+                  className="text-2xl font-black uppercase tracking-wide"
+                  style={{ color: draft.colors.textPrimary }}
+                >
+                  {draft.leaderboard.title || "Overall Rankings"}
+                </h2>
+              ) : null}
+              {draft.leaderboard.subtitle ? (
+                <p
+                  className="text-sm font-semibold uppercase tracking-[0.2em]"
+                  style={{ color: draft.colors.elimColor }}
+                >
+                  {draft.leaderboard.subtitle}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           <SplitLeaderboard teams={PREVIEW_TEAMS} settings={draft} />
         </div>
       );
@@ -497,25 +564,47 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 {/* Presets */}
                 <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20">
-                  <h2 className="text-lg font-semibold text-red-400 mb-3">
+                  <h2 className="text-lg font-semibold text-red-400 mb-1">
                     Preset Themes
                   </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {TABLE_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => applyPreset(preset.pointsTable)}
-                        className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                          draft.preset === preset.id
-                            ? "border-red-500 bg-red-600/40 text-white"
-                            : "border-red-500/30 text-gray-200 hover:bg-red-600/30"
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
+                  <p className="mb-3 text-xs text-gray-400">
+                    Pick a game to filter matching table designs, then fine-tune
+                    the colors below.
+                  </p>
+                  {GAME_LABELS.map((group) => {
+                    const presets = TABLE_PRESETS.filter(
+                      (p) => p.game === group.key
+                    );
+                    if (presets.length === 0) return null;
+                    return (
+                      <div key={group.key} className="mb-4 last:mb-0">
+                        <div className="mb-2 flex items-baseline gap-2">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-red-300">
+                            {group.label}
+                          </h3>
+                          <span className="text-[11px] text-gray-500">
+                            {group.blurb}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {presets.map((preset) => (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => applyPreset(preset.pointsTable)}
+                              className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                draft.preset === preset.id
+                                  ? "border-red-500 bg-red-600/40 text-white"
+                                  : "border-red-500/30 text-gray-200 hover:bg-red-600/30"
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </section>
 
                 {renderControls()}

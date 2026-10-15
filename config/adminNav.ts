@@ -3,8 +3,11 @@ import {
   LayoutDashboard,
   ListOrdered,
   ListPlus,
+  Network,
   Palette,
   Radio,
+  ScanText,
+  Settings2,
   Target,
   Trophy,
   UserCog,
@@ -36,6 +39,8 @@ export const adminNav: AdminNavGroup[] = [
     title: "Operations",
     items: [
       { name: "Live Control", path: "/admin/live", icon: Radio },
+      { name: "Auto Scoring", path: "/admin/verify", icon: ScanText },
+      { name: "Player Mapping", path: "/admin/mapping", icon: Network },
       { name: "Positions", path: "/admin/positions", icon: Crosshair },
       { name: "Round Manager", path: "/admin/rounds", icon: ListOrdered },
     ],
@@ -55,7 +60,10 @@ export const adminNav: AdminNavGroup[] = [
   },
   {
     title: "System",
-    items: [{ name: "Account", path: "/admin/account", icon: UserCog }],
+    items: [
+      { name: "Branding", path: "/admin/system", icon: Settings2 },
+      { name: "Account", path: "/admin/account", icon: UserCog },
+    ],
   },
 ];
 

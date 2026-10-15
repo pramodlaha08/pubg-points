@@ -7,9 +7,11 @@ import { GiChickenOven } from "react-icons/gi";
 import { useSettings } from "@/hooks/useSettings";
 import {
   DEFAULT_POINTS_TABLE,
+  hexToRgba,
   mergePointsTable,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
+import { GAMING_FX_CSS, Shine, fxPan } from "@/components/GamingFx";
 
 interface Team {
   _id: string;
@@ -114,10 +116,13 @@ const TeamTable = ({
       className="relative w-full overflow-hidden rounded-xl border shadow-2xl"
       style={{
         borderColor: palette.border,
-        background: `linear-gradient(140deg, ${palette.panelFrom} 0%, ${palette.panelTo} 100%)`,
+        backgroundImage: `linear-gradient(140deg, ${palette.panelFrom} 0%, ${palette.panelTo} 100%)`,
+        backgroundSize: "200% 200%",
+        animation: "fxPan 12s linear infinite",
         boxShadow: `0 0 0 1px ${palette.borderSoft}, 0 16px 36px rgba(0,0,0,0.25)`,
       }}
     >
+      <style>{GAMING_FX_CSS}</style>
       <div
         className="pointer-events-none absolute inset-0 opacity-20"
         style={{
@@ -127,13 +132,15 @@ const TeamTable = ({
       />
 
       <div
-        className="relative flex h-10 text-xs font-bold uppercase tracking-wide shadow-lg"
+        className="relative flex h-10 overflow-hidden text-xs font-bold uppercase tracking-wide shadow-lg"
         style={{
           color: palette.textPrimary,
-          background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+          backgroundImage: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+          ...fxPan(9),
           borderBottom: `1px solid ${palette.border}`,
         }}
       >
+        <Shine duration={5} />
         <div
           className="flex w-12 items-center justify-center font-semibold"
           style={{
@@ -217,6 +224,7 @@ const TeamTable = ({
                         background: topRankStyle.badgeBg,
                         border: `1px solid ${topRankStyle.badgeBorder}`,
                         boxShadow: topRankStyle.glow,
+                        animation: "fxFloat 3s ease-in-out infinite",
                       }}
                     >
                       {actualRank}
@@ -313,6 +321,11 @@ const TeamTable = ({
                       ? topRankStyle.edge
                       : palette.accent,
                     opacity: 0.95,
+                    boxShadow: `0 0 12px ${hexToRgba(
+                      topRankStyle ? topRankStyle.edge : palette.accent,
+                      0.75
+                    )}`,
+                    animation: "fxPulse 2s ease-in-out infinite",
                   }}
                 />
               </motion.div>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { io, Socket } from "socket.io-client";
 import { getApiTournamentId } from "@/lib/api";
 import { useSettings } from "@/hooks/useSettings";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
@@ -79,6 +80,7 @@ export default function GamingEliminationNotification({
   );
 
   const { settings: remoteSettings, refresh } = useSettings();
+  const { mapByRound, refresh: refreshRoundInfo } = useRoundInfo();
 
   const settings = useMemo<PointsTableSettings>(
     () =>
@@ -203,6 +205,7 @@ export default function GamingEliminationNotification({
     );
 
     socket.on("settings_updated", () => refresh());
+    socket.on("round_info_updated", () => refreshRoundInfo());
 
     return () => {
       if (timerRef.current) {
@@ -211,7 +214,7 @@ export default function GamingEliminationNotification({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [apiBase, socketBase, preview, refresh]);
+  }, [apiBase, socketBase, preview, refresh, refreshRoundInfo]);
 
   useEffect(() => {
     if (preview) return;
@@ -232,6 +235,8 @@ export default function GamingEliminationNotification({
   const active = preview ? PREVIEW_NOTIFICATION : currentNotification;
 
   if (!active) return null;
+
+  const activeMap = mapByRound[active.roundNumber];
 
   return (
     <AnimatePresence>
@@ -356,6 +361,7 @@ export default function GamingEliminationNotification({
                   style={{ color: colors.textPrimary, opacity: 0.6 }}
                 >
                   Round {active.roundNumber}
+                  {activeMap ? ` • ${activeMap}` : ""}
                 </span>
               </div>
             ) : null}

@@ -43,7 +43,6 @@ export default function TeamForm({
     event.preventDefault();
     if (!name.trim()) return notifyError("Team name is required");
     if (!slot || Number(slot) < 1) return notifyError("Slot must be a positive number");
-    if (mode === "create" && !logo) return notifyError("Team logo is required");
 
     setSubmitting(true);
     try {
@@ -106,7 +105,7 @@ export default function TeamForm({
             </label>
             <p className="text-xs text-[var(--adm-muted)]">
               {mode === "create"
-                ? "PNG or JPG, square recommended"
+                ? "Optional — a temporary placeholder is used if left empty"
                 : "Leave empty to keep the current logo"}
             </p>
           </div>

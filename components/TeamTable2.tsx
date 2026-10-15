@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import { api, getApiTournamentId } from "@/lib/api";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
   mergePointsTable,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
+import { GAMING_FX_CSS, Shine, fxPan } from "@/components/GamingFx";
 
 interface Team {
   _id: string;
@@ -134,6 +136,8 @@ export default function AnimatedTeamTable({
   const [lastSyncAt, setLastSyncAt] = useState<string>("-");
   const [updateCount, setUpdateCount] = useState(0);
 
+  const { mapByRound, refresh: refreshRoundInfo } = useRoundInfo();
+
   useEffect(() => {
     const fetchSettings = async () => {
       if (previewSettings) return;
@@ -215,6 +219,10 @@ export default function AnimatedTeamTable({
       }
       scheduleRefresh("settings_updated");
     });
+    socket.on("round_info_updated", () => {
+      void refreshRoundInfo();
+      scheduleRefresh("round_info_updated");
+    });
 
     fetchSettings();
     fetchTeams();
@@ -225,12 +233,17 @@ export default function AnimatedTeamTable({
       }
       socket.disconnect();
     };
-  }, [previewSettings]);
+  }, [previewSettings, refreshRoundInfo]);
 
-  const showTitleStrip = Boolean(header.title || header.logoUrl);
+  const currentRound = teams[0]?.currentRound;
+  const currentMap = currentRound ? mapByRound[currentRound] : "";
+  const showTitleStrip = Boolean(
+    header.title || header.subtitle || header.logoUrl || currentMap
+  );
 
   return (
     <div className="flex items-center justify-center">
+      <style>{GAMING_FX_CSS}</style>
       <div className="mx-auto" style={{ width: layout.width }}>
         {debugMode ? (
           <div className="mb-2 rounded border border-white/30 bg-black/60 px-2 py-1 text-[9px] font-semibold text-white">
@@ -252,13 +265,15 @@ export default function AnimatedTeamTable({
           {/* Optional tournament title / logo strip */}
           {showTitleStrip ? (
             <div
-              className="relative flex items-center justify-center gap-2 px-2"
+              className="relative flex items-center justify-center gap-2 overflow-hidden px-2"
               style={{
                 height: Math.max(layout.rowHeight - 6, 24),
-                background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+                backgroundImage: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+                ...fxPan(7),
                 borderBottom: `1px solid ${palette.border}`,
               }}
             >
+              <Shine delay={0.6} duration={4.2} />
               {header.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -277,20 +292,38 @@ export default function AnimatedTeamTable({
                   {header.title}
                 </span>
               ) : null}
+              {header.subtitle ? (
+                <span
+                  className="font-bold uppercase tracking-wider text-white/80"
+                  style={{ fontSize: 9 * layout.fontScale }}
+                >
+                  {header.subtitle}
+                </span>
+              ) : null}
+              {currentMap ? (
+                <span
+                  className="rounded border border-white/40 bg-black/25 px-1.5 py-0.5 font-bold uppercase tracking-wider text-white"
+                  style={{ fontSize: 9 * layout.fontScale }}
+                >
+                  {currentMap}
+                </span>
+              ) : null}
             </div>
           ) : null}
 
           {/* Decorative overlays removed so they don't tint the green chroma key transparent background */}
           <div
-            className="relative flex text-xs font-bold shadow-lg"
+            className="relative flex overflow-hidden text-xs font-bold shadow-lg"
             style={{
               height: layout.rowHeight,
               fontSize: rowFontSize,
               color: palette.textPrimary,
-              background: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+              backgroundImage: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
+              ...fxPan(9),
               borderBottom: `1px solid ${palette.border}`,
             }}
           >
+            <Shine duration={5} />
             <div
               className="w-12 flex items-center justify-center tracking-tighter font-semibold"
               style={{
@@ -389,6 +422,7 @@ export default function AnimatedTeamTable({
                             background: topRankStyle.badgeBg,
                             border: `1px solid ${topRankStyle.badgeBorder}`,
                             boxShadow: topRankStyle.glow,
+                            animation: "fxFloat 3s ease-in-out infinite",
                           }}
                           aria-label={`Rank ${index + 1}`}
                         >
@@ -544,6 +578,15 @@ export default function AnimatedTeamTable({
                             ? topRankStyle.edge
                             : palette.accent,
                         opacity: isEliminated ? 0.45 : 0.95,
+                        boxShadow: isEliminated
+                          ? undefined
+                          : `0 0 12px ${hexToRgba(
+                              topRankStyle ? topRankStyle.edge : palette.accent,
+                              0.75
+                            )}`,
+                        animation: isEliminated
+                          ? undefined
+                          : "fxPulse 2s ease-in-out infinite",
                       }}
                     />
 

@@ -5,9 +5,11 @@ import AdminNav from "./AdminNav";
 import { clearAdminSession } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { useBranding } from "@/components/providers/BrandingProvider";
 
 export default function AdminSidebar() {
   const router = useRouter();
+  const { branding } = useBranding();
 
   const handleLogout = () => {
     clearAdminSession();
@@ -17,9 +19,18 @@ export default function AdminSidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-[var(--adm-sidebar)] lg:flex">
       <div className="flex items-center gap-2 px-5 py-4">
-        <GiDeathSkull className="text-2xl text-[var(--adm-primary)]" />
+        {branding.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={branding.logoUrl}
+            alt={branding.systemName}
+            className="h-6 w-6 object-contain"
+          />
+        ) : (
+          <GiDeathSkull className="text-2xl text-[var(--adm-primary)]" />
+        )}
         <span className="text-lg font-extrabold tracking-wide text-white">
-          PMWC
+          {branding.systemName}
         </span>
         <span className="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-300">
           Admin

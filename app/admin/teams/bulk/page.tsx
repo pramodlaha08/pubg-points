@@ -38,12 +38,14 @@ const STATUS_VARIANT: Record<
 
 const PLACEHOLDER = `Paste your slot list here, e.g.
 
-│SLOT 03 ✦ UI            2/3
-│SLOT 04 ✦ UR
-│SLOT 05 ✦ CGx
+➟ 𝐓𝐈𝐌𝐄 : 08:40 PM
+➟ 𝐌𝐀𝐏 : 𝐄 | 𝐌 | E | R
+SLOT 03 TNS
+SLOT 04 13R
+SLOT 05 UNC
 ...
 
-The x/y score on the right is ignored.`;
+The time/map header lines are ignored.`;
 
 export default function BulkImportPage() {
   const router = useRouter();
@@ -211,8 +213,8 @@ export default function BulkImportPage() {
       </div>
 
       <p className="text-xs text-[var(--adm-muted)]">
-        New teams get a default placeholder logo — set real logos later via Edit.
-        Existing slots are renamed but keep their logo, points and rounds.
+        New teams get a temporary placeholder logo — set real logos later via
+        Edit. Existing slots are renamed but keep their logo, points and rounds.
       </p>
     </div>
   );

@@ -26,6 +26,14 @@ interface Team {
   isEliminated: boolean;
 }
 
+// Alive teams first (so their boxes rise), fully-eliminated teams last.
+// Slot order is preserved within each group.
+const orderTeams = (a: Team, b: Team) => {
+  const eliminatedDiff = Number(a.isEliminated) - Number(b.isEliminated);
+  if (eliminatedDiff !== 0) return eliminatedDiff;
+  return a.slot - b.slot;
+};
+
 export default function FilteredTeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const params = useParams();
@@ -98,10 +106,10 @@ export default function FilteredTeamsPage() {
       : [];
   const slotNumbers = rawSlots.map(Number).filter((n) => !Number.isNaN(n));
 
-  // Filter and sort teams based on slot numbers
+  // Filter, then order: alive teams first, eliminated teams last.
   const filteredAndSortedTeams = teams
     .filter((team) => slotNumbers.includes(team.slot))
-    .sort((a, b) => a.slot - b.slot);
+    .sort(orderTeams);
 
   return (
     <div className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
