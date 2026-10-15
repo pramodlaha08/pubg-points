@@ -6,6 +6,7 @@ import { GiDeathSkull } from "react-icons/gi";
 import { LogOut, X } from "lucide-react";
 import AdminNav from "./AdminNav";
 import { clearAdminSession } from "@/lib/api";
+import { useBranding } from "@/components/providers/BrandingProvider";
 
 export default function AdminMobileNav({
   open,
@@ -15,6 +16,7 @@ export default function AdminMobileNav({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const { branding } = useBranding();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -41,9 +43,18 @@ export default function AdminMobileNav({
       <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-[var(--adm-sidebar)] shadow-2xl">
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            <GiDeathSkull className="text-2xl text-[var(--adm-primary)]" />
+            {branding.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={branding.logoUrl}
+                alt={branding.systemName}
+                className="h-6 w-6 object-contain"
+              />
+            ) : (
+              <GiDeathSkull className="text-2xl text-[var(--adm-primary)]" />
+            )}
             <span className="text-lg font-extrabold tracking-wide text-white">
-              PMWC
+              {branding.systemName}
             </span>
           </div>
           <button

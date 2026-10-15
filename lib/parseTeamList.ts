@@ -35,7 +35,9 @@ export function normalizeLine(input: string): string {
  * Parse a pasted slot list into structured team rows.
  *
  * Handles fancy unicode (e.g. 𝐒𝐋𝐎𝐓 𝟎𝟑, fullwidth digits), box-drawing
- * borders, ✦ separators and trailing "x/y" score fractions.
+ * borders, ✦ separators and trailing "x/y" score fractions. Lines without a
+ * "SLOT n" token (headers, time/map metadata) are reported as invalid and
+ * skipped during import.
  */
 export function parseTeamList(
   input: string,

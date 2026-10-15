@@ -3,6 +3,7 @@
 import { GiDeathSkull } from "react-icons/gi";
 import { Flame, ChevronDown, ChevronUp } from "lucide-react";
 import SQUAD_CONFIG from "@/lib/squadConfig";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
 
 interface Team {
   _id: string;
@@ -43,15 +44,29 @@ export default function TeamCard({
     (r) => r.roundNumber === team.currentRound
   );
 
+  const { mapByRound } = useRoundInfo();
+  const currentMap = mapByRound[team.currentRound];
+
   const isKillButtonsDisabled = currentRound?.eliminationCount === SQUAD_CONFIG.fullEliminationCount;
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border-2 border-red-500/30 hover:border-red-500/50 transition-all duration-300 shadow-2xl hover:shadow-red-500/20 relative overflow-hidden">
+    <div
+      className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border-2 transition-all duration-300 shadow-2xl relative overflow-hidden ${
+        team.isEliminated
+          ? "border-gray-700 opacity-60 grayscale hover:opacity-80"
+          : "border-red-500/30 hover:border-red-500/50 hover:shadow-red-500/20"
+      }`}
+    >
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold text-red-400 flex items-center gap-2 uppercase">
             <GiDeathSkull className="text-3xl" />
             {team.name}
+            {team.isEliminated && (
+              <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white">
+                OUT
+              </span>
+            )}
           </h2>
           <p className="text-gray-400 text-sm">Slot #{team.slot}</p>
         </div>
@@ -122,12 +137,13 @@ export default function TeamCard({
       {/* Collapsible Round Info */}
       <div
         className={`mt-4 text-sm overflow-hidden transition-all duration-300 ${
-          isRoundInfoExpanded ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+          isRoundInfoExpanded ? "max-h-28 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="flex justify-between">
           <div className="text-gray-400">
             <p>Current Round: {team.currentRound}</p>
+            <p>Map: {currentMap || "—"}</p>
             <p>Eliminations: {currentRound?.eliminationCount ?? 0}/{SQUAD_CONFIG.fullEliminationCount}</p>
           </div>
           <div className="text-right">
