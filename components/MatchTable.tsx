@@ -14,7 +14,13 @@ import {
   mergePointsTable,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
+import {
+  displayName,
+  panelSurfaceStyle,
+  typographyStyle,
+} from "@/lib/overlayTheme";
 import { GAMING_FX_CSS, Shine, fxPan } from "@/components/GamingFx";
+import { SurfaceBackground, Watermark } from "@/components/OverlayChrome";
 
 const styles = {
   screenshot: `
@@ -101,51 +107,51 @@ export default function MatchTable({
     [previewSettings, remoteSettings]
   );
 
-  const { colors, match } = settings;
+  const { colors, match, layout, typography, surface, watermark } = settings;
+  const template = match.template;
+  const isCard = template === "card-stack";
+  const isHairline = template === "hairline";
+  const isLower = template === "lower-third";
+  const isBig = template === "big-board";
+  const animate = surface.animate;
+  const fs = (base: number) => base * layout.fontScale * typography.fontScale;
+  const typeStyle = typographyStyle(typography);
+  const rowH = isBig ? 72 : isCard ? 64 : isHairline ? 44 : 48;
+  const columnWidth = isBig ? 96 : 80;
+
   const displayTeams = preview ? PREVIEW_TEAMS : teams;
 
-  const latestRound = Object.keys(mapByRound).reduce(
-    (max, key) => Math.max(max, Number(key)),
-    0
-  );
-  const activeMapRound = matchId ?? (latestRound || undefined);
-  const activeMap = activeMapRound ? mapByRound[activeMapRound] : undefined;
-
   useEffect(() => {
-    if (preview) return;
     const fetchTeams = async () => {
       try {
-        const url = matchId
-          ? `/team/match/${matchId}`
-          : `/team`;
-        const response = await api.get(url);
+        const response = await api.get(matchId ? `/team/match/${matchId}` : "/team");
         const data = response.data;
-
         if (data.success) {
-          setTeams(() => {
-            return data.data.sort((a: Team, b: Team) => {
-              const aRound = a.rounds[matchId ? 0 : a.currentRound - 1];
-              const bRound = b.rounds[matchId ? 0 : b.currentRound - 1];
-
+          setTeams(
+            data.data.sort((a: Team, b: Team) => {
+              const aRound = a.rounds.find(
+                (r) => r.roundNumber === (matchId || a.currentRound)
+              );
+              const bRound = b.rounds.find(
+                (r) => r.roundNumber === (matchId || b.currentRound)
+              );
               const aPositionPoints = aRound?.positionPoints || 0;
               const bPositionPoints = bRound?.positionPoints || 0;
-
               const aTotal = (aRound?.kills || 0) + aPositionPoints;
               const bTotal = (bRound?.kills || 0) + bPositionPoints;
-
               if (bPositionPoints !== aPositionPoints) {
                 return bPositionPoints - aPositionPoints;
               }
               return bTotal - aTotal;
-            });
-          });
+            })
+          );
         }
       } catch (error) {
         console.error("Error fetching teams:", error);
       }
     };
     fetchTeams();
-  }, [matchId, preview]);
+  }, [matchId]);
 
   const captureScreenshot = async () => {
     if (!contentRef.current || isCapturing) return;
@@ -153,7 +159,6 @@ export default function MatchTable({
     setIsCapturing(true);
     try {
       const element = contentRef.current;
-
       const canvas = await html2canvas(element, {
         scale: 3,
         backgroundColor: colors.panelTo,
@@ -173,13 +178,7 @@ export default function MatchTable({
       });
 
       const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob(
-          (blob) => {
-            resolve(blob!);
-          },
-          "image/png",
-          1.0
-        );
+        canvas.toBlob((b) => resolve(b!), "image/png", 1.0);
       });
 
       const url = URL.createObjectURL(blob);
@@ -201,6 +200,145 @@ export default function MatchTable({
     }
   };
 
+  const renderRow = (team: Team, index: number) => {
+    const round = team.rounds.find(
+      (r) => r.roundNumber === (matchId || team.currentRound)
+    );
+    const nameText = displayName(team.name, typography);
+
+    if (isCard) {
+      return (
+        <motion.div
+          key={team._id}
+          layout
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ type: "spring", stiffness: 105, damping: 15, delay: Math.min(index * 0.015, 0.12) }}
+          className="relative mb-2 flex items-center gap-2 overflow-hidden px-3"
+          style={{
+            height: rowH,
+            borderRadius: surface.radius,
+            backgroundImage: `linear-gradient(90deg, ${colors.teamFrom} 0%, ${colors.teamTo} 100%)`,
+            border: `1px solid ${colors.borderSoft}`,
+            ...typeStyle,
+          }}
+        >
+          <span className="w-7 text-lg font-black text-white">{index + 1}</span>
+          {match.showLogo ? (
+            <Image src={team.logo || "/placeholder.svg"} alt={team.name} width={32} height={32} className="rounded object-contain" />
+          ) : null}
+          <span className="min-w-0 flex-1 truncate font-extrabold text-white" style={{ fontSize: fs(16) }}>
+            {nameText}
+          </span>
+          {match.showElims ? (
+            <span className="font-bold" style={{ color: colors.elimColor, fontSize: fs(14) }}>
+              {round?.kills || 0}
+            </span>
+          ) : null}
+          {match.showPlace ? (
+            <span className="font-bold" style={{ color: colors.placeColor, fontSize: fs(14) }}>
+              {round?.positionPoints || 0}
+            </span>
+          ) : null}
+          {match.showTotal ? (
+            <span className="font-black text-white" style={{ fontSize: fs(17) }}>
+              {(round?.kills || 0) + (round?.positionPoints || 0)}
+            </span>
+          ) : null}
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div
+        key={team._id}
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ type: "spring", stiffness: 100, damping: 15 }}
+        className="relative flex"
+        style={{
+          height: rowH,
+          fontSize: fs(isBig ? 15 : 12),
+          color: isHairline ? colors.textPrimary : "#FFFFFF",
+          backgroundImage: isHairline
+            ? undefined
+            : `linear-gradient(90deg, ${colors.teamFrom} 0%, ${colors.teamTo} 100%)`,
+          borderBottom: `1px solid ${hexToRgba(colors.border, 0.3)}`,
+          ...typeStyle,
+        }}
+      >
+        {isLower ? (
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              transform: "skewX(-14deg)",
+              backgroundImage: `linear-gradient(90deg, ${colors.teamFrom} 0%, ${colors.teamTo} 100%)`,
+            }}
+          />
+        ) : null}
+
+        {match.showRank ? (
+          <div
+            className="relative z-10 flex items-center justify-center"
+            style={{ width: isBig ? 64 : 50, color: isHairline ? colors.textPrimary : "#FFFFFF" }}
+          >
+            {index === 0 ? (
+              <motion.span variants={trophyVariants} initial="initial" animate="animate">
+                🏆
+              </motion.span>
+            ) : (
+              index + 1
+            )}
+          </div>
+        ) : null}
+
+        <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2 pl-2">
+          {match.showLogo ? (
+            <Image
+              src={team.logo || "/placeholder.svg"}
+              alt={team.name}
+              width={isBig ? 36 : 28}
+              height={isBig ? 36 : 28}
+              className="rounded-full object-contain"
+              style={{ background: isHairline ? "transparent" : colors.rankFrom }}
+            />
+          ) : null}
+          <span className="truncate font-bold tracking-wider" style={{ color: isHairline ? colors.textPrimary : "#FFFFFF", ...typeStyle }}>
+            {nameText}
+          </span>
+        </div>
+
+        {match.showElims ? (
+          <div
+            className="relative z-10 flex items-center justify-center font-bold"
+            style={{ width: columnWidth, color: colors.elimColor, backgroundColor: isHairline ? "transparent" : colors.cellBg, borderLeft: `1px solid ${colors.borderSoft}` }}
+          >
+            {round?.kills || 0}
+          </div>
+        ) : null}
+        {match.showPlace ? (
+          <div
+            className="relative z-10 flex items-center justify-center font-bold"
+            style={{ width: columnWidth, color: colors.placeColor, backgroundColor: isHairline ? "transparent" : colors.cellBg, borderLeft: `1px solid ${colors.borderSoft}` }}
+          >
+            {round?.positionPoints || 0}
+          </div>
+        ) : null}
+        {match.showTotal ? (
+          <div
+            className="relative z-10 flex items-center justify-center font-bold"
+            style={{ width: columnWidth, color: colors.totalColor, backgroundColor: isHairline ? "transparent" : colors.cellBg, borderLeft: `1px solid ${colors.borderSoft}` }}
+          >
+            {(round?.kills || 0) + (round?.positionPoints || 0)}
+          </div>
+        ) : null}
+      </motion.div>
+    );
+  };
+
   return (
     <div
       className={inline ? "relative" : "relative min-h-screen bg-fixed bg-center"}
@@ -215,14 +353,14 @@ export default function MatchTable({
         <motion.button
           onClick={captureScreenshot}
           disabled={isCapturing}
-          className="fixed right-4 top-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-lg px-4 py-2 font-semibold text-white shadow-lg transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{
             background: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Camera className="w-5 h-5" />
+          <Camera className="h-5 w-5" />
           {isCapturing ? "Capturing..." : "Screenshot"}
         </motion.button>
       ) : null}
@@ -230,15 +368,24 @@ export default function MatchTable({
       <div
         ref={contentRef}
         data-screenshot
-        className="relative w-[500px] mx-auto px-4 py-8"
+        className="relative mx-auto w-[500px] px-4 py-8"
       >
-        <div className="text-center mb-12 relative">
+        <SurfaceBackground surface={surface} />
+        <div className="relative mb-12 text-center">
           {match.showTitle ? (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="relative inline-flex items-center gap-3"
             >
+              {match.bannerImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={match.bannerImage}
+                  alt=""
+                  className="h-14 w-auto object-contain"
+                />
+              ) : null}
               <h1
                 className="text-4xl font-bold tracking-tight md:text-6xl"
                 style={{
@@ -247,7 +394,8 @@ export default function MatchTable({
                   WebkitBackgroundClip: "text",
                   backgroundClip: "text",
                   color: "transparent",
-                  animation: "fxPan 5s linear infinite",
+                  ...(animate ? fxPan(5) : {}),
+                  ...typeStyle,
                 }}
               >
                 {match.title || branding.systemName || "Tournament Standings"}
@@ -266,43 +414,45 @@ export default function MatchTable({
             </motion.p>
           ) : null}
 
-          <div className="flex justify-center mt-8">
+          <div className="mt-8 flex justify-center">
             <div
               className="h-1 w-40 rounded-full"
               style={{
                 backgroundImage: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.warning} 50%, ${colors.headerTo} 100%)`,
                 backgroundSize: "200% 100%",
-                animation: "fxPan 4s linear infinite",
+                ...(animate ? fxPan(4) : {}),
                 boxShadow: `0 0 14px ${hexToRgba(colors.warning, 0.6)}`,
               }}
             />
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center justify-center gap-2 mt-4"
-          >
-            <Flame className="w-5 h-5" style={{ color: colors.warning }} />
-            <h2
-              className="text-2xl -mt-5 font-semibold"
-              style={{ color: colors.textPrimary, opacity: 0.75 }}
+          {matchId ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-4 flex items-center justify-center gap-2"
             >
-              Match {matchId}
-            </h2>
-            <Flame className="w-5 h-5" style={{ color: colors.warning }} />
-          </motion.div>
+              <Flame className="h-5 w-5" style={{ color: colors.warning }} />
+              <h2
+                className="-mt-5 text-2xl font-semibold"
+                style={{ color: colors.textPrimary, opacity: 0.75 }}
+              >
+                Match {matchId}
+              </h2>
+              <Flame className="h-5 w-5" style={{ color: colors.warning }} />
+            </motion.div>
+          ) : null}
 
-          {activeMap ? (
+          {mapByRound[matchId || 0] ? (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-lg font-bold uppercase tracking-widest mt-2"
+              className="mt-2 text-lg font-bold uppercase tracking-widest"
               style={{ color: colors.accent }}
             >
-              Map: {activeMap}
+              Map: {mapByRound[matchId || 0]}
             </motion.p>
           ) : null}
         </div>
@@ -310,181 +460,67 @@ export default function MatchTable({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-[450px] mx-auto relative"
+          className="relative mx-auto w-[450px]"
         >
-          <div
-            className="absolute inset-0 blur-xl"
-            style={{
-              backgroundImage: `linear-gradient(90deg, ${hexToRgba(
-                colors.headerFrom,
-                0.25
-              )} 0%, ${hexToRgba(colors.accent, 0.25)} 50%, ${hexToRgba(
-                colors.headerTo,
-                0.25
-              )} 100%)`,
-              backgroundSize: "200% 200%",
-              animation: "fxPan 8s linear infinite, fxPulse 3s ease-in-out infinite",
-            }}
-          />
-          <div className="relative">
+          {!isHairline ? (
             <div
-              className="flex flex-col rounded-lg overflow-hidden border-2"
-              style={{ borderColor: colors.border }}
-            >
-              <div
-                className="relative flex h-[3.5rem] overflow-hidden border-b-2 font-sans text-sm font-bold"
-                style={{
-                  color: "#FFFFFF",
-                  borderColor: colors.border,
-                  backgroundImage: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
-                  ...fxPan(9),
-                }}
-              >
-                <Shine duration={4.6} />
-                {match.showRank ? (
-                  <div className="w-[50px] flex items-center justify-center">
-                    #
-                  </div>
-                ) : null}
-                <div className="w-[150px] flex items-center justify-start pl-2">
-                  TEAM
+              className="absolute inset-0 blur-xl"
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${hexToRgba(colors.headerFrom, 0.25)} 0%, ${hexToRgba(colors.accent, 0.25)} 50%, ${hexToRgba(colors.headerTo, 0.25)} 100%)`,
+                backgroundSize: "200% 200%",
+                ...(animate ? fxPan(8) : {}),
+              }}
+            />
+          ) : null}
+
+          <div className="relative">
+            <div className="flex flex-col overflow-hidden" style={panelSurfaceStyle(surface, colors)}>
+              {!isCard && !isHairline ? (
+                <div
+                  className="relative flex overflow-hidden border-b-2 font-sans text-sm font-bold"
+                  style={{
+                    height: "3.5rem",
+                    color: "#FFFFFF",
+                    borderColor: colors.border,
+                    backgroundImage: `linear-gradient(90deg, ${colors.headerFrom} 0%, ${colors.headerTo} 100%)`,
+                    ...(animate ? fxPan(9) : {}),
+                    ...typeStyle,
+                  }}
+                >
+                  {animate ? <Shine duration={4.6} /> : null}
+                  {match.showRank ? (
+                    <div className="relative flex w-[50px] items-center justify-center">#</div>
+                  ) : null}
+                  <div className="relative flex flex-1 items-center justify-start pl-2">TEAM</div>
+                  {match.showElims ? (
+                    <div className="relative flex items-center justify-center" style={{ width: columnWidth }}>ELIMS</div>
+                  ) : null}
+                  {match.showPlace ? (
+                    <div className="relative flex items-center justify-center" style={{ width: columnWidth }}>PLACE PTS</div>
+                  ) : null}
+                  {match.showTotal ? (
+                    <div className="relative flex items-center justify-center" style={{ width: columnWidth, color: colors.warning }}>TOTAL</div>
+                  ) : null}
                 </div>
-                {match.showElims ? (
-                  <div
-                    className="w-[80px] flex items-center justify-center"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    ELIMS
-                  </div>
-                ) : null}
-                {match.showPlace ? (
-                  <div
-                    className="w-[80px] flex items-center justify-center"
-                    style={{ color: colors.textPrimary }}
-                  >
-                    PLACE PTS
-                  </div>
-                ) : null}
-                {match.showTotal ? (
-                  <div
-                    className="w-[80px] flex items-center justify-center"
-                    style={{ color: colors.warning }}
-                  >
-                    TOTAL
-                  </div>
-                ) : null}
-              </div>
+              ) : null}
+
               <div>
                 <AnimatePresence>
-                  {displayTeams.map((team, index) => {
-                    const currentRoundStats = team.rounds[
-                      matchId ? 0 : team.currentRound - 1
-                    ] || {
-                      kills: 0,
-                      positionPoints: 0,
-                    };
-                    const totalPoints =
-                      currentRoundStats.kills +
-                      currentRoundStats.positionPoints;
-
-                    return (
-                      <motion.div
-                        key={team._id}
-                        layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 100,
-                          damping: 15,
-                        }}
-                        className="flex h-12 font-sans text-sm border-b"
-                        style={{
-                          color: "#FFFFFF",
-                          background: `linear-gradient(90deg, ${colors.teamFrom} 0%, ${colors.teamTo} 100%)`,
-                          borderColor: hexToRgba(colors.border, 0.3),
-                        }}
-                      >
-                        {match.showRank ? (
-                          <div
-                            className="w-[50px] flex items-center justify-center font-bold"
-                            style={{ color: "#FFFFFF" }}
-                          >
-                            {index === 0 ? (
-                              <motion.span
-                                className="relative z-10"
-                                variants={trophyVariants}
-                                initial="initial"
-                                animate="animate"
-                              >
-                                🏆
-                              </motion.span>
-                            ) : (
-                              `#${index + 1}`
-                            )}
-                          </div>
-                        ) : null}
-                        <div className="w-[150px] flex items-center space-x-2 pl-2">
-                          {match.showLogo ? (
-                            <div
-                              className="w-8 h-8 relative flex items-center justify-center rounded-full p-1"
-                              style={{ background: colors.rankFrom }}
-                            >
-                              <Image
-                                src={team.logo || "/placeholder.svg"}
-                                alt={team.name}
-                                width={28}
-                                height={28}
-                                className="object-contain rounded-full"
-                              />
-                            </div>
-                          ) : null}
-                          <div className="font-bold h-full pt-[0.65rem] tracking-wider truncate">
-                            {team.name.toUpperCase()}
-                          </div>
-                        </div>
-                        {match.showElims ? (
-                          <div
-                            className="w-[80px] flex items-center justify-center font-bold"
-                            style={{
-                              color: colors.elimColor,
-                              backgroundColor: colors.cellBg,
-                            }}
-                          >
-                            {currentRoundStats.kills || 0}
-                          </div>
-                        ) : null}
-                        {match.showPlace ? (
-                          <div
-                            className="w-[80px] flex items-center justify-center font-bold"
-                            style={{
-                              color: colors.placeColor,
-                              backgroundColor: colors.cellBg,
-                            }}
-                          >
-                            {currentRoundStats.positionPoints || 0}
-                          </div>
-                        ) : null}
-                        {match.showTotal ? (
-                          <div
-                            className="w-[80px] flex items-center justify-center font-bold"
-                            style={{
-                              color: colors.totalColor,
-                              backgroundColor: colors.cellBg,
-                            }}
-                          >
-                            {totalPoints}
-                          </div>
-                        ) : null}
-                      </motion.div>
-                    );
-                  })}
+                  {displayTeams.map((team, index) => renderRow(team, index))}
                 </AnimatePresence>
               </div>
             </div>
           </div>
         </motion.div>
+        {match.footerNote ? (
+          <p
+            className="relative z-10 mt-6 text-center text-sm font-semibold uppercase tracking-wide"
+            style={{ color: colors.textPrimary, opacity: 0.7 }}
+          >
+            {match.footerNote}
+          </p>
+        ) : null}
+        <Watermark watermark={watermark} />
       </div>
     </div>
   );

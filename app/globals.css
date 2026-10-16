@@ -63,6 +63,9 @@ body:has(.broadcast-page) > main {
   margin: 0 !important;
   padding: 0 !important;
 }
+body:has(.broadcast-page) {
+  background: transparent !important;
+}
 body:has(.broadcast-page) [data-app-sidebar="true"] {
   display: none !important;
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
@@ -10,13 +10,30 @@ import {ToastContainer, notifyError, notifySuccess} from "@/utils/ToastifyNotifi
 interface Team {
   _id: string;
   slot: number;
-  collegeName: string;
+  collegeName?: string;
   name: string;
   isEliminated: boolean;
+  currentRound?: number;
+  totalPoints?: number;
+  logo?: string;
   rounds: Array<{
     roundNumber: number;
     status: string;
+    kills?: number;
+    killPoints?: number;
+    position?: number;
+    positionPoints?: number;
   }>;
+}
+
+interface RoundSummary {
+  roundNumber: number;
+  mapName: string;
+  teams: number;
+  kills: number;
+  points: number;
+  positionsSet: number;
+  eliminated: number;
 }
 
 export default function RoundManager() {
@@ -31,36 +48,100 @@ export default function RoundManager() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Fetch all teams
+  const fetchTeams = useCallback(async () => {
+    try {
+      const response = await api.get("/team");
+      const list: Team[] = response.data.data ?? [];
+      // Always show teams in slot order (S1, S2, …) for predictable selection.
+      setTeams([...list].sort((a, b) => a.slot - b.slot));
+    } catch {
+      setError("Failed to load teams");
+    }
+  }, []);
+
+  const fetchRoundInfo = useCallback(async () => {
+    try {
+      const response = await api.get("/roundinfo");
+      setRoundInfo(response.data.data);
+    } catch {
+      setError("Failed to load round maps");
+    }
+  }, []);
+
+  const refresh = useCallback(
+    () => Promise.all([fetchTeams(), fetchRoundInfo()]),
+    [fetchTeams, fetchRoundInfo]
+  );
 
   useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await api.get("/team");
-        const list: Team[] = response.data.data ?? [];
-        // Always show teams in slot order (S1, S2, …) for predictable selection.
-        setTeams([...list].sort((a, b) => a.slot - b.slot));
-      } catch  {
-        setError("Failed to load teams");
-      }
-    };
-    const fetchRoundInfo = async () => {
-      try {
-        const response = await api.get("/roundinfo");
-        setRoundInfo(response.data.data);
-      } catch {
-        setError("Failed to load round maps");
-      }
-    };
-    fetchTeams();
-    fetchRoundInfo();
-  }, []);
+    void refresh();
+  }, [refresh]);
 
   // Prefill the map field whenever the selected round changes
   useEffect(() => {
     const found = roundInfo.find((r) => r.roundNumber === Number(roundNumber));
     setMapName(found?.mapName ?? "");
   }, [roundNumber, roundInfo]);
+
+  // Aggregate each team's rounds into a per-round overview so admins can see
+  // which rounds already exist, their map, and how far along they are.
+  const roundsOverview = useMemo<RoundSummary[]>(() => {
+    const byRound = new Map<number, RoundSummary>();
+
+    const ensure = (roundNum: number) => {
+      const existing = byRound.get(roundNum);
+      if (existing) return existing;
+      const created: RoundSummary = {
+        roundNumber: roundNum,
+        mapName: "",
+        teams: 0,
+        kills: 0,
+        points: 0,
+        positionsSet: 0,
+        eliminated: 0,
+      };
+      byRound.set(roundNum, created);
+      return created;
+    };
+
+    for (const team of teams) {
+      for (const round of team.rounds ?? []) {
+        const entry = ensure(round.roundNumber);
+        entry.teams += 1;
+        entry.kills += round.kills ?? 0;
+        entry.points += (round.killPoints ?? 0) + (round.positionPoints ?? 0);
+        if ((round.position ?? 0) > 0) entry.positionsSet += 1;
+        if (round.status === "eliminated") entry.eliminated += 1;
+      }
+    }
+
+    // Rounds that only have a saved map (no team registered yet) still show up.
+    for (const info of roundInfo) ensure(info.roundNumber);
+
+    const mapNames = new Map(
+      roundInfo.map((info) => [info.roundNumber, info.mapName])
+    );
+
+    return [...byRound.values()]
+      .sort((a, b) => a.roundNumber - b.roundNumber)
+      .map((entry) => ({ ...entry, mapName: mapNames.get(entry.roundNumber) ?? "" }));
+  }, [teams, roundInfo]);
+
+  // The "current" round is the furthest one any team has reached.
+  const currentRound = useMemo(
+    () => teams.reduce((max, team) => Math.max(max, team.currentRound ?? 0), 0),
+    [teams]
+  );
+
+  const selectedRound = Number(roundNumber) || 0;
+  const selectedRoundSummary = roundsOverview.find(
+    (round) => round.roundNumber === selectedRound
+  );
+  const selectedTeamsInRound = teams.filter(
+    (team) =>
+      selectedSlots.includes(team.slot) &&
+      team.rounds?.some((round) => round.roundNumber === selectedRound)
+  ).length;
 
   // Handle checkbox changes
   const handleCheckboxChange = (slot: number) => {
@@ -93,8 +174,7 @@ export default function RoundManager() {
       });
       setSuccess(`Map for round ${roundNumber} saved!`);
       notifySuccess(`Map for round ${roundNumber} saved!`);
-      const response = await api.get("/roundinfo");
-      setRoundInfo(response.data.data);
+      await fetchRoundInfo();
       setTimeout(() => setSuccess(""), 5000);
     } catch {
       setError("Failed to save map");
@@ -120,9 +200,8 @@ export default function RoundManager() {
       });
       setSuccess(`Round ${roundNumber} created successfully!`);
       notifySuccess(`Round ${roundNumber} created successfully!`);
-      // Refresh data by fetching teams again
-      // Refresh the page after success
-      setTimeout(() => window.location.reload(), 1000);
+      await refresh();
+      setSelectedSlots([]);
       setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
       if (isAxiosError(err) && err.response) {
@@ -154,8 +233,8 @@ export default function RoundManager() {
       });
       setSuccess(`Round ${roundNumber} deleted successfully!`);
       notifySuccess(`Round ${roundNumber} deleted successfully!`);
-      // Refresh the page after success
-      setTimeout(() => window.location.reload(), 1000);
+      await refresh();
+      setSelectedSlots([]);
       setTimeout(() => setSuccess(""), 5000);
     } catch {
       setError("Failed to delete round");
@@ -178,6 +257,32 @@ export default function RoundManager() {
             Tournament Round Manager
           </h1>
 
+          {/* Quick summary */}
+          <div className="mb-8 grid grid-cols-3 gap-3">
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-white">{teams.length}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">
+                Teams
+              </p>
+            </div>
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-white">
+                {roundsOverview.length}
+              </p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">
+                Rounds Created
+              </p>
+            </div>
+            <div className="bg-gray-700/50 rounded-lg p-4 text-center">
+              <p className="text-2xl font-bold text-green-400">
+                {currentRound ? `R${currentRound}` : "—"}
+              </p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">
+                Current Round
+              </p>
+            </div>
+          </div>
+
           {/* Round Number Input */}
           <div className="mb-8">
             <label htmlFor="round" className="block text-red-400 mb-2 text-lg">
@@ -190,6 +295,19 @@ export default function RoundManager() {
               onChange={(e) => setRoundNumber(e.target.value)}
               className="w-full bg-gray-700 text-white p-3 rounded-lg border-2 border-red-500/30 focus:border-red-500 outline-none"
             />
+            {selectedRound > 0 && (
+              <p
+                className={`mt-2 text-sm ${
+                  selectedRoundSummary?.teams
+                    ? "text-green-400"
+                    : "text-amber-400"
+                }`}
+              >
+                {selectedRoundSummary?.teams
+                  ? `Round ${selectedRound} is already created for ${selectedRoundSummary.teams} team(s).`
+                  : `Round ${selectedRound} has not been created yet.`}
+              </p>
+            )}
           </div>
 
           {/* Round Map */}
@@ -237,6 +355,70 @@ export default function RoundManager() {
             ) : null}
           </div>
 
+          {/* Rounds Overview */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl text-red-400">Rounds Overview</h2>
+              <span className="text-sm text-gray-400">
+                {roundsOverview.length} round(s) • Current:{" "}
+                {currentRound ? `R${currentRound}` : "—"}
+              </span>
+            </div>
+            {roundsOverview.length === 0 ? (
+              <p className="text-gray-400 text-sm">No rounds created yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {roundsOverview.map((round) => {
+                  const isCurrent = round.roundNumber === currentRound;
+                  const isSelected = round.roundNumber === selectedRound;
+                  return (
+                    <button
+                      key={round.roundNumber}
+                      type="button"
+                      onClick={() => setRoundNumber(String(round.roundNumber))}
+                      className={`text-left p-3 rounded-lg border-2 transition-all ${
+                        isCurrent
+                          ? "border-green-500 bg-green-500/10"
+                          : "border-gray-700 hover:border-red-500/40"
+                      } ${isSelected ? "ring-2 ring-red-500" : ""}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-bold">
+                          R{round.roundNumber}
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                            isCurrent
+                              ? "bg-green-500/20 text-green-300"
+                              : "bg-gray-600/50 text-gray-300"
+                          }`}
+                        >
+                          {isCurrent ? "CURRENT" : "CREATED"}
+                        </span>
+                      </div>
+                      <p className="text-gray-300 text-sm mt-1 truncate">
+                        {round.mapName || "No map set"}
+                      </p>
+                      <div className="text-[11px] text-gray-400 mt-1 space-y-0.5">
+                        <p>
+                          {round.teams} team(s) • {round.kills} kills
+                        </p>
+                        <p>
+                          {round.points} pts • {round.positionsSet} positioned
+                        </p>
+                        {round.eliminated > 0 && (
+                          <p className="text-red-400">
+                            {round.eliminated} eliminated
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Team Selection */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -270,20 +452,29 @@ export default function RoundManager() {
                         Slot #{team.slot}
                       </h3>
                       <p className="text-red-300 uppercase">{team.name}</p>
-                      <p className="text-gray-400 text-sm">
-                        {team.collegeName}
+                      <p className="text-gray-300 text-xs mt-0.5">
+                        {team.totalPoints ?? 0} pts
+                        {team.isEliminated ? " • eliminated" : ""}
                       </p>
                       {team.rounds.length > 0 ? (
-                        team.rounds.map((round) => (
-                          <p
-                            key={round.roundNumber}
-                            className="text-gray-400 text-sm"
-                          >
-                            Rounds: {round.roundNumber}
-                          </p>
-                        ))
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {[...team.rounds]
+                            .sort((a, b) => a.roundNumber - b.roundNumber)
+                            .map((round) => (
+                              <span
+                                key={round.roundNumber}
+                                className={`text-[11px] px-2 py-0.5 rounded ${
+                                  round.roundNumber === currentRound
+                                    ? "bg-green-500/20 text-green-300"
+                                    : "bg-gray-600/50 text-gray-300"
+                                }`}
+                              >
+                                R{round.roundNumber}
+                              </span>
+                            ))}
+                        </div>
                       ) : (
-                        <p className="text-gray-400 text-sm">No rounds found</p>
+                        <p className="text-gray-500 text-xs mt-1">No rounds yet</p>
                       )}
                     </div>
                     <input
@@ -297,6 +488,13 @@ export default function RoundManager() {
               ))}
             </div>
           </div>
+
+          {selectedRound > 0 && selectedSlots.length > 0 && (
+            <p className="mb-3 text-sm text-gray-400">
+              Round {selectedRound}: {selectedTeamsInRound} of{" "}
+              {selectedSlots.length} selected team(s) already have this round.
+            </p>
+          )}
 
           {/* Action Buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

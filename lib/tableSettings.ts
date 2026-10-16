@@ -37,21 +37,26 @@ export interface PointsTableHeader {
 }
 
 export interface PointsTableLayout {
+  template: OverlayTemplate;
   width: number;
   rowHeight: number;
   fontScale: number;
   showTrophy: boolean;
+  gap: number;
 }
 
 export interface NotificationSettings {
+  template: OverlayTemplate;
   showLogo: boolean;
   showKills: boolean;
   showRank: boolean;
   showRound: boolean;
   durationMs: number;
+  position: OverlayPosition;
 }
 
 export interface LeaderboardSettings {
+  template: OverlayTemplate;
   showTitle: boolean;
   title: string;
   subtitle: string;
@@ -60,9 +65,23 @@ export interface LeaderboardSettings {
   showElims: boolean;
   showTotal: boolean;
   showChickens: boolean;
+  bannerImage: string;
+  logoSize: number;
+  logoRounding: number;
+  footerNote: string;
+  headerLabels: LeaderboardHeaderLabels;
+}
+
+export interface LeaderboardHeaderLabels {
+  rank: string;
+  team: string;
+  place: string;
+  elims: string;
+  total: string;
 }
 
 export interface MatchSettings {
+  template: OverlayTemplate;
   showTitle: boolean;
   title: string;
   subtitle: string;
@@ -71,17 +90,85 @@ export interface MatchSettings {
   showElims: boolean;
   showPlace: boolean;
   showTotal: boolean;
+  bannerImage: string;
+  footerNote: string;
+}
+
+export type OverlayTemplate =
+  | "classic"
+  | "lower-third"
+  | "card-stack"
+  | "big-board"
+  | "hairline";
+
+export interface OverlayTypography {
+  fontFamily: string;
+  fontScale: number;
+  uppercase: boolean;
+  letterSpacing: number;
+}
+
+export type SurfaceStyle =
+  | "solid"
+  | "gradient"
+  | "glass"
+  | "transparent"
+  | "none";
+
+export interface OverlaySurface {
+  style: SurfaceStyle;
+  opacity: number;
+  blur: number;
+  radius: number;
+  borderWidth: number;
+  shadow: boolean;
+  scanline: boolean;
+  animate: boolean;
+  backgroundImage: string;
+  backgroundImageOpacity: number;
+  backgroundImageBlur: number;
+  gradientFrom: string;
+  gradientTo: string;
+  gradientAngle: number;
+}
+
+export type WatermarkCorner =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
+
+export interface OverlayWatermark {
+  enabled: boolean;
+  image: string;
+  corner: WatermarkCorner;
+  size: number;
+  opacity: number;
+  offset: number;
+}
+
+export type VerticalAnchor = "top" | "middle" | "bottom";
+export type HorizontalAnchor = "left" | "center" | "right";
+
+export interface OverlayPosition {
+  vertical: VerticalAnchor;
+  horizontal: HorizontalAnchor;
+  offsetX: number;
+  offsetY: number;
 }
 
 export interface PointsTableSettings {
   preset: string;
   colors: PointsTableColors;
+  typography: OverlayTypography;
+  surface: OverlaySurface;
   columns: PointsTableColumns;
   header: PointsTableHeader;
   layout: PointsTableLayout;
   notifications: NotificationSettings;
   leaderboard: LeaderboardSettings;
   match: MatchSettings;
+  watermark: OverlayWatermark;
 }
 
 export interface AppSettings {
@@ -115,17 +202,54 @@ export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
     notificationFrom: "#FFFFFF",
     notificationTo: "#EFF6FF",
   },
+  typography: {
+    fontFamily: "",
+    fontScale: 1,
+    uppercase: true,
+    letterSpacing: 0,
+  },
+  surface: {
+    style: "transparent",
+    opacity: 0.92,
+    blur: 8,
+    radius: 12,
+    borderWidth: 1,
+    shadow: true,
+    scanline: false,
+    animate: true,
+    backgroundImage: "",
+    backgroundImageOpacity: 0.25,
+    backgroundImageBlur: 0,
+    gradientFrom: "",
+    gradientTo: "",
+    gradientAngle: 140,
+  },
   columns: { logo: true, alive: true, pts: true, elims: true },
   header: { title: "", subtitle: "", logoUrl: "" },
-  layout: { width: 300, rowHeight: 36, fontScale: 1, showTrophy: true },
+  layout: {
+    template: "classic",
+    width: 300,
+    rowHeight: 36,
+    fontScale: 1,
+    showTrophy: true,
+    gap: 0,
+  },
   notifications: {
+    template: "classic",
     showLogo: true,
     showKills: true,
     showRank: true,
     showRound: true,
     durationMs: 5000,
+    position: {
+      vertical: "bottom",
+      horizontal: "left",
+      offsetX: 48,
+      offsetY: 288,
+    },
   },
   leaderboard: {
+    template: "classic",
     showTitle: true,
     title: "",
     subtitle: "",
@@ -134,8 +258,20 @@ export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
     showElims: true,
     showTotal: true,
     showChickens: true,
+    bannerImage: "",
+    logoSize: 30,
+    logoRounding: 4,
+    footerNote: "",
+    headerLabels: {
+      rank: "RANK",
+      team: "TEAM",
+      place: "PLACE",
+      elims: "ELIMS",
+      total: "TOTAL",
+    },
   },
   match: {
+    template: "classic",
     showTitle: true,
     title: "",
     subtitle: "",
@@ -144,6 +280,16 @@ export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
     showElims: true,
     showPlace: true,
     showTotal: true,
+    bannerImage: "",
+    footerNote: "",
+  },
+  watermark: {
+    enabled: false,
+    image: "",
+    corner: "top-right",
+    size: 72,
+    opacity: 0.85,
+    offset: 24,
   },
 };
 
@@ -190,6 +336,70 @@ export const GAME_LABELS: { key: GameTheme; label: string; blurb: string }[] = [
     label: "Universal",
     blurb: "Game-agnostic esports themes",
   },
+];
+
+export const TEMPLATE_LABELS: {
+  key: OverlayTemplate;
+  label: string;
+  blurb: string;
+}[] = [
+  {
+    key: "classic",
+    label: "Classic Table",
+    blurb: "Columns with the animated broadcast header",
+  },
+  {
+    key: "lower-third",
+    label: "Lower Third",
+    blurb: "Angled broadcast bands, traditional esports look",
+  },
+  {
+    key: "card-stack",
+    label: "Card Stack",
+    blurb: "One tile per team with the full team name",
+  },
+  {
+    key: "big-board",
+    label: "Big Board",
+    blurb: "Large type built to be read at a glance",
+  },
+  {
+    key: "hairline",
+    label: "Hairline",
+    blurb: "Type only, no panels, sits in the footage",
+  },
+];
+
+export const SURFACE_STYLE_LABELS: {
+  key: SurfaceStyle;
+  label: string;
+}[] = [
+  { key: "transparent", label: "Transparent" },
+  { key: "glass", label: "Glass" },
+  { key: "gradient", label: "Gradient" },
+  { key: "solid", label: "Solid" },
+  { key: "none", label: "No panel" },
+];
+
+export const WATERMARK_CORNER_LABELS: {
+  key: WatermarkCorner;
+  label: string;
+}[] = [
+  { key: "top-right", label: "Top right" },
+  { key: "top-left", label: "Top left" },
+  { key: "bottom-right", label: "Bottom right" },
+  { key: "bottom-left", label: "Bottom left" },
+];
+
+export const FONT_FAMILIES: { label: string; value: string }[] = [
+  { label: "Default", value: "" },
+  { label: "Inter", value: "Inter, sans-serif" },
+  { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Segoe UI", value: "'Segoe UI', sans-serif" },
+  { label: "Rajdhani (tech)", value: "Rajdhani, sans-serif" },
+  { label: "Teko (condensed)", value: "Teko, sans-serif" },
+  { label: "Oswald", value: "Oswald, sans-serif" },
+  { label: "Courier (mono)", value: "'Courier New', monospace" },
 ];
 
 export interface TablePreset {
@@ -767,18 +977,32 @@ export function mergePointsTable(
   return {
     preset: input.preset ?? DEFAULT_POINTS_TABLE.preset,
     colors: { ...DEFAULT_POINTS_TABLE.colors, ...(input.colors ?? {}) },
+    typography: {
+      ...DEFAULT_POINTS_TABLE.typography,
+      ...(input.typography ?? {}),
+    },
+    surface: { ...DEFAULT_POINTS_TABLE.surface, ...(input.surface ?? {}) },
     columns: { ...DEFAULT_POINTS_TABLE.columns, ...(input.columns ?? {}) },
     header: { ...DEFAULT_POINTS_TABLE.header, ...(input.header ?? {}) },
     layout: { ...DEFAULT_POINTS_TABLE.layout, ...(input.layout ?? {}) },
     notifications: {
       ...DEFAULT_POINTS_TABLE.notifications,
       ...(input.notifications ?? {}),
+      position: {
+        ...DEFAULT_POINTS_TABLE.notifications.position,
+        ...(input.notifications?.position ?? {}),
+      },
     },
     leaderboard: {
       ...DEFAULT_POINTS_TABLE.leaderboard,
       ...(input.leaderboard ?? {}),
+      headerLabels: {
+        ...DEFAULT_POINTS_TABLE.leaderboard.headerLabels,
+        ...(input.leaderboard?.headerLabels ?? {}),
+      },
     },
     match: { ...DEFAULT_POINTS_TABLE.match, ...(input.match ?? {}) },
+    watermark: { ...DEFAULT_POINTS_TABLE.watermark, ...(input.watermark ?? {}) },
   };
 }
 

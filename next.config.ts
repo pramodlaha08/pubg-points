@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
         port: "8000",
         pathname: "/temp/**",
       },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
     ],
   },
   eslint: {

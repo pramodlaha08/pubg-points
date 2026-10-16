@@ -13,6 +13,12 @@ import {
   mergePointsTable,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
+import {
+  displayName,
+  positionStyle,
+  typographyStyle,
+} from "@/lib/overlayTheme";
+import { SurfaceBackground, Watermark } from "@/components/OverlayChrome";
 
 interface EliminationNotification {
   id: string;
@@ -75,9 +81,7 @@ export default function GamingEliminationNotification({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const seenEventIdsRef = useRef<Set<string>>(new Set());
-  const latestByKeyRef = useRef<Map<string, EliminationNotification>>(
-    new Map()
-  );
+  const latestByKeyRef = useRef<Map<string, EliminationNotification>>(new Map());
 
   const { settings: remoteSettings, refresh } = useSettings();
   const { mapByRound, refresh: refreshRoundInfo } = useRoundInfo();
@@ -85,14 +89,13 @@ export default function GamingEliminationNotification({
   const settings = useMemo<PointsTableSettings>(
     () =>
       mergePointsTable(
-        previewSettings ??
-          remoteSettings?.pointsTable ??
-          DEFAULT_POINTS_TABLE
+        previewSettings ?? remoteSettings?.pointsTable ?? DEFAULT_POINTS_TABLE
       ),
     [previewSettings, remoteSettings]
   );
 
-  const { colors, notifications } = settings;
+  const { colors, notifications, typography, surface, watermark } = settings;
+  const template = notifications.template;
 
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -237,6 +240,11 @@ export default function GamingEliminationNotification({
   if (!active) return null;
 
   const activeMap = mapByRound[active.roundNumber];
+  const name = displayName(active.teamName, typography);
+  const isFlat = template === "hairline";
+  const isBig = template === "big-board";
+  const isLower = template === "lower-third";
+  const logoSize = isBig ? 72 : isLower ? 56 : 64;
 
   return (
     <AnimatePresence>
@@ -251,103 +259,130 @@ export default function GamingEliminationNotification({
             transition: { duration: 0.4, ease: "easeIn" },
           }}
           transition={{ type: "spring", stiffness: 110, damping: 15 }}
-          /*
-           * To change the position of the notification, update the classes below.
-           * For top-left, use: "top-4 left-4"
-           * For top-right, use: "top-4 right-4"
-           * For bottom-left, use: "bottom-4 left-4"
-           * For bottom-right, use: "bottom-4 right-4"
-           * You can also use other values like "top-8", "left-8", etc. to adjust the spacing.
-           */
-          className={
-            inline
-              ? "relative w-full max-w-sm z-[100]"
-              : "fixed bottom-72 left-12 w-full max-w-sm z-[100]"
-          }
+          className={inline ? "relative z-[100]" : "z-[100]"}
+          style={{
+            ...positionStyle(notifications.position, inline),
+            width: "100%",
+            maxWidth: isBig ? 460 : isLower ? 480 : 384,
+          }}
         >
           <div
-            className="relative border p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] overflow-hidden"
+            className="relative overflow-hidden"
             style={{
-              borderColor: colors.borderSoft,
-              background: `linear-gradient(135deg, ${colors.notificationFrom} 0%, ${colors.notificationTo} 100%)`,
+              border: isFlat ? "none" : `1px solid ${colors.borderSoft}`,
+              borderRadius: isFlat ? 0 : 16,
+              padding: isFlat ? 0 : 16,
+              background: isFlat
+                ? "transparent"
+                : `linear-gradient(135deg, ${colors.notificationFrom} 0%, ${colors.notificationTo} 100%)`,
+              boxShadow: isFlat ? "none" : "0 8px 30px rgb(0 0 0 / 0.12)",
             }}
           >
-            {/* Decorative background gradients */}
-            <div
-              className="absolute right-0 top-0 w-32 h-full pointer-events-none"
-              style={{
-                background: `linear-gradient(to left, ${hexToRgba(
-                  colors.danger,
-                  0.12
-                )}, transparent)`,
-              }}
-            />
-            <div className="absolute left-0 bottom-0 w-full h-1/2 bg-gradient-to-t from-slate-50/40 to-transparent pointer-events-none" />
+            <SurfaceBackground surface={surface} />
+            {!isFlat ? (
+              <>
+                <div
+                  className="pointer-events-none absolute right-0 top-0 h-full w-32"
+                  style={{
+                    background: `linear-gradient(to left, ${hexToRgba(
+                      colors.danger,
+                      0.12
+                    )}, transparent)`,
+                  }}
+                />
+                <div className="pointer-events-none absolute bottom-0 left-0 h-1/2 w-full bg-gradient-to-t from-slate-50/40 to-transparent" />
+              </>
+            ) : null}
 
-            <div className="relative flex items-center justify-between z-10">
-              <div className="flex items-center space-x-4">
-                {/* Logo wrapper */}
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {isLower ? (
+                  <span
+                    className="h-12 w-1.5 shrink-0 rounded-full"
+                    style={{ background: colors.danger }}
+                  />
+                ) : null}
+
                 {notifications.showLogo ? (
                   <div
-                    className="relative w-16 h-16 rounded-xl border shadow-sm flex items-center justify-center p-1"
+                    className="relative flex shrink-0 items-center justify-center rounded-xl border shadow-sm"
                     style={{
-                      background: colors.cellBg,
-                      borderColor: colors.borderSoft,
+                      width: logoSize,
+                      height: logoSize,
+                      padding: isFlat ? 0 : 4,
+                      background: isFlat ? "transparent" : colors.cellBg,
+                      borderColor: isFlat ? "transparent" : colors.borderSoft,
                     }}
                   >
                     <Image
                       src={active.teamLogo || "/placeholder.svg"}
                       alt={`${active.teamName} logo`}
                       fill
-                      className="p-1 rounded-xl drop-shadow-sm grayscale-[15%] object-contain"
+                      className="rounded-xl object-contain drop-shadow-sm"
+                      style={{ padding: isFlat ? 0 : 4 }}
                     />
                   </div>
                 ) : null}
 
                 <div className="min-w-0">
                   <p
-                    className="text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5"
-                    style={{ color: colors.danger }}
+                    className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: colors.danger, ...typographyStyle(typography) }}
                   >
-                    Team Eliminated
+                    {isFlat ? "Eliminated" : "Team Eliminated"}
                   </p>
                   <h3
-                    className="text-2xl font-black uppercase tracking-wide leading-none truncate max-w-[150px]"
-                    style={{ color: colors.textPrimary }}
+                    className={`truncate font-black uppercase leading-none tracking-wide ${
+                      isBig ? "text-4xl" : "text-2xl"
+                    }`}
+                    style={{
+                      color: colors.textPrimary,
+                      maxWidth: isBig ? 220 : 150,
+                      ...typographyStyle(typography),
+                    }}
                   >
-                    {active.teamName}
+                    {name}
                   </h3>
 
                   {notifications.showKills ? (
-                    <div className="flex items-center mt-2.5">
+                    <div className="mt-2.5 flex items-center">
                       <span
-                        className="inline-flex items-center rounded px-2 py-0.5 text-xs font-bold border"
+                        className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-bold"
                         style={{
-                          color: colors.warning,
-                          borderColor: hexToRgba(colors.warning, 0.3),
-                          background: hexToRgba(colors.warning, 0.15),
+                          color: colors.textPrimary,
+                          borderColor: hexToRgba(colors.warning, 0.5),
+                          background: hexToRgba(colors.warning, 0.16),
                         }}
                       >
-                        Elims: {active.killCount}
+                        {active.killCount} ELIMS
                       </span>
                     </div>
                   ) : null}
                 </div>
               </div>
 
-              {/* Rank Block */}
               {notifications.showRank ? (
                 <div
-                  className="flex flex-col items-center justify-center h-16 w-16 rounded-xl shadow-md border flex-shrink-0"
+                  className="flex shrink-0 flex-col items-center justify-center rounded-xl border shadow-sm"
                   style={{
-                    background: `linear-gradient(135deg, ${colors.rankFrom} 0%, ${colors.rankTo} 100%)`,
-                    borderColor: hexToRgba(colors.rankTo, 0.6),
+                    width: isFlat ? 56 : 64,
+                    height: isFlat ? 56 : 64,
+                    background: isFlat
+                      ? "transparent"
+                      : `linear-gradient(180deg, ${colors.rankFrom} 0%, ${colors.rankTo} 100%)`,
+                    borderColor: isFlat ? "transparent" : colors.border,
                   }}
                 >
-                  <span className="text-[9px] font-bold text-white/80 uppercase tracking-widest mb-[-2px]">
+                  <span
+                    className="mb-[-2px] text-[9px] font-bold uppercase tracking-widest"
+                    style={{ color: colors.textPrimary, opacity: 0.7 }}
+                  >
                     Rank
                   </span>
-                  <p className="text-3xl font-black text-white leading-none">
+                  <p
+                    className="text-3xl font-black leading-none"
+                    style={{ color: isFlat ? colors.textPrimary : "#FFFFFF" }}
+                  >
                     #{active.eliminationOrder}
                   </p>
                 </div>
@@ -366,7 +401,6 @@ export default function GamingEliminationNotification({
               </div>
             ) : null}
 
-            {/* Auto-dismiss progress bar line */}
             <motion.div
               initial={{ width: "100%" }}
               animate={{ width: "0%" }}
@@ -376,9 +410,12 @@ export default function GamingEliminationNotification({
               }}
               className="absolute bottom-0 left-0 h-1"
               style={{
-                background: `linear-gradient(90deg, ${colors.rankFrom} 0%, ${colors.rankTo} 100%)`,
+                background: isFlat
+                  ? colors.accent
+                  : `linear-gradient(90deg, ${colors.rankFrom} 0%, ${colors.rankTo} 100%)`,
               }}
             />
+            <Watermark watermark={watermark} />
           </div>
         </motion.div>
       )}
