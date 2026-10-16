@@ -9,12 +9,21 @@ import { useTournament } from "@/components/providers/TournamentProvider";
 import {
   COLOR_FIELDS,
   DEFAULT_POINTS_TABLE,
+  FONT_FAMILIES,
   GAME_LABELS,
+  SURFACE_STYLE_LABELS,
   TABLE_PRESETS,
+  TEMPLATE_LABELS,
+  WATERMARK_CORNER_LABELS,
   mergePointsTable,
+  type LeaderboardHeaderLabels,
   type LeaderboardSettings,
   type MatchSettings,
   type NotificationSettings,
+  type OverlaySurface,
+  type OverlayTemplate,
+  type OverlayTypography,
+  type OverlayWatermark,
   type PointsTableColors,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
@@ -56,6 +65,7 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   const { tournamentId, activeTournament } = useTournament();
 
@@ -105,7 +115,7 @@ export default function SettingsPage() {
 
   const updateLeaderboard = (
     key: keyof LeaderboardSettings,
-    value: boolean | string
+    value: boolean | string | number
   ) => {
     setDraft((prev) => ({
       ...prev,
@@ -119,6 +129,166 @@ export default function SettingsPage() {
       match: { ...prev.match, [key]: value } as MatchSettings,
     }));
   };
+
+  const updateTypography = (
+    key: keyof OverlayTypography,
+    value: string | number | boolean
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      typography: { ...prev.typography, [key]: value } as OverlayTypography,
+    }));
+  };
+
+  const updateSurface = (
+    key: keyof OverlaySurface,
+    value: string | number | boolean
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      surface: { ...prev.surface, [key]: value } as OverlaySurface,
+    }));
+  };
+
+  const updateLayoutNumber = (key: "gap", value: number) => {
+    setDraft((prev) => ({ ...prev, layout: { ...prev.layout, [key]: value } }));
+  };
+
+  const setTemplate = (
+    section: "table" | "notification" | "leaderboard" | "match",
+    value: OverlayTemplate
+  ) => {
+    setDraft((prev) => {
+      if (section === "table") {
+        return { ...prev, layout: { ...prev.layout, template: value } };
+      }
+      if (section === "notification") {
+        return {
+          ...prev,
+          notifications: { ...prev.notifications, template: value },
+        };
+      }
+      if (section === "leaderboard") {
+        return {
+          ...prev,
+          leaderboard: { ...prev.leaderboard, template: value },
+        };
+      }
+      return { ...prev, match: { ...prev.match, template: value } };
+    });
+  };
+
+  const updatePosition = (
+    key: "vertical" | "horizontal" | "offsetX" | "offsetY",
+    value: string | number
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      notifications: {
+        ...prev.notifications,
+        position: { ...prev.notifications.position, [key]: value },
+      } as NotificationSettings,
+    }));
+  };
+
+  const updateWatermark = (
+    key: keyof OverlayWatermark,
+    value: boolean | number | string
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      watermark: { ...prev.watermark, [key]: value } as OverlayWatermark,
+    }));
+  };
+
+  const updateHeaderLabel = (
+    key: keyof LeaderboardHeaderLabels,
+    value: string
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      leaderboard: {
+        ...prev.leaderboard,
+        headerLabels: { ...prev.leaderboard.headerLabels, [key]: value },
+      },
+    }));
+  };
+
+  const uploadImage = async (file: File, key: string): Promise<string | null> => {
+    setUploading(key);
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const response = await api.post("/system/upload-image", form);
+      const url = response.data?.data?.url as string | undefined;
+      if (!url) {
+        notifyError("Upload did not return an image URL.");
+        return null;
+      }
+      return url;
+    } catch (error) {
+      const message = isAxiosError(error)
+        ? (error.response?.data?.message as string | undefined)
+        : undefined;
+      notifyError(message || "Image upload failed.");
+      return null;
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const imageField = (
+    label: string,
+    value: string,
+    onChange: (value: string) => void,
+    key: string
+  ) => (
+    <div className="space-y-2">
+      <div className="text-sm text-gray-300">{label}</div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://... or upload"
+          className="flex-1 min-w-0 bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+        />
+        <label className="cursor-pointer rounded-lg border-2 border-red-500/40 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-600/20">
+          {uploading === key ? "Uploading..." : "Upload"}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                const url = await uploadImage(file, key);
+                if (url) onChange(url);
+              }
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="rounded-lg border-2 border-red-500/40 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-600/20"
+          >
+            Clear
+          </button>
+        ) : null}
+      </div>
+      {value ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={value}
+          alt=""
+          className="h-16 w-auto rounded border border-red-500/20 object-contain"
+        />
+      ) : null}
+    </div>
+  );
 
   const applyPreset = (presetSettings: PointsTableSettings) => {
     setDraft((prev) => ({
@@ -188,10 +358,311 @@ export default function SettingsPage() {
     </label>
   );
 
+  const rangeRow = (
+    label: string,
+    value: number,
+    min: number,
+    max: number,
+    step: number,
+    onChange: (v: number) => void,
+    format?: (v: number) => string
+  ) => (
+    <div key={label}>
+      <div className="flex justify-between text-sm text-gray-300">
+        <span>{label}</span>
+        <span>{format ? format(value) : value}</span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full accent-red-500"
+      />
+    </div>
+  );
+
+  const templatePicker = (
+    current: OverlayTemplate,
+    onPick: (v: OverlayTemplate) => void
+  ) => (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {TEMPLATE_LABELS.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onPick(t.key)}
+          className={`rounded-lg border-2 px-3 py-2 text-left transition-all ${
+            current === t.key
+              ? "border-red-500 bg-red-600/20"
+              : "border-red-500/20 hover:bg-red-600/10"
+          }`}
+        >
+          <div className="text-sm font-semibold text-white">{t.label}</div>
+          <div className="text-[11px] text-gray-400">{t.blurb}</div>
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderAppearanceSections = () => (
+    <>
+      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
+        <h2 className="text-lg font-semibold text-red-400">Typography</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2">
+            <span>Font family</span>
+            <select
+              value={draft.typography.fontFamily}
+              onChange={(e) => updateTypography("fontFamily", e.target.value)}
+              className="bg-gray-800 border border-red-500/30 rounded px-2 py-1 text-white text-sm"
+            >
+              {FONT_FAMILIES.map((f) => (
+                <option key={f.label} value={f.value}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {checkboxRow("Uppercase names", draft.typography.uppercase, (v) =>
+            updateTypography("uppercase", v)
+          )}
+        </div>
+        {rangeRow(
+          "Font scale",
+          draft.typography.fontScale,
+          0.7,
+          1.8,
+          0.05,
+          (v) => updateTypography("fontScale", v),
+          (v) => `${v.toFixed(2)}x`
+        )}
+        {rangeRow(
+          "Letter spacing",
+          draft.typography.letterSpacing,
+          0,
+          0.2,
+          0.01,
+          (v) => updateTypography("letterSpacing", v),
+          (v) => `${v.toFixed(2)}em`
+        )}
+        <p className="text-xs text-gray-400">
+          Shared by every overlay. Per-overlay font scale in the Layout section
+          multiplies on top of this.
+        </p>
+      </section>
+
+      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
+        <h2 className="text-lg font-semibold text-red-400">Panel Surface</h2>
+        <div className="flex flex-wrap gap-2">
+          {SURFACE_STYLE_LABELS.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => updateSurface("style", s.key)}
+              className={`rounded-lg border-2 px-3 py-1.5 text-sm font-semibold transition-all ${
+                draft.surface.style === s.key
+                  ? "border-red-500 bg-red-600/20 text-white"
+                  : "border-red-500/20 text-gray-300 hover:bg-red-600/10"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-4">
+          {checkboxRow("Drop shadow", draft.surface.shadow, (v) =>
+            updateSurface("shadow", v)
+          )}
+          {checkboxRow("Scanlines", draft.surface.scanline, (v) =>
+            updateSurface("scanline", v)
+          )}
+          {checkboxRow("Animate (pan / shine)", draft.surface.animate, (v) =>
+            updateSurface("animate", v)
+          )}
+        </div>
+        {rangeRow(
+          "Corner radius",
+          draft.surface.radius,
+          0,
+          32,
+          1,
+          (v) => updateSurface("radius", v),
+          (v) => `${v}px`
+        )}
+        {rangeRow(
+          "Border width",
+          draft.surface.borderWidth,
+          0,
+          4,
+          1,
+          (v) => updateSurface("borderWidth", v),
+          (v) => `${v}px`
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {rangeRow(
+            "Opacity (glass/solid)",
+            draft.surface.opacity,
+            0.2,
+          1,
+            0.02,
+            (v) => updateSurface("opacity", v),
+            (v) => `${Math.round(v * 100)}%`
+          )}
+          {rangeRow(
+            "Blur (glass)",
+            draft.surface.blur,
+            0,
+            24,
+            1,
+            (v) => updateSurface("blur", v),
+            (v) => `${v}px`
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2">
+            <span>Gradient start</span>
+            <input
+              type="color"
+              value={draft.surface.gradientFrom || draft.colors.panelFrom}
+              onChange={(e) => updateSurface("gradientFrom", e.target.value)}
+              className="h-7 w-10 rounded bg-transparent"
+            />
+          </label>
+          <label className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2">
+            <span>Gradient end</span>
+            <input
+              type="color"
+              value={draft.surface.gradientTo || draft.colors.panelTo}
+              onChange={(e) => updateSurface("gradientTo", e.target.value)}
+              className="bg-transparent"
+            />
+          </label>
+        </div>
+        {rangeRow(
+          "Gradient angle",
+          draft.surface.gradientAngle,
+          0,
+          360,
+          5,
+          (v) => updateSurface("gradientAngle", v),
+          (v) => `${v}deg`
+        )}
+        {imageField(
+          "Panel background image",
+          draft.surface.backgroundImage,
+          (v) => updateSurface("backgroundImage", v),
+          "bg"
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {rangeRow(
+            "Background image opacity",
+            draft.surface.backgroundImageOpacity,
+            0,
+            1,
+            0.05,
+            (v) => updateSurface("backgroundImageOpacity", v),
+            (v) => `${Math.round(v * 100)}%`
+          )}
+          {rangeRow(
+            "Background image blur",
+            draft.surface.backgroundImageBlur,
+            0,
+            24,
+            1,
+            (v) => updateSurface("backgroundImageBlur", v),
+            (v) => `${v}px`
+          )}
+        </div>
+      </section>
+
+      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
+        <h2 className="text-lg font-semibold text-red-400">Watermark</h2>
+        <div className="flex flex-wrap gap-4">
+          {checkboxRow("Show watermark", draft.watermark.enabled, (v) =>
+            updateWatermark("enabled", v)
+          )}
+        </div>
+        {imageField(
+          "Watermark image",
+          draft.watermark.image,
+          (v) => updateWatermark("image", v),
+          "wm"
+        )}
+        <div className="flex flex-wrap gap-2">
+          {WATERMARK_CORNER_LABELS.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => updateWatermark("corner", c.key)}
+              className={`rounded-lg border-2 px-3 py-1.5 text-sm font-semibold transition-all ${
+                draft.watermark.corner === c.key
+                  ? "border-red-500 bg-red-600/20 text-white"
+                  : "border-red-500/20 text-gray-300 hover:bg-red-600/10"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {rangeRow(
+            "Size",
+            draft.watermark.size,
+            16,
+            320,
+            2,
+            (v) => updateWatermark("size", v),
+            (v) => `${v}px`
+          )}
+          {rangeRow(
+            "Opacity",
+            draft.watermark.opacity,
+            0,
+            1,
+            0.05,
+            (v) => updateWatermark("opacity", v),
+            (v) => `${Math.round(v * 100)}%`
+          )}
+        </div>
+        {rangeRow(
+          "Corner offset",
+          draft.watermark.offset,
+          0,
+          200,
+          2,
+          (v) => updateWatermark("offset", v),
+          (v) => `${v}px`
+        )}
+      </section>
+    </>
+  );
+
   const renderControls = () => {
     if (tab === "table") {
       return (
         <>
+          <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+            <h2 className="text-lg font-semibold text-red-400">
+              Design Template
+            </h2>
+            {templatePicker(draft.layout.template, (v) =>
+              setTemplate("table", v)
+            )}
+            {rangeRow(
+              "Row gap",
+              draft.layout.gap,
+              0,
+              16,
+              1,
+              (v) => updateLayoutNumber("gap", v),
+              (v) => `${v}px`
+            )}
+          </section>
+
           <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20">
             <h2 className="text-lg font-semibold text-red-400 mb-3">
               Columns & Elements
@@ -322,6 +793,13 @@ export default function SettingsPage() {
 
     if (tab === "notification") {
       return (
+        <>
+        <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+          <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
+          {templatePicker(draft.notifications.template, (v) =>
+            setTemplate("notification", v)
+          )}
+        </section>
         <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
           <h2 className="text-lg font-semibold text-red-400 mb-1">
             Elimination Notification
@@ -362,11 +840,68 @@ export default function SettingsPage() {
             tab.
           </p>
         </section>
+        <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
+          <h2 className="text-lg font-semibold text-red-400">
+            Position (OBS overlay)
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2">
+              <span>Vertical</span>
+              <select
+                value={draft.notifications.position.vertical}
+                onChange={(e) => updatePosition("vertical", e.target.value)}
+                className="bg-gray-800 border border-red-500/30 rounded px-2 py-1 text-white text-sm"
+              >
+                <option value="top">Top</option>
+                <option value="middle">Middle</option>
+                <option value="bottom">Bottom</option>
+              </select>
+            </label>
+            <label className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2">
+              <span>Horizontal</span>
+              <select
+                value={draft.notifications.position.horizontal}
+                onChange={(e) => updatePosition("horizontal", e.target.value)}
+                className="bg-gray-800 border border-red-500/30 rounded px-2 py-1 text-white text-sm"
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+          </div>
+          {rangeRow(
+            "Offset X",
+            draft.notifications.position.offsetX,
+            0,
+            600,
+            4,
+            (v) => updatePosition("offsetX", v),
+            (v) => `${v}px`
+          )}
+          {rangeRow(
+            "Offset Y",
+            draft.notifications.position.offsetY,
+            0,
+            600,
+            4,
+            (v) => updatePosition("offsetY", v),
+            (v) => `${v}px`
+          )}
+        </section>
+        </>
       );
     }
 
     if (tab === "leaderboard") {
       return (
+        <>
+        <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+          <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
+          {templatePicker(draft.leaderboard.template, (v) =>
+            setTemplate("leaderboard", v)
+          )}
+        </section>
         <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
           <h2 className="text-lg font-semibold text-red-400 mb-1">
             Leaderboard
@@ -403,15 +938,78 @@ export default function SettingsPage() {
               className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
             />
           </div>
+          {imageField(
+            "Banner image (shown next to the title)",
+            draft.leaderboard.bannerImage,
+            (v) => updateLeaderboard("bannerImage", v),
+            "lb-banner"
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {rangeRow(
+              "Logo size",
+              draft.leaderboard.logoSize,
+              16,
+              96,
+              1,
+              (v) => updateLeaderboard("logoSize", v),
+              (v) => `${v}px`
+            )}
+            {rangeRow(
+              "Logo corner radius",
+              draft.leaderboard.logoRounding,
+              0,
+              48,
+              1,
+              (v) => updateLeaderboard("logoRounding", v),
+              (v) => `${v}px`
+            )}
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm text-gray-300">Column labels</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {(
+                [
+                  ["rank", "Rank"],
+                  ["team", "Team"],
+                  ["place", "Place"],
+                  ["elims", "Elims"],
+                  ["total", "Total"],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key} className="text-xs text-gray-400">
+                  {label}
+                  <input
+                    type="text"
+                    value={draft.leaderboard.headerLabels[key]}
+                    onChange={(e) => updateHeaderLabel(key, e.target.value)}
+                    className="mt-1 w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-red-500"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+          <input
+            type="text"
+            value={draft.leaderboard.footerNote}
+            onChange={(e) => updateLeaderboard("footerNote", e.target.value)}
+            placeholder="Footer note (optional, e.g. Round 4 - Erangel)"
+            className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+          />
           <p className="text-xs text-gray-400">
             Colors come from the shared theme. Adjust them in the Points Table
             tab.
           </p>
         </section>
+        </>
       );
     }
 
     return (
+      <>
+      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+        <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
+        {templatePicker(draft.match.template, (v) => setTemplate("match", v))}
+      </section>
       <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
         <h2 className="text-lg font-semibold text-red-400 mb-1">
           Match Table
@@ -446,18 +1044,41 @@ export default function SettingsPage() {
             className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
           />
         </div>
+        {imageField(
+          "Banner image (shown next to the title)",
+          draft.match.bannerImage,
+          (v) => updateMatch("bannerImage", v),
+          "match-banner"
+        )}
+        <input
+          type="text"
+          value={draft.match.footerNote}
+          onChange={(e) => updateMatch("footerNote", e.target.value)}
+          placeholder="Footer note (optional)"
+          className="w-full bg-gray-900/60 border border-red-500/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-red-500"
+        />
         <p className="text-xs text-gray-400">
           Colors come from the shared theme. Adjust them in the Points Table
           tab.
         </p>
       </section>
+      </>
     );
   };
 
   const renderPreview = () => {
     if (tab === "table") {
       return (
-        <div className="bg-green-500 rounded-xl p-6 border-2 border-red-500/30 overflow-auto">
+        <div
+          className="rounded-xl p-6 border-2 border-red-500/30 overflow-auto"
+          style={{
+            backgroundColor: "#111827",
+            backgroundImage:
+              "linear-gradient(45deg, #1f2937 25%, transparent 25%), linear-gradient(-45deg, #1f2937 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1f2937 75%), linear-gradient(-45deg, transparent 75%, #1f2937 75%)",
+            backgroundSize: "20px 20px",
+            backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+          }}
+        >
           <AnimatedTeamTable previewSettings={draft} />
         </div>
       );
@@ -480,26 +1101,6 @@ export default function SettingsPage() {
     if (tab === "leaderboard") {
       return (
         <div className="bg-slate-100 rounded-xl p-4 border-2 border-red-500/30 overflow-auto">
-          {draft.leaderboard.showTitle || draft.leaderboard.subtitle ? (
-            <div className="mb-3 text-center">
-              {draft.leaderboard.showTitle ? (
-                <h2
-                  className="text-2xl font-black uppercase tracking-wide"
-                  style={{ color: draft.colors.textPrimary }}
-                >
-                  {draft.leaderboard.title || "Overall Rankings"}
-                </h2>
-              ) : null}
-              {draft.leaderboard.subtitle ? (
-                <p
-                  className="text-sm font-semibold uppercase tracking-[0.2em]"
-                  style={{ color: draft.colors.elimColor }}
-                >
-                  {draft.leaderboard.subtitle}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
           <SplitLeaderboard teams={PREVIEW_TEAMS} settings={draft} />
         </div>
       );
@@ -608,6 +1209,8 @@ export default function SettingsPage() {
                 </section>
 
                 {renderControls()}
+
+                {renderAppearanceSections()}
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-3">
