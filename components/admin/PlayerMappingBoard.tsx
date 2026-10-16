@@ -152,9 +152,15 @@ export function PlayerMappingBoard({
   setRows: React.Dispatch<React.SetStateAction<LobbyRow[]>>;
   teams: TeamOption[];
 }) {
-  const teamById = useMemo(
-    () => new Map(teams.map((team) => [team._id, team])),
+  // Keep teams (cards and every "assign to team" dropdown) in slot order.
+  const orderedTeams = useMemo(
+    () => [...teams].sort((a, b) => a.slot - b.slot),
     [teams]
+  );
+
+  const teamById = useMemo(
+    () => new Map(orderedTeams.map((team) => [team._id, team])),
+    [orderedTeams]
   );
 
   // Live "which player -> which team" groupings derived from the editable rows.
@@ -228,12 +234,12 @@ export function PlayerMappingBoard({
         </p>
       ) : (
         <div className="grid max-h-[28rem] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
-          {teams.map((team) => (
+          {orderedTeams.map((team) => (
             <MappingTeamCard
               key={team._id}
               team={team}
               players={byTeam.get(team._id) ?? []}
-              teamOptions={teams}
+              teamOptions={orderedTeams}
               onRename={renamePlayer}
               onMove={movePlayer}
               onRemove={removePlayer}
@@ -262,7 +268,7 @@ export function PlayerMappingBoard({
                   className="h-7 w-32 text-[11px]"
                 >
                   <option value="">Assign to…</option>
-                  {teams.map((team) => (
+                  {orderedTeams.map((team) => (
                     <option key={team._id} value={team._id}>
                       S{team.slot} · {team.name}
                     </option>
