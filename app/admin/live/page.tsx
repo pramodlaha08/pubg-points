@@ -22,6 +22,7 @@ interface Team {
     status: string;
   }>;
   isEliminated: boolean;
+  absent?: boolean;
 }
 
 // Alive teams first (so their boxes rise), fully-eliminated teams last.
@@ -106,7 +107,7 @@ export default function TeamsPage() {
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {[...teams].sort(orderTeams).map((team) => (
+          {[...teams].filter((team) => !team.absent).sort(orderTeams).map((team) => (
               <TeamCard
                 key={team._id}
                 team={team}

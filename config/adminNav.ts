@@ -11,6 +11,7 @@ import {
   Target,
   Trophy,
   UserCog,
+  UserPlus,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -36,20 +37,21 @@ export const adminNav: AdminNavGroup[] = [
     ],
   },
   {
-    title: "Operations",
-    items: [
-      { name: "Live Control", path: "/admin/live", icon: Radio },
-      { name: "Auto Scoring", path: "/admin/verify", icon: ScanText },
-      { name: "Player Mapping", path: "/admin/mapping", icon: Network },
-      { name: "Positions", path: "/admin/positions", icon: Crosshair },
-      { name: "Round Manager", path: "/admin/rounds", icon: ListOrdered },
-    ],
-  },
-  {
     title: "Teams",
     items: [
       { name: "Teams", path: "/admin/teams", icon: Users },
       { name: "Bulk Import", path: "/admin/teams/bulk", icon: ListPlus },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { name: "Round Manager", path: "/admin/rounds", icon: ListOrdered },
+      { name: "Players Register", path: "/admin/register", icon: UserPlus },
+      { name: "Player Mapping", path: "/admin/mapping", icon: Network },
+      { name: "Live Control", path: "/admin/live", icon: Radio },
+      { name: "Positions", path: "/admin/positions", icon: Crosshair },
+      { name: "Auto Scoring", path: "/admin/verify", icon: ScanText },
     ],
   },
   {

@@ -31,6 +31,7 @@ interface Team {
     eliminatedPlayers: number[];
     status: string;
   }[];
+  absent?: boolean;
 }
 
 const trophyVariants = {
@@ -158,7 +159,9 @@ export default function AnimatedTeamTable({
 
         if (data.success) {
           setTeams(
-            data.data.sort((a: Team, b: Team) => b.totalPoints - a.totalPoints),
+            data.data
+              .filter((team: Team) => !team.absent)
+              .sort((a: Team, b: Team) => b.totalPoints - a.totalPoints),
           );
           setLastSyncAt(new Date().toLocaleTimeString());
         }
