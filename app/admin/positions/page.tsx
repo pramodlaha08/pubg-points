@@ -33,7 +33,9 @@ export default function PositionUpdater() {
   const fetchTeams = async () => {
     try {
       const response = await api.get("/team");
-      setTeams(response.data.data);
+      const list: Team[] = response.data.data ?? [];
+      // Always show teams in slot order (S1, S2, …) for predictable entry.
+      setTeams([...list].sort((a, b) => a.slot - b.slot));
     } catch (error) {
       console.error("Error fetching teams:", error);
     }

@@ -94,15 +94,23 @@ export default function PlayersRegisterPage() {
     return { total: rows.length, assigned };
   }, [rows]);
 
-  // Show players in slot order; rows without a slot stay at the end in the
-  // order they were added, so a re-upload never reshuffles confirmed rows.
+  // Group players under their assigned team (team slot order), then by player
+  // slot, so each team's players sit together for quick verification. Rows with
+  // no team keep their relative order and fall to the end.
   const orderedRows = useMemo(() => {
-    const withSlot = rows
-      .filter((row) => String(row.slot).trim() !== "")
-      .sort((a, b) => Number(a.slot) - Number(b.slot));
-    const withoutSlot = rows.filter((row) => String(row.slot).trim() === "");
-    return [...withSlot, ...withoutSlot];
-  }, [rows]);
+    const teamSlot = new Map<string, number>();
+    for (const team of teamOptions) teamSlot.set(team._id, team.slot);
+    const slotKey = (row: LobbyRow) =>
+      String(row.slot).trim() === "" ? Number.POSITIVE_INFINITY : Number(row.slot);
+    return [...rows].sort((a, b) => {
+      const teamA = a.teamId ? teamSlot.get(a.teamId) : undefined;
+      const teamB = b.teamId ? teamSlot.get(b.teamId) : undefined;
+      const byTeam =
+        (teamA ?? Number.POSITIVE_INFINITY) - (teamB ?? Number.POSITIVE_INFINITY);
+      if (byTeam !== 0) return byTeam;
+      return slotKey(a) - slotKey(b);
+    });
+  }, [rows, teamOptions]);
 
   // Load any previously saved roster for the selected round so a re-upload can
   // update only the unmatched rows and leave confirmed ones untouched. When the

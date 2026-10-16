@@ -37,7 +37,9 @@ export default function RoundManager() {
     const fetchTeams = async () => {
       try {
         const response = await api.get("/team");
-        setTeams(response.data.data);
+        const list: Team[] = response.data.data ?? [];
+        // Always show teams in slot order (S1, S2, …) for predictable selection.
+        setTeams([...list].sort((a, b) => a.slot - b.slot));
       } catch  {
         setError("Failed to load teams");
       }
