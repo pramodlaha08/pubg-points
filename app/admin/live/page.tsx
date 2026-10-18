@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { GiCrossedSabres } from "react-icons/gi";
 import TeamCard from "@/components/TeamCard";
+import SQUAD_CONFIG from "@/lib/squadConfig";
 
 interface Team {
   _id: string;
@@ -62,10 +63,68 @@ export default function TeamsPage() {
     fetchTeams();
   }, []);
 
+  // Latest in-flight request per team, so a slow/out-of-order response can
+  // never overwrite a newer optimistic change.
+  const requestSeqRef = useRef<Record<string, number>>({});
+
+  const applyOptimisticKills = (teamId: string, action: "add" | "decrease") => {
+    const delta = action === "add" ? 1 : -1;
+    setTeams((prev) =>
+      prev.map((team) =>
+        team._id !== teamId
+          ? team
+          : {
+              ...team,
+              rounds: team.rounds.map((round) =>
+                round.roundNumber === team.currentRound
+                  ? { ...round, kills: Math.max(0, round.kills + delta) }
+                  : round,
+              ),
+            },
+      ),
+    );
+  };
+
+  const applyOptimisticElimination = (teamId: string, playerIndex: number) => {
+    const full = SQUAD_CONFIG.fullEliminationCount;
+    setTeams((prev) =>
+      prev.map((team) => {
+        if (team._id !== teamId) return team;
+        const rounds = team.rounds.map((round) => {
+          if (round.roundNumber !== team.currentRound) return round;
+          const alreadyOut = round.eliminatedPlayers.includes(playerIndex);
+          const eliminatedPlayers = alreadyOut
+            ? round.eliminatedPlayers.filter((p) => p !== playerIndex)
+            : [...round.eliminatedPlayers, playerIndex];
+          const eliminationCount = Math.max(
+            0,
+            Math.min(full, round.eliminationCount + (alreadyOut ? -1 : 1)),
+          );
+          return {
+            ...round,
+            eliminatedPlayers,
+            eliminationCount,
+            status: eliminationCount === full ? "eliminated" : "alive",
+          };
+        });
+        const current = rounds.find((r) => r.roundNumber === team.currentRound);
+        return {
+          ...team,
+          rounds,
+          isEliminated: (current?.eliminationCount ?? 0) === full,
+        };
+      }),
+    );
+  };
+
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
+    applyOptimisticKills(teamId, action);
+    const seq = (requestSeqRef.current[teamId] ?? 0) + 1;
+    requestSeqRef.current[teamId] = seq;
     try {
       const endpoint = `/team/${teamId}/${action}-kill`;
       const response = await api.post(endpoint);
+      if (requestSeqRef.current[teamId] !== seq) return;
       const updatedTeam = response?.data?.data as Team | undefined;
       if (updatedTeam) {
         upsertTeam(updatedTeam);
@@ -74,14 +133,19 @@ export default function TeamsPage() {
       }
     } catch (error) {
       console.error(`Error ${action}ing kills:`, error);
+      if (requestSeqRef.current[teamId] === seq) fetchTeams();
     }
   };
 
   const handleElimination = async (teamId: string, playerIndex: number) => {
+    applyOptimisticElimination(teamId, playerIndex);
+    const seq = (requestSeqRef.current[teamId] ?? 0) + 1;
+    requestSeqRef.current[teamId] = seq;
     try {
       const response = await api.put(`/team/${teamId}/elimination`, {
         playerIndex,
       });
+      if (requestSeqRef.current[teamId] !== seq) return;
       const updatedTeam = response?.data?.data as Team | undefined;
       if (updatedTeam) {
         upsertTeam(updatedTeam);
@@ -90,6 +154,7 @@ export default function TeamsPage() {
       }
     } catch (error) {
       console.error("Error updating elimination:", error);
+      if (requestSeqRef.current[teamId] === seq) fetchTeams();
     }
   };
 

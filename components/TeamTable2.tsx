@@ -184,6 +184,28 @@ export default function AnimatedTeamTable({
       }
     };
 
+    // Patch a single team in place. Live kill/elimination updates broadcast the
+    // updated team, so the table can react immediately instead of waiting on a
+    // full refetch (the refetch stays as a safety net).
+    const applyTeamUpdate = (updated: Team) => {
+      if (!updated?._id) return;
+      setTeams((prev) => {
+        if (updated.absent) {
+          return prev.filter((team) => team._id !== updated._id);
+        }
+        const exists = prev.some((team) => team._id === updated._id);
+        const next = exists
+          ? prev.map((team) =>
+              team._id === updated._id ? { ...team, ...updated } : team
+            )
+          : [...prev, updated];
+        return next.sort((a, b) => b.totalPoints - a.totalPoints);
+      });
+      setLastEvent("team_updated");
+      setUpdateCount((prev) => prev + 1);
+      setLastSyncAt(new Date().toLocaleTimeString());
+    };
+
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
     const socketBase =
       process.env.NEXT_PUBLIC_SOCKET_URL || apiBase.replace(/\/api\/v1\/?$/, "");
@@ -205,6 +227,10 @@ export default function AnimatedTeamTable({
       reconnectionAttempts: Infinity,
       reconnectionDelay: 800,
       reconnectionDelayMax: 4000,
+    });
+
+    socket.on("team_updated", (payload: Team) => {
+      applyTeamUpdate(payload);
     });
 
     socket.on("connect", () => {
