@@ -51,6 +51,7 @@ export default function ScoringPage() {
 
   const [squadSize, setSquadSize] = useState(4);
   const [killMultiplier, setKillMultiplier] = useState(1);
+  const [trackKills, setTrackKills] = useState(false);
   const [positionPoints, setPositionPoints] = useState<Record<string, number>>(
     buildPositionPoints()
   );
@@ -62,11 +63,13 @@ export default function ScoringPage() {
     if (!serverScoring) {
       setSquadSize(4);
       setKillMultiplier(1);
+      setTrackKills(false);
       setPositionPoints(buildPositionPoints());
       return;
     }
     setSquadSize(serverScoring.fullEliminationCount ?? 4);
     setKillMultiplier(serverScoring.killPointMultiplier ?? 1);
+    setTrackKills(serverScoring.trackKills ?? false);
     setPositionPoints(buildPositionPoints(serverScoring.positionPoints));
   }, [serverScoring, tournamentId]);
 
@@ -74,8 +77,9 @@ export default function ScoringPage() {
     const top = ["1", "2", "3"].map(
       (p) => `${positionPoints[p] ?? 0} (P${p})`
     );
-    return `Win ${top[0]} · 2nd ${top[1]} · 3rd ${top[2]} · +${killMultiplier}/kill · ${squadSize} players`;
-  }, [positionPoints, killMultiplier, squadSize]);
+    const killLabel = trackKills ? `+${killMultiplier}/kill` : "kills not scored";
+    return `Win ${top[0]} · 2nd ${top[1]} · 3rd ${top[2]} · ${killLabel} · ${squadSize} players`;
+  }, [positionPoints, killMultiplier, trackKills, squadSize]);
 
   const setPosition = (key: string, value: string) => {
     const number = value === "" ? 0 : Number(value);
@@ -88,6 +92,7 @@ export default function ScoringPage() {
   const resetToDefaults = () => {
     setSquadSize(4);
     setKillMultiplier(1);
+    setTrackKills(false);
     setPositionPoints(buildPositionPoints());
   };
 
@@ -100,6 +105,7 @@ export default function ScoringPage() {
           positionPoints,
           killPointMultiplier: killMultiplier,
           fullEliminationCount: squadSize,
+          trackKills,
         },
       });
       notifySuccess("Scoring rules saved");
@@ -168,6 +174,30 @@ export default function ScoringPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Scoring mode</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={trackKills}
+              onChange={(e) => setTrackKills(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-blue-600"
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-medium">Track kills</span>
+              <span className="block text-xs text-[var(--adm-muted)]">
+                {trackKills
+                  ? "Eliminations are read from screenshots and award points."
+                  : "Position-only: teams score from placement alone. Kills are not read, entered or scored."}
+              </span>
+            </span>
+          </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Global rules</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -194,10 +224,17 @@ export default function ScoringPage() {
               min={0}
               step={1}
               value={killMultiplier}
+              disabled={!trackKills}
+              className={trackKills ? undefined : "opacity-50"}
               onChange={(e) =>
                 setKillMultiplier(Math.max(0, Number(e.target.value) || 0))
               }
             />
+            {!trackKills ? (
+              <p className="text-[11px] text-[var(--adm-muted)]">
+                Kills are not scored in position-first mode.
+              </p>
+            ) : null}
           </div>
         </CardContent>
       </Card>
