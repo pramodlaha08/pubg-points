@@ -20,10 +20,16 @@ function LoginForm() {
     try {
       const response = await api.post("/auth/login", { username, password });
       const token = response?.data?.data?.token as string | undefined;
+      const role = response?.data?.data?.admin?.role as
+        | "admin"
+        | "scorer"
+        | "commentator"
+        | "viewer"
+        | undefined;
       if (!token) {
         throw new Error("No token returned by server");
       }
-      setAdminSession(token);
+      setAdminSession(token, role);
       const next = searchParams.get("next");
       router.replace(next && next.startsWith("/") ? next : "/admin/overview");
     } catch (error) {
@@ -37,9 +43,9 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border-4 border-red-500/40 shadow-2xl">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 sm:p-8 border-4 border-red-500/40 shadow-2xl">
           <div className="flex flex-col items-center gap-3 mb-8">
             <GiDeathSkull className="text-5xl text-red-500 animate-pulse" />
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">

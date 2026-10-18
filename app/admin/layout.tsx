@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import AdminShell from "@/components/admin/AdminShell";
 import { TournamentProvider } from "@/components/providers/TournamentProvider";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export default async function AdminLayout({
   children,
@@ -16,8 +17,10 @@ export default async function AdminLayout({
   }
 
   return (
-    <TournamentProvider>
-      <AdminShell>{children}</AdminShell>
-    </TournamentProvider>
+    <AuthProvider>
+      <TournamentProvider>
+        <AdminShell>{children}</AdminShell>
+      </TournamentProvider>
+    </AuthProvider>
   );
 }
