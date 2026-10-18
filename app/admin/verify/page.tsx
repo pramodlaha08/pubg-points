@@ -462,7 +462,7 @@ export default function AutoScoringPage() {
                 </InlineAlert>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-[var(--adm-muted)]">
                   {trackKills
                     ? "Only teams with a verified kill or position value are updated. Empty cells are left untouched."

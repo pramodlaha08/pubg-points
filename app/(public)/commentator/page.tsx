@@ -246,7 +246,7 @@ export default function CommentatorPage() {
     <section className="min-h-screen bg-slate-950 px-3 py-4 sm:px-4 sm:py-5">
       <div className="mx-auto w-full max-w-7xl">
         {/* Header: Minimal and Compact */}
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <GiRadioTower className="h-5 w-5 text-cyan-300" />
             <h1 className="text-lg font-bold text-cyan-100 uppercase tracking-tight">

@@ -245,15 +245,15 @@ export default function RoundManager() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
       <ToastContainer   />
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-gray-800 rounded-xl p-8 shadow-2xl"
+          className="bg-gray-800 rounded-xl p-4 sm:p-6 md:p-8 shadow-2xl"
         >
-          <h1 className="text-3xl font-bold text-red-500 mb-6 border-b border-red-500/30 pb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-red-500 mb-6 border-b border-red-500/30 pb-4">
             Tournament Round Manager
           </h1>
 
