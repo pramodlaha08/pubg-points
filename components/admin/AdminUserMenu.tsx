@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, UserCog } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, UserCog } from "lucide-react";
 import { clearAdminSession } from "@/lib/api";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { ROLE_LABELS } from "@/types/admin";
 
 export default function AdminUserMenu() {
   const router = useRouter();
+  const { role, username } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const roleLabel = role ? ROLE_LABELS[role] : "Admin";
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -36,14 +41,39 @@ export default function AdminUserMenu() {
         aria-expanded={open}
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--adm-primary)] text-xs font-bold text-[var(--adm-primary-fg)]">
-          A
+          {role === "admin" ? <ShieldCheck className="h-3.5 w-3.5" /> : "A"}
         </span>
-        <span className="hidden sm:inline">Admin</span>
+        <span className="hidden flex-col items-start leading-tight sm:flex">
+          <span className="text-xs font-semibold">
+            {username ?? roleLabel}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-[var(--adm-muted)]">
+            {roleLabel}
+          </span>
+        </span>
         <ChevronDown className="h-4 w-4 text-[var(--adm-muted)]" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface)] py-1 shadow-lg">
+        <div className="absolute right-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface)] py-1 shadow-lg">
+          <div className="border-b border-[var(--adm-border)] px-3 py-2">
+            <p className="truncate text-sm font-semibold text-[var(--adm-fg)]">
+              {username ?? "Signed in"}
+            </p>
+            <p className="text-[11px] uppercase tracking-wide text-[var(--adm-muted)]">
+              {roleLabel}
+            </p>
+          </div>
+          {role === "admin" && (
+            <Link
+              href="/admin/admins"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-[var(--adm-fg)] hover:bg-[var(--adm-surface-2)]"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admins &amp; Roles
+            </Link>
+          )}
           <Link
             href="/admin/account"
             onClick={() => setOpen(false)}

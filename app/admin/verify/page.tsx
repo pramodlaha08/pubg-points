@@ -5,6 +5,7 @@ import Link from "next/link";
 import { isAxiosError } from "axios";
 import { Image as ImageIcon, RefreshCw, ScanText, Upload } from "lucide-react";
 import { api } from "@/lib/api";
+import { useTournament } from "@/components/providers/TournamentProvider";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,9 @@ const errorMessage = (error: unknown, fallback: string) =>
     : undefined) || fallback;
 
 export default function AutoScoringPage() {
+  const { activeTournament } = useTournament();
+  // Position-first events hide every kill control; only placement is scored.
+  const trackKills = activeTournament?.scoring?.trackKills ?? false;
   const [roundNumber, setRoundNumber] = useState("1");
 
   const [resultBusy, setResultBusy] = useState(false);
@@ -145,7 +149,10 @@ export default function AutoScoringPage() {
       .map((row) => ({
         slot: row.slot,
         teamId: row.teamId,
-        kills: row.verifiedKills === "" ? null : Number(row.verifiedKills),
+        kills:
+          trackKills && row.verifiedKills !== ""
+            ? Number(row.verifiedKills)
+            : null,
         position: row.verifiedPosition === "" ? null : Number(row.verifiedPosition),
       }))
       .filter((row) => row.kills !== null || row.position !== null);
@@ -200,7 +207,10 @@ export default function AutoScoringPage() {
         teamId: row.teamId,
         name: row.name,
         liveKills: row.liveKills,
-        verifiedKills: row.verifiedKills === "" ? null : Number(row.verifiedKills),
+        verifiedKills:
+          trackKills && row.verifiedKills !== ""
+            ? Number(row.verifiedKills)
+            : null,
         livePosition: row.livePosition,
         verifiedPosition:
           row.verifiedPosition === "" ? null : Number(row.verifiedPosition),
@@ -337,8 +347,8 @@ export default function AutoScoringPage() {
                   <TR className="hover:bg-transparent">
                     <TH>Team</TH>
                     <TH className="w-14">Slot</TH>
-                    <TH className="w-20">Live Kills</TH>
-                    <TH className="w-24">Verified Kills</TH>
+                    {trackKills && <TH className="w-20">Live Kills</TH>}
+                    {trackKills && <TH className="w-24">Verified Kills</TH>}
                     <TH className="w-24">Live Pts</TH>
                     <TH className="w-24">Verified Pts</TH>
                     <TH className="w-20">Position</TH>
@@ -357,20 +367,22 @@ export default function AutoScoringPage() {
                           {row.name}
                         </TD>
                         <TD className="text-[var(--adm-muted)]">{row.slot}</TD>
-                        <TD>{row.liveKills}</TD>
-                        <TD>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={row.verifiedKills}
-                            onChange={(event) =>
-                              updateComparison(row.teamId, {
-                                verifiedKills: event.target.value,
-                              })
-                            }
-                            className="h-8 w-20"
-                          />
-                        </TD>
+                        {trackKills && <TD>{row.liveKills}</TD>}
+                        {trackKills && (
+                          <TD>
+                            <Input
+                              type="number"
+                              min={0}
+                              value={row.verifiedKills}
+                              onChange={(event) =>
+                                updateComparison(row.teamId, {
+                                  verifiedKills: event.target.value,
+                                })
+                              }
+                              className="h-8 w-20"
+                            />
+                          </TD>
+                        )}
                         <TD>{row.livePlacementPoints}</TD>
                         <TD className="text-[var(--adm-muted)]">
                           {verifiedPositionNum != null
@@ -418,8 +430,8 @@ export default function AutoScoringPage() {
                         <span className="shrink-0 text-[11px] text-[var(--adm-muted)]">
                           {item.verifiedPosition != null
                             ? `#${item.verifiedPosition}`
-                            : "#—"}{" "}
-                          · {item.verifiedKills ?? 0} kills
+                            : "#—"}
+                          {trackKills ? ` · ${item.verifiedKills ?? 0} kills` : ""}
                         </span>
                       </div>
                       <ul className="mt-1 space-y-0.5 text-[11px] text-[var(--adm-muted)]">
@@ -450,10 +462,11 @@ export default function AutoScoringPage() {
                 </InlineAlert>
               )}
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-[var(--adm-muted)]">
-                  Only teams with a verified kill or position value are updated.
-                  Empty cells are left untouched.
+                  {trackKills
+                    ? "Only teams with a verified kill or position value are updated. Empty cells are left untouched."
+                    : "Only teams with a verified position are updated. Empty cells are left untouched. Kills are not scored for this tournament."}
                 </p>
                 <Button
                   onClick={requestApply}
@@ -506,10 +519,13 @@ export default function AutoScoringPage() {
         {previewData ? (
           <div className="space-y-4">
             <p className="text-xs text-[var(--adm-muted)]">
-              Applying will overwrite the live kills/placement for{" "}
+              Applying will overwrite the live{" "}
+              {trackKills ? "kills/placement" : "placement"} for{" "}
               {previewData.changes.length} team(s) in round{" "}
-              {previewData.roundNumber}. Kill point multiplier:{" "}
-              {previewData.killPointMultiplier}.
+              {previewData.roundNumber}.
+              {trackKills
+                ? ` Kill point multiplier: ${previewData.killPointMultiplier}.`
+                : " Kills are not scored for this tournament."}
             </p>
 
             {previewData.changes.length > 0 ? (
@@ -517,7 +533,7 @@ export default function AutoScoringPage() {
                 <THead>
                   <TR className="hover:bg-transparent">
                     <TH>Team</TH>
-                    <TH className="w-24">Kills</TH>
+                    {trackKills && <TH className="w-24">Kills</TH>}
                     <TH className="w-24">Position</TH>
                     <TH className="w-32">Total points</TH>
                     <TH className="w-16">Δ</TH>
@@ -533,10 +549,12 @@ export default function AutoScoringPage() {
                         </span>
                         {row.name}
                       </TD>
-                      <TD>
-                        {row.currentKills} →{" "}
-                        <span className="font-semibold">{row.newKills}</span>
-                      </TD>
+                      {trackKills && (
+                        <TD>
+                          {row.currentKills} →{" "}
+                          <span className="font-semibold">{row.newKills}</span>
+                        </TD>
+                      )}
                       <TD>
                         {row.currentPosition} →{" "}
                         <span className="font-semibold">{row.newPosition}</span>

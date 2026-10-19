@@ -1,6 +1,8 @@
 import axios from "axios";
+import type { AdminRole } from "@/types/admin";
 
 export const ADMIN_TOKEN_KEY = "pubg_admin_token";
+export const ADMIN_ROLE_KEY = "pubg_admin_role";
 export const ADMIN_COOKIE = "pubg_admin";
 export const TOURNAMENT_STORAGE_KEY = "pubg_tournament_id";
 const COOKIE_MAX_AGE = 60 * 60 * 12;
@@ -64,21 +66,35 @@ api.interceptors.response.use(
   }
 );
 
-export function setAdminSession(token: string) {
+export function setAdminSession(token: string, role?: AdminRole) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  if (role) {
+    window.localStorage.setItem(ADMIN_ROLE_KEY, role);
+  }
   document.cookie = `${ADMIN_COOKIE}=1; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
 }
 
 export function clearAdminSession() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+  window.localStorage.removeItem(ADMIN_ROLE_KEY);
   document.cookie = `${ADMIN_COOKIE}=; path=/; max-age=0; samesite=lax`;
 }
 
 export function getAdminToken(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+export function setAdminRole(role: AdminRole) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(ADMIN_ROLE_KEY, role);
+}
+
+export function getAdminRole(): AdminRole | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(ADMIN_ROLE_KEY) as AdminRole | null;
 }
 
 export function isAdminLoggedIn(): boolean {

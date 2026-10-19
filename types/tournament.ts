@@ -11,6 +11,7 @@ export interface TournamentScoring {
   positionPoints: Record<string, number>;
   killPointMultiplier: number;
   fullEliminationCount: number;
+  trackKills: boolean;
 }
 
 export interface Tournament {

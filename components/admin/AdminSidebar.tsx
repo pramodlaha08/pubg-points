@@ -6,10 +6,13 @@ import { clearAdminSession } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useBranding } from "@/components/providers/BrandingProvider";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { ROLE_LABELS } from "@/types/admin";
 
 export default function AdminSidebar() {
   const router = useRouter();
   const { branding } = useBranding();
+  const { role } = useAuth();
 
   const handleLogout = () => {
     clearAdminSession();
@@ -33,7 +36,7 @@ export default function AdminSidebar() {
           {branding.systemName}
         </span>
         <span className="ml-1 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-300">
-          Admin
+          {role ? ROLE_LABELS[role] : "Admin"}
         </span>
       </div>
 

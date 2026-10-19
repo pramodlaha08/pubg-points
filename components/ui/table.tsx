@@ -52,7 +52,12 @@ export function TH({
   className,
   ...props
 }: React.ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th className={cn("px-3 py-3 font-medium", className)} {...props} />;
+  return (
+    <th
+      className={cn("whitespace-nowrap px-3 py-3 font-medium", className)}
+      {...props}
+    />
+  );
 }
 
 export function TD({
