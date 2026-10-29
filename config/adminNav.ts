@@ -1,5 +1,6 @@
 import {
   Crosshair,
+  History,
   LayoutDashboard,
   ListOrdered,
   ListPlus,
@@ -106,6 +107,12 @@ export const adminNav: AdminNavGroup[] = [
         name: "Auto Scoring",
         path: "/admin/verify",
         icon: ScanText,
+        roles: SCORING_ROLES,
+      },
+      {
+        name: "Activity Log",
+        path: "/admin/activity",
+        icon: History,
         roles: SCORING_ROLES,
       },
     ],

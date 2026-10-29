@@ -94,7 +94,7 @@ export default function SettingsPage() {
   };
 
   const updateColumn = (
-    key: "logo" | "alive" | "pts" | "elims",
+    key: "logo" | "alive" | "place" | "pts" | "elims",
     value: boolean
   ) => {
     setDraft((prev) => ({
@@ -672,6 +672,7 @@ export default function SettingsPage() {
                 [
                   ["logo", "Team logo"],
                   ["alive", "ALIVE column"],
+                  ["place", "PLACE column"],
                   ["pts", "PTS column"],
                   ["elims", "ELIMS column"],
                 ] as const

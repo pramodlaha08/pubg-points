@@ -30,6 +30,16 @@ export interface TeamLogEntry {
   slot: number;
   roundNumber: number | null;
   createdAt: string;
+  teamId?: string | null;
+  changes?: {
+    field: string;
+    previous?: unknown;
+    current?: unknown;
+    delta?: number | null;
+  }[];
+  meta?: Record<string, unknown>;
+  revertedAt?: string | null;
+  revertedByName?: string | null;
 }
 
 export interface ActivityEntry {

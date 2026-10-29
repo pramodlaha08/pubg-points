@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { io, Socket } from "socket.io-client";
@@ -41,6 +41,31 @@ interface Team {
 }
 
 type RoundStat = Team["rounds"][number] | undefined;
+
+const totalKillsFor = (team: Team) =>
+  team.rounds.reduce((sum, round) => sum + (round.kills ?? 0), 0);
+
+const placementPointsFor = (team: Team) =>
+  team.rounds.reduce((sum, round) => sum + (round.positionPoints ?? 0), 0);
+
+const bestPlacementFor = (team: Team) => {
+  const positions = team.rounds
+    .map((round) => round.position)
+    .filter((position) => position > 0);
+  return positions.length ? Math.min(...positions) : 9999;
+};
+
+// Standings: total points, then placement points, then eliminations, then best
+// placement, then slot so equal scores always keep a stable order.
+const compareStandings = (a: Team, b: Team) =>
+  b.totalPoints - a.totalPoints ||
+  placementPointsFor(b) - placementPointsFor(a) ||
+  totalKillsFor(b) - totalKillsFor(a) ||
+  bestPlacementFor(a) - bestPlacementFor(b) ||
+  a.slot - b.slot;
+
+const formatPlace = (position?: number) =>
+  position && position > 0 ? position : "—";
 
 const trophyVariants = {
   initial: { rotate: 0, scale: 1, textShadow: "0 0 0px rgba(255, 165, 0, 0)" },
@@ -86,12 +111,15 @@ interface AnimatedTeamTableProps {
   readonly showDebug?: boolean;
   readonly themeColor?: string;
   readonly previewSettings?: PointsTableSettings;
+  /** Shrink rows so the whole table fits the remaining viewport height. */
+  readonly fitToHeight?: boolean;
 }
 
 export default function AnimatedTeamTable({
   showDebug,
   themeColor,
   previewSettings,
+  fitToHeight,
 }: AnimatedTeamTableProps) {
   const debugMode =
     showDebug !== undefined
@@ -107,6 +135,24 @@ export default function AnimatedTeamTable({
       setSettings(previewSettings);
     }
   }, [previewSettings]);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [availableHeight, setAvailableHeight] = useState<number | null>(null);
+
+  // Measure how much vertical space is left for the panel (the overlay is
+  // anchored part-way down the screen) so dense lobbies can shrink to fit.
+  useEffect(() => {
+    if (!fitToHeight) return;
+    const measure = () => {
+      const el = rootRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      setAvailableHeight(Math.max(0, window.innerHeight - top - 8));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [fitToHeight]);
 
   const { columns, header, layout, typography, surface, watermark } = settings;
   const colors = settings.colors;
@@ -128,6 +174,7 @@ export default function AnimatedTeamTable({
     hudGlow: hexToRgba(accent, 0.28),
     textPrimary: colors.textPrimary,
     totalColor: colors.totalColor,
+    placeColor: colors.placeColor,
     elimColor: colors.elimColor,
   };
 
@@ -139,11 +186,6 @@ export default function AnimatedTeamTable({
   const animate = surface.animate;
 
   const fs = (base: number) => base * layout.fontScale * typography.fontScale;
-  const rowFontSize = fs(isBig ? 15 : 12);
-  const rowH = Math.round(
-    layout.rowHeight * (isBig ? 1.7 : isCard ? 1.55 : 1)
-  );
-  const headerH = Math.round(layout.rowHeight * (isBig ? 1.35 : 1)) || rowH;
   const typeStyle = typographyStyle(typography);
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -175,7 +217,7 @@ export default function AnimatedTeamTable({
           setTeams(
             data.data
               .filter((team: Team) => !team.absent)
-              .sort((a: Team, b: Team) => b.totalPoints - a.totalPoints)
+              .sort(compareStandings)
           );
           setLastSyncAt(new Date().toLocaleTimeString());
         }
@@ -199,7 +241,7 @@ export default function AnimatedTeamTable({
               team._id === updated._id ? { ...team, ...updated } : team
             )
           : [...prev, updated];
-        return next.sort((a, b) => b.totalPoints - a.totalPoints);
+        return next.sort(compareStandings);
       });
       setLastEvent("team_updated");
       setUpdateCount((prev) => prev + 1);
@@ -273,6 +315,29 @@ export default function AnimatedTeamTable({
   const showTitleStrip = Boolean(
     header.title || header.subtitle || header.logoUrl || currentMap
   );
+
+  // Row metrics. When fitToHeight is on, compress rows proportionally so a full
+  // lobby stays inside the panel instead of being clipped at the bottom.
+  const baseRowH = Math.round(
+    layout.rowHeight * (isBig ? 1.7 : isCard ? 1.55 : 1)
+  );
+  const baseHeaderH =
+    Math.round(layout.rowHeight * (isBig ? 1.35 : 1)) || baseRowH;
+  const titleH = showTitleStrip ? Math.max(layout.rowHeight - 6, 24) : 0;
+  const naturalHeight =
+    titleH +
+    (isCard ? 0 : baseHeaderH) +
+    teams.length * (baseRowH + layout.gap);
+
+  const fitScale =
+    availableHeight && naturalHeight > 0
+      ? Math.min(1, Math.max(0.45, availableHeight / naturalHeight))
+      : 1;
+
+  const rowH = Math.max(10, Math.round(baseRowH * fitScale));
+  const headerH = Math.max(10, Math.round(baseHeaderH * fitScale));
+  const rowGap = Math.max(0, Math.round(layout.gap * fitScale));
+  const rowFontSize = fs(isBig ? 15 : 12) * fitScale;
 
   const renderAliveDots = (round: RoundStat, dotH: number) => (
     <div className="flex gap-1">
@@ -448,6 +513,14 @@ export default function AnimatedTeamTable({
             ALIVE
           </div>
         ) : null}
+        {columns.place ? (
+          <div
+            className="relative flex w-12 items-center justify-center tracking-wide"
+            style={{ color: cellColor }}
+          >
+            PLACE
+          </div>
+        ) : null}
         {columns.pts ? (
           <div
             className="relative flex w-11 items-center justify-center tracking-wide"
@@ -493,7 +566,7 @@ export default function AnimatedTeamTable({
         style={{
           height: rowH,
           fontSize: rowFontSize,
-          marginBottom: layout.gap,
+          marginBottom: rowGap,
           borderRadius: surface.radius,
           backgroundImage: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
           border: `1px solid ${palette.borderSoft}`,
@@ -533,6 +606,19 @@ export default function AnimatedTeamTable({
             <div className="mt-0.5">{renderAliveDots(round, 8)}</div>
           ) : null}
         </div>
+        {columns.place ? (
+          <div className="flex flex-col items-center px-1.5">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/70">
+              PLACE
+            </span>
+            <span
+              className="font-black"
+              style={{ color: palette.placeColor, fontSize: rowFontSize * 1.1 }}
+            >
+              {formatPlace(round?.position)}
+            </span>
+          </div>
+        ) : null}
         {columns.pts ? (
           <div className="flex flex-col items-center px-1.5">
             <span className="text-[8px] font-bold uppercase tracking-widest text-white/70">
@@ -552,7 +638,7 @@ export default function AnimatedTeamTable({
               className="font-black"
               style={{ color: palette.aliveBar, fontSize: rowFontSize * 1.1 }}
             >
-              {round?.kills ?? 0}
+              {totalKillsFor(team)}
             </span>
           </div>
         ) : null}
@@ -588,7 +674,7 @@ export default function AnimatedTeamTable({
         style={{
           height: rowH,
           fontSize: rowFontSize,
-          marginBottom: layout.gap,
+          marginBottom: rowGap,
           borderBottom: `1px solid ${isHairline ? palette.border : palette.borderSoft}`,
           background: isEliminated
             ? "rgba(226, 232, 240, 0.75)"
@@ -684,6 +770,19 @@ export default function AnimatedTeamTable({
           </div>
         ) : null}
 
+        {columns.place ? (
+          <div
+            className="relative z-10 flex w-12 items-center justify-center font-black"
+            style={{
+              background: isEliminated ? "transparent" : palette.cellBg,
+              borderLeft: `1px solid ${palette.borderSoft}`,
+              color: isEliminated ? undefined : palette.placeColor,
+            }}
+          >
+            {formatPlace(round?.position)}
+          </div>
+        ) : null}
+
         {columns.pts ? (
           <div
             className="relative z-10 flex w-12 items-center justify-center font-black"
@@ -706,7 +805,7 @@ export default function AnimatedTeamTable({
               color: isEliminated ? undefined : palette.elimColor,
             }}
           >
-            {round?.kills ?? 0}
+            {totalKillsFor(team)}
           </div>
         ) : null}
 
@@ -736,7 +835,7 @@ export default function AnimatedTeamTable({
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div ref={rootRef} className="flex items-center justify-center">
       <style>{GAMING_FX_CSS}</style>
       <div className="mx-auto" style={{ width: layout.width }}>
         {debugMode ? (
