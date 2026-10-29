@@ -1,4 +1,5 @@
 import {
+  Clapperboard,
   Crosshair,
   History,
   LayoutDashboard,
@@ -120,6 +121,12 @@ export const adminNav: AdminNavGroup[] = [
   {
     title: "Presentation",
     items: [
+      {
+        name: "Control Room",
+        path: "/admin/control",
+        icon: Clapperboard,
+        roles: SCORING_ROLES,
+      },
       {
         name: "Table Design",
         path: "/admin/design",

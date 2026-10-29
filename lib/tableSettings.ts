@@ -116,6 +116,17 @@ export type SurfaceStyle =
   | "transparent"
   | "none";
 
+export type EntranceAnimation =
+  | "fade-up"
+  | "fade"
+  | "slide-left"
+  | "slide-right"
+  | "scale"
+  | "flip"
+  | "none";
+
+export type AmbientEffect = "float-shine" | "float" | "shine" | "pulse";
+
 export interface OverlaySurface {
   style: SurfaceStyle;
   opacity: number;
@@ -125,6 +136,10 @@ export interface OverlaySurface {
   shadow: boolean;
   scanline: boolean;
   animate: boolean;
+  entrance: EntranceAnimation;
+  entranceDuration: number;
+  stagger: number;
+  ambient: AmbientEffect;
   backgroundImage: string;
   backgroundImageOpacity: number;
   backgroundImageBlur: number;
@@ -218,6 +233,10 @@ export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
     shadow: true,
     scanline: false,
     animate: true,
+    entrance: "fade-up",
+    entranceDuration: 420,
+    stagger: 30,
+    ambient: "float-shine",
     backgroundImage: "",
     backgroundImageOpacity: 0.25,
     backgroundImageBlur: 0,
@@ -380,6 +399,29 @@ export const SURFACE_STYLE_LABELS: {
   { key: "gradient", label: "Gradient" },
   { key: "solid", label: "Solid" },
   { key: "none", label: "No panel" },
+];
+
+export const ENTRANCE_LABELS: {
+  key: EntranceAnimation;
+  label: string;
+}[] = [
+  { key: "fade-up", label: "Fade up" },
+  { key: "fade", label: "Fade in" },
+  { key: "slide-left", label: "Slide from left" },
+  { key: "slide-right", label: "Slide from right" },
+  { key: "scale", label: "Scale in" },
+  { key: "flip", label: "Flip in" },
+  { key: "none", label: "Instant" },
+];
+
+export const AMBIENT_LABELS: {
+  key: AmbientEffect;
+  label: string;
+}[] = [
+  { key: "float-shine", label: "Float + shine" },
+  { key: "float", label: "Float" },
+  { key: "shine", label: "Shine sweep" },
+  { key: "pulse", label: "Pulse" },
 ];
 
 export const WATERMARK_CORNER_LABELS: {

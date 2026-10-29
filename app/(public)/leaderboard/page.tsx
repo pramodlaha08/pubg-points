@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
 import { useSettings } from "@/hooks/useSettings";
 import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useBroadcast } from "@/hooks/useBroadcast";
 import { useBranding } from "@/components/providers/BrandingProvider";
 import {
   DEFAULT_POINTS_TABLE,
@@ -37,6 +38,8 @@ export default function LeaderboardPage() {
   const { settings: remoteSettings } = useSettings();
   const { mapByRound } = useRoundInfo();
   const { branding } = useBranding();
+  const { broadcast } = useBroadcast();
+  const showLeaderboard = broadcast?.overlays.leaderboard !== false;
 
   const settings = useMemo(
     () => mergePointsTable(remoteSettings?.pointsTable ?? DEFAULT_POINTS_TABLE),
@@ -128,7 +131,9 @@ export default function LeaderboardPage() {
   return (
     <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden">
       <div
-        className="relative h-full w-full overflow-hidden border"
+        className={`relative h-full w-full overflow-hidden border ${
+          showLeaderboard ? "" : "hidden"
+        }`}
         style={{
           borderColor: palette.borderSoft,
           background: `linear-gradient(135deg, ${palette.panelFrom} 0%, ${palette.panelTo} 50%, ${palette.panelAlt} 100%)`,

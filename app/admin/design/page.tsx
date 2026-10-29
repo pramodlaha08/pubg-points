@@ -7,8 +7,10 @@ import { GiGears, GiDeathSkull } from "react-icons/gi";
 import { api } from "@/lib/api";
 import { useTournament } from "@/components/providers/TournamentProvider";
 import {
+  AMBIENT_LABELS,
   COLOR_FIELDS,
   DEFAULT_POINTS_TABLE,
+  ENTRANCE_LABELS,
   FONT_FAMILIES,
   GAME_LABELS,
   SURFACE_STYLE_LABELS,
@@ -16,6 +18,8 @@ import {
   TEMPLATE_LABELS,
   WATERMARK_CORNER_LABELS,
   mergePointsTable,
+  type AmbientEffect,
+  type EntranceAnimation,
   type LeaderboardHeaderLabels,
   type LeaderboardSettings,
   type MatchSettings,
@@ -60,6 +64,7 @@ export default function SettingsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [previewNonce, setPreviewNonce] = useState(0);
   const [tab, setTab] = useState<TabKey>("table");
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -384,6 +389,31 @@ export default function SettingsPage() {
     </div>
   );
 
+  const selectRow = (
+    label: string,
+    value: string,
+    options: { key: string; label: string }[],
+    onChange: (v: string) => void
+  ) => (
+    <label
+      key={label}
+      className="flex items-center justify-between gap-3 text-sm text-gray-300 bg-gray-900/60 rounded-lg px-3 py-2"
+    >
+      <span>{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="bg-gray-800 border border-red-500/30 rounded px-2 py-1 text-white text-sm"
+      >
+        {options.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
   const templatePicker = (
     current: OverlayTemplate,
     onPick: (v: OverlayTemplate) => void
@@ -479,7 +509,7 @@ export default function SettingsPage() {
           {checkboxRow("Scanlines", draft.surface.scanline, (v) =>
             updateSurface("scanline", v)
           )}
-          {checkboxRow("Animate (pan / shine)", draft.surface.animate, (v) =>
+          {checkboxRow("Ambient effects", draft.surface.animate, (v) =>
             updateSurface("animate", v)
           )}
         </div>
@@ -576,6 +606,56 @@ export default function SettingsPage() {
             (v) => updateSurface("backgroundImageBlur", v),
             (v) => `${v}px`
           )}
+        </div>
+      </section>
+
+      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
+        <h2 className="text-lg font-semibold text-red-400">Animation</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {selectRow(
+            "Row entrance",
+            draft.surface.entrance,
+            ENTRANCE_LABELS,
+            (v) => updateSurface("entrance", v as EntranceAnimation)
+          )}
+          {selectRow(
+            "Ambient effect",
+            draft.surface.ambient,
+            AMBIENT_LABELS,
+            (v) => updateSurface("ambient", v as AmbientEffect)
+          )}
+        </div>
+        {rangeRow(
+          "Entrance duration",
+          draft.surface.entranceDuration,
+          150,
+          1200,
+          10,
+          (v) => updateSurface("entranceDuration", v),
+          (v) => `${v}ms`
+        )}
+        {rangeRow(
+          "Stagger between rows",
+          draft.surface.stagger,
+          0,
+          150,
+          5,
+          (v) => updateSurface("stagger", v),
+          (v) => `${v}ms`
+        )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">
+            Rows animate in while the table loads, then glide into their new
+            order when scores change. Ambient effects need the toggle in Panel
+            Surface.
+          </p>
+          <button
+            type="button"
+            onClick={() => setPreviewNonce((n) => n + 1)}
+            className="rounded-lg border-2 border-red-500/40 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-600/20"
+          >
+            Replay entrance
+          </button>
         </div>
       </section>
 
@@ -1080,7 +1160,10 @@ export default function SettingsPage() {
             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
           }}
         >
-          <AnimatedTeamTable previewSettings={draft} />
+          <AnimatedTeamTable
+            key={`table-preview-${previewNonce}`}
+            previewSettings={draft}
+          />
         </div>
       );
     }
