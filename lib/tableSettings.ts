@@ -26,6 +26,7 @@ export interface PointsTableColors {
 export interface PointsTableColumns {
   logo: boolean;
   alive: boolean;
+  place: boolean;
   pts: boolean;
   elims: boolean;
 }
@@ -224,7 +225,7 @@ export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
     gradientTo: "",
     gradientAngle: 140,
   },
-  columns: { logo: true, alive: true, pts: true, elims: true },
+  columns: { logo: true, alive: true, place: true, pts: true, elims: true },
   header: { title: "", subtitle: "", logoUrl: "" },
   layout: {
     template: "classic",

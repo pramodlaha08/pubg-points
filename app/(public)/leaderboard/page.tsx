@@ -66,18 +66,34 @@ export default function LeaderboardPage() {
         const response = await api.get("/team");
         const data = response.data;
         if (data.success) {
+          const roundsOf = (team: Team) => team.rounds ?? [];
+          const totalsOf = (team: Team) => {
+            let placePoints = 0;
+            let killPoints = 0;
+            for (const round of roundsOf(team)) {
+              placePoints += round.positionPoints || 0;
+              killPoints += round.killPoints || 0;
+            }
+            return { total: placePoints + killPoints, placePoints, killPoints };
+          };
+          const bestPlaceOf = (team: Team) => {
+            const positions = roundsOf(team)
+              .map((round) => round.position)
+              .filter((position) => position > 0 && position < 9999);
+            return positions.length ? Math.min(...positions) : 9999;
+          };
           const sortedTeams = data.data.sort((a: Team, b: Team) => {
-            const aTotal = a.rounds.reduce(
-              (acc, round) =>
-                acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0,
-            );
-            const bTotal = b.rounds.reduce(
-              (acc, round) =>
-                acc + (round.positionPoints || 0) + (round.killPoints || 0),
-              0,
-            );
-            return bTotal - aTotal;
+            const aStats = totalsOf(a);
+            const bStats = totalsOf(b);
+            if (bStats.total !== aStats.total) return bStats.total - aStats.total;
+            if (bStats.placePoints !== aStats.placePoints)
+              return bStats.placePoints - aStats.placePoints;
+            if (bStats.killPoints !== aStats.killPoints)
+              return bStats.killPoints - aStats.killPoints;
+            const aBest = bestPlaceOf(a);
+            const bBest = bestPlaceOf(b);
+            if (aBest !== bBest) return aBest - bBest;
+            return (a.slot ?? 0) - (b.slot ?? 0);
           });
           setTeams(sortedTeams);
         }
