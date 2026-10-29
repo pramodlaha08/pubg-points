@@ -29,6 +29,10 @@ export const GAMING_FX_CSS = `
   0% { background-position: 0 0; }
   100% { background-position: 44px 44px; }
 }
+@keyframes fxShimmer {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(210%); }
+}
 `;
 
 export const fxPan = (duration = 6) => ({

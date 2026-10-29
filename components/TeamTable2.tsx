@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import { api, getApiTournamentId } from "@/lib/api";
@@ -10,6 +10,7 @@ import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
   mergePointsTable,
+  type EntranceAnimation,
   type PointsTableSettings,
 } from "@/lib/tableSettings";
 import {
@@ -81,6 +82,31 @@ const trophyVariants = {
     ],
     transition: { duration: 1.5, repeat: Infinity, ease: "linear" },
   },
+};
+
+const entranceFor = (entrance: EntranceAnimation) => {
+  switch (entrance) {
+    case "fade":
+      return { initial: { opacity: 0 }, exit: { opacity: 0 } };
+    case "slide-left":
+      return { initial: { opacity: 0, x: -28 }, exit: { opacity: 0, x: 28 } };
+    case "slide-right":
+      return { initial: { opacity: 0, x: 28 }, exit: { opacity: 0, x: -28 } };
+    case "scale":
+      return {
+        initial: { opacity: 0, scale: 0.94 },
+        exit: { opacity: 0, scale: 0.94 },
+      };
+    case "flip":
+      return {
+        initial: { opacity: 0, rotateX: -70 },
+        exit: { opacity: 0, rotateX: 70 },
+      };
+    case "none":
+      return { initial: false as const, exit: { opacity: 0 } };
+    default:
+      return { initial: { opacity: 0, y: -12 }, exit: { opacity: 0, y: 12 } };
+  }
 };
 
 const topRankStyles = {
@@ -184,15 +210,21 @@ export default function AnimatedTeamTable({
   const isHairline = template === "hairline";
   const isLower = template === "lower-third";
   const animate = surface.animate;
+  const ambient = animate ? surface.ambient : "none";
+  const ambientOn = ambient !== "none";
+  const wantFloat = ambient === "float" || ambient === "float-shine";
+  const wantShine = ambient === "shine" || ambient === "float-shine";
 
   const fs = (base: number) => base * layout.fontScale * typography.fontScale;
   const typeStyle = typographyStyle(typography);
 
   const [teams, setTeams] = useState<Team[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<string>("-");
   const [lastSyncAt, setLastSyncAt] = useState<string>("-");
   const [updateCount, setUpdateCount] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   const { mapByRound, refresh: refreshRoundInfo } = useRoundInfo();
 
@@ -223,6 +255,8 @@ export default function AnimatedTeamTable({
         }
       } catch {
         console.error("Error fetching teams:");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -339,6 +373,63 @@ export default function AnimatedTeamTable({
   const rowGap = Math.max(0, Math.round(layout.gap * fitScale));
   const rowFontSize = fs(isBig ? 15 : 12) * fitScale;
 
+  // Rows stagger in on first load, then reflow with a spring when ranks change.
+  const rowMotion = (index: number) => {
+    const { initial, exit } = entranceFor(surface.entrance);
+    const duration = prefersReducedMotion ? 0 : surface.entranceDuration / 1000;
+    const delay = prefersReducedMotion
+      ? 0
+      : Math.min(index * (surface.stagger / 1000), 0.6);
+    const step = { duration, delay };
+    return {
+      initial: prefersReducedMotion ? (false as const) : initial,
+      animate: { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0 },
+      exit: prefersReducedMotion ? { opacity: 0 } : exit,
+      transition: {
+        opacity: step,
+        x: step,
+        y: step,
+        scale: step,
+        rotateX: step,
+        layout: { type: "spring" as const, stiffness: 105, damping: 15 },
+      },
+    };
+  };
+
+  const renderSkeleton = () => {
+    const rows = teams.length || 12;
+    const fill = isCard
+      ? `linear-gradient(90deg, ${hexToRgba(palette.teamFrom, 0.5)} 0%, ${hexToRgba(palette.teamTo, 0.5)} 100%)`
+      : hexToRgba(palette.borderSoft, 0.55);
+    return (
+      <div aria-hidden className="pointer-events-none">
+        {Array.from({ length: rows }).map((_, index) => (
+          <div
+            key={index}
+            className="relative overflow-hidden"
+            style={{
+              height: rowH,
+              marginBottom: rowGap,
+              borderRadius: isCard ? surface.radius : Math.min(surface.radius, 4),
+              border: `1px solid ${hexToRgba(palette.borderSoft, 0.55)}`,
+              background: fill,
+              opacity: Math.max(0.35, 0.9 - index * 0.04),
+            }}
+          >
+            <span
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(100deg, transparent 15%, rgba(255,255,255,0.45) 50%, transparent 85%)",
+                animation: `fxShimmer 1.5s ease-in-out ${index * 0.05}s infinite`,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderAliveDots = (round: RoundStat, dotH: number) => (
     <div className="flex gap-1">
       {SQUAD_CONFIG.playerIndices().map((playerIndex) => {
@@ -374,7 +465,7 @@ export default function AnimatedTeamTable({
             background: topRankStyle.badgeBg,
             border: `1px solid ${topRankStyle.badgeBorder}`,
             boxShadow: topRankStyle.glow,
-            animation: animate ? "fxFloat 3s ease-in-out infinite" : undefined,
+            animation: wantFloat ? "fxFloat 3s ease-in-out infinite" : undefined,
           }}
           aria-label={`Rank ${index + 1}`}
         >
@@ -407,11 +498,11 @@ export default function AnimatedTeamTable({
         style={{
           height: Math.max(layout.rowHeight - 6, 24),
           backgroundImage: `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
-          ...(animate ? fxPan(7) : {}),
+          ...(wantFloat ? fxPan(7) : {}),
           borderBottom: `1px solid ${palette.border}`,
         }}
       >
-        {animate ? <Shine delay={0.6} duration={4.2} /> : null}
+        {wantShine ? <Shine delay={0.6} duration={4.2} /> : null}
         {header.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -457,7 +548,7 @@ export default function AnimatedTeamTable({
     return (
       <div
         className={`relative flex overflow-hidden font-bold ${
-          animate && !light ? "shadow-lg" : ""
+          ambientOn && !light ? "shadow-lg" : ""
         }`}
         style={{
           height: headerH,
@@ -466,7 +557,7 @@ export default function AnimatedTeamTable({
           backgroundImage: light
             ? undefined
             : `linear-gradient(90deg, ${palette.headerFrom} 0%, ${palette.headerTo} 50%, ${palette.headerFrom} 100%)`,
-          ...(animate && !light ? fxPan(9) : {}),
+          ...(wantFloat && !light ? fxPan(9) : {}),
           borderBottom: `1px solid ${palette.border}`,
           opacity: light ? 0.8 : 1,
           ...typeStyle,
@@ -481,7 +572,7 @@ export default function AnimatedTeamTable({
             }}
           />
         ) : null}
-        {animate && !light ? <Shine duration={5} /> : null}
+        {wantShine && !light ? <Shine duration={5} /> : null}
         <div
           className="relative flex w-12 items-center justify-center font-semibold tracking-tighter"
           style={{
@@ -553,21 +644,14 @@ export default function AnimatedTeamTable({
       <motion.div
         key={team._id}
         layout
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{
-          type: "spring",
-          stiffness: 105,
-          damping: 15,
-          delay: Math.min(index * 0.015, 0.12),
-        }}
+        {...rowMotion(index)}
         className="relative flex items-center gap-2 overflow-hidden px-2"
         style={{
           height: rowH,
           fontSize: rowFontSize,
           marginBottom: rowGap,
           borderRadius: surface.radius,
+          transformPerspective: 800,
           backgroundImage: `linear-gradient(90deg, ${palette.teamFrom} 0%, ${palette.teamTo} 100%)`,
           border: `1px solid ${palette.borderSoft}`,
           boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.06)`,
@@ -661,20 +745,13 @@ export default function AnimatedTeamTable({
       <motion.div
         key={team._id}
         layout
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 10 }}
-        transition={{
-          type: "spring",
-          stiffness: 105,
-          damping: 15,
-          delay: Math.min(index * 0.015, 0.12),
-        }}
+        {...rowMotion(index)}
         className={`relative flex ${isHairline ? "" : "shadow-md"}`}
         style={{
           height: rowH,
           fontSize: rowFontSize,
           marginBottom: rowGap,
+          transformPerspective: 800,
           borderBottom: `1px solid ${isHairline ? palette.border : palette.borderSoft}`,
           background: isEliminated
             ? "rgba(226, 232, 240, 0.75)"
@@ -752,7 +829,7 @@ export default function AnimatedTeamTable({
               style={{
                 backgroundColor: palette.aliveBar,
                 boxShadow: `0 0 10px ${palette.hudGlow}`,
-                animation: animate ? "fxPulse 1.2s ease-in-out infinite" : undefined,
+                animation: ambientOn ? "fxPulse 1.2s ease-in-out infinite" : undefined,
               }}
             />
           ) : null}
@@ -818,7 +895,7 @@ export default function AnimatedTeamTable({
               ? undefined
               : `0 0 12px ${hexToRgba(edgeColor, 0.75)}`,
             animation:
-              !isEliminated && animate ? "fxPulse 2s ease-in-out infinite" : undefined,
+              !isEliminated && ambientOn ? "fxPulse 2s ease-in-out infinite" : undefined,
           }}
         />
       </motion.div>
@@ -865,9 +942,13 @@ export default function AnimatedTeamTable({
             {renderTitleStrip()}
             {renderColumnHeader()}
             <div className="relative flex-1 overflow-hidden">
-              <AnimatePresence>
-                {teams.map((team, index) => renderTeam(team, index))}
-              </AnimatePresence>
+              {isLoading && teams.length === 0 ? (
+                renderSkeleton()
+              ) : (
+                <AnimatePresence>
+                  {teams.map((team, index) => renderTeam(team, index))}
+                </AnimatePresence>
+              )}
             </div>
           </div>
           <Watermark watermark={watermark} />
