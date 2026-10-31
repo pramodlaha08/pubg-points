@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import {
   Copy,
+  Crown,
   ExternalLink,
   Eye,
   EyeOff,
@@ -13,6 +14,7 @@ import {
   Play,
   RefreshCw,
   RotateCcw,
+  Skull,
   Timer,
   Trophy,
   Type,
@@ -59,6 +61,10 @@ export default function ControlRoomPage() {
   const [lowerSubtitle, setLowerSubtitle] = useState("");
   const [countdownTitle, setCountdownTitle] = useState("Starting in");
   const [countdownMinutes, setCountdownMinutes] = useState("5");
+  const [winnerTeamId, setWinnerTeamId] = useState("");
+  const [winnerTitle, setWinnerTitle] = useState("CHAMPIONS");
+  const [winnerSubtitle, setWinnerSubtitle] = useState("");
+  const [teams, setTeams] = useState<{ _id: string; name: string }[]>([]);
 
   const [now, setNow] = useState(() => Date.now());
   const hydratedFor = useRef<string | null>(null);
@@ -85,7 +91,32 @@ export default function ControlRoomPage() {
     setCountdownMinutes(
       String(Math.max(1, Math.round(broadcast.countdown.durationSeconds / 60)))
     );
+    setWinnerTeamId(broadcast.winner.teamId ?? "");
+    setWinnerTitle(broadcast.winner.title || "CHAMPIONS");
+    setWinnerSubtitle(broadcast.winner.subtitle || "");
   }, [broadcast]);
+
+  useEffect(() => {
+    if (!ready || !canScore) return;
+    let active = true;
+    api
+      .get("/team")
+      .then((response) => {
+        if (!active || !response.data?.success) return;
+        setTeams(
+          (response.data.data as { _id: string; name: string }[]).map((team) => ({
+            _id: team._id,
+            name: team.name,
+          }))
+        );
+      })
+      .catch(() => {
+        if (active) notifyError("Could not load the team list");
+      });
+    return () => {
+      active = false;
+    };
+  }, [ready, canScore]);
 
   const patch = useCallback(
     async (body: Record<string, unknown>, message?: string) => {
@@ -123,6 +154,7 @@ export default function ControlRoomPage() {
   const overlays = broadcast?.overlays;
   const lowerThird = broadcast?.lowerThird;
   const countdown = broadcast?.countdown;
+  const winner = broadcast?.winner;
 
   const remaining =
     countdown?.running && countdown.endsAt
@@ -161,6 +193,24 @@ export default function ControlRoomPage() {
     );
   };
 
+  const applyWinner = () => {
+    if (!winnerTeamId) {
+      notifyError("Pick the winning team first");
+      return;
+    }
+    void patch(
+      {
+        winner: {
+          visible: true,
+          teamId: winnerTeamId,
+          title: winnerTitle.trim() || "CHAMPIONS",
+          subtitle: winnerSubtitle.trim(),
+        },
+      },
+      "Winner splash is live"
+    );
+  };
+
   if (!ready || !canScore) {
     return (
       <div className="py-20 text-center text-sm text-[var(--adm-muted)]">
@@ -185,6 +235,14 @@ export default function ControlRoomPage() {
       path: "/leaderboard",
       icon: Trophy,
       visible: overlays?.leaderboard !== false,
+    },
+    {
+      key: "killFeed" as const,
+      name: "Kill Feed",
+      description: "Recent eliminations sliding in from the right",
+      path: "/overlay/kill-feed",
+      icon: Skull,
+      visible: overlays?.killFeed !== false,
     },
   ];
 
@@ -460,6 +518,96 @@ export default function ControlRoomPage() {
                 size="sm"
                 variant="ghost"
                 onClick={() => copyUrl("/overlay/countdown")}
+              >
+                <Copy className="h-4 w-4" />
+                Copy OBS URL
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-[var(--adm-muted)]" />
+                <p className="font-semibold text-[var(--adm-fg)]">
+                  Winner Splash
+                </p>
+              </div>
+              <Badge variant={winner?.visible ? "success" : "muted"}>
+                {winner?.visible ? "ON AIR" : "OFF"}
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Winning team
+              </label>
+              <select
+                value={winnerTeamId}
+                onChange={(event) => setWinnerTeamId(event.target.value)}
+                className="h-10 w-full rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface)] px-3 text-sm text-[var(--adm-fg)] focus:outline-none focus:ring-2 focus:ring-[var(--adm-ring)]"
+              >
+                <option value="">Select a team…</option>
+                {teams.map((team) => (
+                  <option key={team._id} value={team._id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Headline
+              </label>
+              <Input
+                value={winnerTitle}
+                maxLength={60}
+                onChange={(event) => setWinnerTitle(event.target.value)}
+                placeholder="CHAMPIONS"
+              />
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Subtitle
+              </label>
+              <Input
+                value={winnerSubtitle}
+                maxLength={100}
+                onChange={(event) => setWinnerSubtitle(event.target.value)}
+                placeholder="e.g. PMWC 2026 Grand Final"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" disabled={saving} onClick={applyWinner}>
+                <Play className="h-4 w-4" />
+                {winner?.visible ? "Update & keep live" : "Apply & show"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={saving || !winner?.visible}
+                onClick={() =>
+                  patch({ winner: { visible: false } }, "Winner splash hidden")
+                }
+              >
+                <EyeOff className="h-4 w-4" />
+                Hide
+              </Button>
+              <a
+                href={sceneUrl("/overlay/winner")}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button size="sm" variant="ghost">
+                  <ExternalLink className="h-4 w-4" />
+                  Open
+                </Button>
+              </a>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => copyUrl("/overlay/winner")}
               >
                 <Copy className="h-4 w-4" />
                 Copy OBS URL
