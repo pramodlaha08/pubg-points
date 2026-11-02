@@ -21,6 +21,7 @@ export interface Tournament {
   status: TournamentStatus;
   isDefault: boolean;
   isArchived: boolean;
+  activeRound?: number;
   teamCount: number;
   scoring?: TournamentScoring;
   meta?: TournamentMeta;

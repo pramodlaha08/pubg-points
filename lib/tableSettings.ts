@@ -1,3 +1,5 @@
+import { LEGACY_PRESET_DATA } from "./legacyPresets";
+
 export interface PointsTableColors {
   headerFrom: string;
   headerTo: string;
@@ -96,11 +98,41 @@ export interface MatchSettings {
 }
 
 export type OverlayTemplate =
+  | "arena"
+  | "editorial"
+  | "editorial-cards"
+  | "editorial-podium"
+  | "editorial-minimal"
+  | "split"
+  | "ticker"
+  | "spotlight"
+  | "scoreboard"
+  | "ledger"
+  | "matrix"
+  | "strip"
   | "classic"
   | "lower-third"
   | "card-stack"
   | "big-board"
   | "hairline";
+
+export const EDITORIAL_TEMPLATES: OverlayTemplate[] = [
+  "arena",
+  "editorial",
+  "editorial-cards",
+  "editorial-podium",
+  "editorial-minimal",
+  "split",
+  "ticker",
+  "spotlight",
+  "scoreboard",
+  "ledger",
+  "matrix",
+  "strip",
+];
+
+export const isEditorialTemplate = (template?: string | null) =>
+  !!template && EDITORIAL_TEMPLATES.includes(template as OverlayTemplate);
 
 export interface OverlayTypography {
   fontFamily: string;
@@ -173,6 +205,36 @@ export interface OverlayPosition {
   offsetY: number;
 }
 
+export type OverlayCardStyle = "editorial" | "spotlight" | "minimal";
+
+export interface OverlayCardSettings {
+  winner: OverlayCardStyle;
+  countdown: OverlayCardStyle;
+  lowerThird: OverlayCardStyle;
+}
+
+export const CARD_STYLE_LABELS: {
+  key: OverlayCardStyle;
+  label: string;
+  blurb: string;
+}[] = [
+  {
+    key: "editorial",
+    label: "Editorial",
+    blurb: "Structured broadcast panel with a restrained accent",
+  },
+  {
+    key: "spotlight",
+    label: "Spotlight",
+    blurb: "Large centred type built for the main scene",
+  },
+  {
+    key: "minimal",
+    label: "Minimal",
+    blurb: "Type-only treatment that sits over the footage",
+  },
+];
+
 export interface PointsTableSettings {
   preset: string;
   colors: PointsTableColors;
@@ -181,6 +243,7 @@ export interface PointsTableSettings {
   columns: PointsTableColumns;
   header: PointsTableHeader;
   layout: PointsTableLayout;
+  cards: OverlayCardSettings;
   notifications: NotificationSettings;
   leaderboard: LeaderboardSettings;
   match: MatchSettings;
@@ -193,66 +256,71 @@ export interface AppSettings {
 }
 
 export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
-  preset: "esports-blue",
+  preset: "neon-apex",
   colors: {
-    headerFrom: "#4D78D6",
-    headerTo: "#5A6EFF",
-    rankFrom: "#001FFF",
-    rankTo: "#5A96E6",
-    teamFrom: "#001FFF",
-    teamTo: "#5A96E6",
-    cellBg: "#FFFFFF",
-    border: "#3A3E5A",
-    borderSoft: "#E6EEFF",
-    accent: "#4D78D6",
-    aliveBar: "#0000FF",
-    deadBar: "#EF4444",
-    textPrimary: "#0F172A",
-    panelFrom: "#F5F8FF",
-    panelTo: "#EAF2FF",
-    placeColor: "#2563EB",
-    elimColor: "#D97706",
-    totalColor: "#0F172A",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-    notificationFrom: "#FFFFFF",
-    notificationTo: "#EFF6FF",
+    headerFrom: "#050A14",
+    headerTo: "#0B1424",
+    rankFrom: "#07111F",
+    rankTo: "#0D1B2E",
+    teamFrom: "#050A14",
+    teamTo: "#0A1220",
+    cellBg: "#070C15",
+    border: "#1A3550",
+    borderSoft: "#14283D",
+    accent: "#22D3EE",
+    aliveBar: "#34D399",
+    deadBar: "#FB7185",
+    textPrimary: "#E8FAFF",
+    panelFrom: "#071019",
+    panelTo: "#0B1727",
+    placeColor: "#7CB3CC",
+    elimColor: "#F0A6C8",
+    totalColor: "#FFFFFF",
+    danger: "#FB7185",
+    warning: "#FBBF24",
+    notificationFrom: "#071019",
+    notificationTo: "#102235",
   },
   typography: {
-    fontFamily: "",
+    fontFamily: "Bahnschrift, 'DIN Alternate', 'Segoe UI', sans-serif",
     fontScale: 1,
     uppercase: true,
     letterSpacing: 0,
   },
   surface: {
-    style: "transparent",
-    opacity: 0.92,
-    blur: 8,
-    radius: 12,
+    style: "gradient",
+    opacity: 0.94,
+    blur: 10,
+    radius: 2,
     borderWidth: 1,
     shadow: true,
-    scanline: false,
+    scanline: true,
     animate: true,
-    entrance: "fade-up",
-    entranceDuration: 420,
-    stagger: 30,
-    ambient: "float-shine",
+    entrance: "slide-left",
+    entranceDuration: 520,
+    stagger: 42,
+    ambient: "shine",
     backgroundImage: "",
     backgroundImageOpacity: 0.25,
     backgroundImageBlur: 0,
-    gradientFrom: "",
-    gradientTo: "",
-    gradientAngle: 140,
+    gradientFrom: "#071019",
+    gradientTo: "#0B1727",
+    gradientAngle: 135,
   },
   columns: { logo: true, alive: true, place: true, pts: true, elims: true },
   header: { title: "", subtitle: "", logoUrl: "" },
   layout: {
-    template: "classic",
-    width: 300,
-    rowHeight: 36,
+    template: "arena",
+    width: 320,
+    rowHeight: 38,
     fontScale: 1,
     showTrophy: true,
-    gap: 0,
+    gap: 2,
+  },
+  cards: {
+    winner: "editorial",
+    countdown: "editorial",
+    lowerThird: "editorial",
   },
   notifications: {
     template: "classic",
@@ -364,6 +432,26 @@ export const TEMPLATE_LABELS: {
   blurb: string;
 }[] = [
   {
+    key: "editorial",
+    label: "Editorial Board",
+    blurb: "Premium hairline table with a cinematic broadcast feel",
+  },
+  {
+    key: "editorial-cards",
+    label: "Editorial Cards",
+    blurb: "Two-column cards with strong team identity and stats",
+  },
+  {
+    key: "editorial-podium",
+    label: "Editorial Podium",
+    blurb: "Top three spotlight cards above a compact standings list",
+  },
+  {
+    key: "editorial-minimal",
+    label: "Editorial Minimal",
+    blurb: "Type-only broadcast strip with no panel background",
+  },
+  {
     key: "classic",
     label: "Classic Table",
     blurb: "Columns with the animated broadcast header",
@@ -387,6 +475,46 @@ export const TEMPLATE_LABELS: {
     key: "hairline",
     label: "Hairline",
     blurb: "Type only, no panels, sits in the footage",
+  },
+  {
+    key: "arena",
+    label: "Arena Board",
+    blurb: "Tactical rank blocks with glowing leader emphasis",
+  },
+  {
+    key: "split",
+    label: "Split Standings",
+    blurb: "Two balanced standings lanes side by side",
+  },
+  {
+    key: "ticker",
+    label: "Broadcast Ticker",
+    blurb: "Fast one-line standings with oversized points",
+  },
+  {
+    key: "spotlight",
+    label: "Leader Spotlight",
+    blurb: "Hero leader card followed by the chasing pack",
+  },
+  {
+    key: "scoreboard",
+    label: "Scoreboard Grid",
+    blurb: "Large score cards built for instant reading",
+  },
+  {
+    key: "ledger",
+    label: "Ledger Bands",
+    blurb: "Full-width alternating bands with broadcast stats",
+  },
+  {
+    key: "matrix",
+    label: "Matrix Grid",
+    blurb: "Dense three-column team tiles",
+  },
+  {
+    key: "strip",
+    label: "Compact Strip",
+    blurb: "Stacked clipped strips with a strong leader line",
   },
 ];
 
@@ -445,573 +573,368 @@ export const FONT_FAMILIES: { label: string; value: string }[] = [
   { label: "Courier (mono)", value: "'Courier New', monospace" },
 ];
 
+export type ThemeMotion =
+  | "surge"
+  | "pulse"
+  | "glitch"
+  | "sweep"
+  | "rise"
+  | "zoom"
+  | "drift"
+  | "flash"
+  | "cascade"
+  | "slide";
+
+export type ThemePattern =
+  | "grid"
+  | "chevron"
+  | "scan"
+  | "hex"
+  | "diagonal"
+  | "dots"
+  | "circuit"
+  | "rays"
+  | "rings"
+  | "stripes"
+  | "triangles"
+  | "waves"
+  | "crosshatch"
+  | "mosaic";
+
 export interface TablePreset {
   id: string;
   label: string;
+  tagline: string;
   game: GameTheme;
+  motion: ThemeMotion;
+  pattern: ThemePattern;
   pointsTable: PointsTableSettings;
 }
 
-const preset = (
+type ThemePresetDef = {
+  id: string;
+  label: string;
+  tagline: string;
+  game: GameTheme;
+  motion: ThemeMotion;
+  pattern: ThemePattern;
+  design?: OverlayTemplate;
+  base: string;
+  accent: string;
+  text: string;
+  surfaceStyle?: SurfaceStyle;
+  radius?: number;
+  borderWidth?: number;
+  width?: number;
+  rowHeight?: number;
+  gap?: number;
+  fontFamily?: string;
+};
+
+const parseHex = (hex: string): [number, number, number] => {
+  const value = hex.replace("#", "");
+  const full =
+    value.length === 3
+      ? value
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : value.slice(0, 6);
+  const number = Number.parseInt(full, 16);
+  if (Number.isNaN(number)) return [0, 0, 0];
+  return [(number >> 16) & 255, (number >> 8) & 255, number & 255];
+};
+
+const mixHex = (from: string, to: string, amount: number) => {
+  const [r1, g1, b1] = parseHex(from);
+  const [r2, g2, b2] = parseHex(to);
+  const ratio = Math.max(0, Math.min(1, amount));
+  const channel = (a: number, b: number) =>
+    Math.round(a + (b - a) * ratio)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${channel(r1, r2)}${channel(g1, g2)}${channel(b1, b2)}`;
+};
+
+const paletteFrom = (
+  base: string,
+  accent: string,
+  text: string
+): PointsTableColors => ({
+  ...DEFAULT_POINTS_TABLE.colors,
+  headerFrom: base,
+  headerTo: mixHex(base, accent, 0.2),
+  rankFrom: mixHex(base, accent, 0.05),
+  rankTo: mixHex(base, accent, 0.26),
+  teamFrom: base,
+  teamTo: mixHex(base, accent, 0.1),
+  cellBg: mixHex(base, "#000000", 0.18),
+  border: mixHex(base, accent, 0.44),
+  borderSoft: mixHex(base, accent, 0.2),
+  accent,
+  aliveBar: mixHex(accent, "#34D399", 0.58),
+  deadBar: mixHex(text, "#FB7185", 0.58),
+  textPrimary: text,
+  panelFrom: base,
+  panelTo: mixHex(base, accent, 0.16),
+  placeColor: mixHex(text, base, 0.46),
+  elimColor: mixHex(text, accent, 0.42),
+  totalColor: text,
+  danger: mixHex(accent, "#FB7185", 0.52),
+  warning: mixHex(accent, "#FBBF24", 0.5),
+  notificationFrom: base,
+  notificationTo: mixHex(base, accent, 0.18),
+});
+
+const FONT_STACKS = [
+  "Bahnschrift, 'DIN Alternate', 'Segoe UI', sans-serif",
+  "Oswald, 'Arial Narrow', sans-serif",
+  "'Arial Black', Impact, sans-serif",
+  "'Trebuchet MS', 'Segoe UI', sans-serif",
+  "'Courier New', monospace",
+  "Georgia, 'Times New Roman', serif",
+];
+
+const entranceFor = (motion: ThemeMotion): EntranceAnimation => {
+  if (motion === "rise") return "fade-up";
+  if (motion === "slide" || motion === "surge") return "slide-left";
+  if (motion === "zoom" || motion === "pulse") return "scale";
+  if (motion === "flash") return "fade";
+  if (motion === "cascade") return "flip";
+  if (motion === "drift") return "slide-right";
+  return "slide-left";
+};
+
+const PRESET_DESIGNS: OverlayTemplate[] = [
+  "arena",
+  "editorial",
+  "editorial-cards",
+  "editorial-podium",
+  "editorial-minimal",
+  "split",
+  "classic",
+  "spotlight",
+  "editorial-cards",
+  "ticker",
+  "lower-third",
+  "ledger",
+  "matrix",
+  "editorial",
+  "scoreboard",
+  "strip",
+  "big-board",
+  "editorial-cards",
+  "arena",
+  "card-stack",
+  "spotlight",
+  "split",
+  "hairline",
+  "classic",
+  "editorial-minimal",
+  "editorial-podium",
+  "scoreboard",
+  "matrix",
+  "ticker",
+  "ledger",
+];
+
+const themePreset = (def: ThemePresetDef, index: number): TablePreset => {
+  const colors = paletteFrom(def.base, def.accent, def.text);
+  const design = def.design ?? PRESET_DESIGNS[index] ?? "arena";
+  const surfaceStyle = def.surfaceStyle ?? "gradient";
+  const glass = surfaceStyle === "glass";
+  const fontFamily =
+    def.fontFamily ?? FONT_STACKS[index % FONT_STACKS.length];
+  return {
+    id: def.id,
+    label: def.label,
+    tagline: def.tagline,
+    game: def.game,
+    motion: def.motion,
+    pattern: def.pattern,
+    pointsTable: {
+      ...DEFAULT_POINTS_TABLE,
+      preset: def.id,
+      colors,
+      typography: {
+        ...DEFAULT_POINTS_TABLE.typography,
+        fontFamily,
+        fontScale: 1,
+        uppercase: true,
+        letterSpacing: index % 3 === 0 ? 0.4 : 0,
+      },
+      surface: {
+        ...DEFAULT_POINTS_TABLE.surface,
+        style: surfaceStyle,
+        opacity: glass ? 0.76 : 0.95,
+        blur: glass ? 18 : 10,
+        radius: def.radius ?? (glass ? 12 : 2),
+        borderWidth: def.borderWidth ?? 1,
+        shadow: true,
+        scanline: true,
+        animate: true,
+        entrance: entranceFor(def.motion),
+        entranceDuration: 420 + (index % 5) * 60,
+        stagger: 28 + (index % 6) * 8,
+        ambient:
+          def.motion === "pulse" || def.motion === "flash" ? "pulse" : "shine",
+        gradientFrom: def.base,
+        gradientTo: mixHex(def.base, def.accent, 0.18),
+        gradientAngle: 90 + ((index * 37) % 180),
+      },
+      layout: {
+        ...DEFAULT_POINTS_TABLE.layout,
+        template: design,
+        width: def.width ?? (300 + (index % 4) * 20),
+        rowHeight: def.rowHeight ?? (index % 3 === 0 ? 36 : 38),
+        fontScale: 1,
+        showTrophy: true,
+        gap: def.gap ?? (index % 2 === 0 ? 2 : 4),
+      },
+      cards: {
+        winner: "editorial",
+        countdown: "editorial",
+        lowerThird: "editorial",
+      },
+    },
+  };
+};
+
+const THEME_DEFS: ThemePresetDef[] = [
+  { id: "neon-apex", label: "Neon Apex", tagline: "Cyan circuit lines with a cold arena glow", game: "pubg", motion: "surge", pattern: "grid", base: "#050A14", accent: "#22D3EE", text: "#E8FAFF", radius: 2 },
+  { id: "ember-ops", label: "Ember Ops", tagline: "Warm tactical panels with aggressive orange edges", game: "pubg", motion: "pulse", pattern: "chevron", base: "#120805", accent: "#FF7A18", text: "#FFF3E6", radius: 4 },
+  { id: "arctic-signal", label: "Arctic Signal", tagline: "Ice-blue telemetry with a clean broadcast scan", game: "universal", motion: "sweep", pattern: "scan", base: "#061018", accent: "#7DD3FC", text: "#F0FBFF", surfaceStyle: "glass", radius: 10 },
+  { id: "royal-arena", label: "Royal Arena", tagline: "Championship gold on deep obsidian plates", game: "pubg", motion: "glitch", pattern: "hex", base: "#0C0903", accent: "#F5C542", text: "#FFF9E8", radius: 0 },
+  { id: "toxic-strike", label: "Toxic Strike", tagline: "Acid green accents with a hostile field scan", game: "freefire", motion: "glitch", pattern: "grid", base: "#050F08", accent: "#A3E635", text: "#F4FFE7", radius: 2 },
+  { id: "cyber-violet", label: "Cyber Violet", tagline: "Violet circuitry and glassy neon depth", game: "universal", motion: "glitch", pattern: "circuit", base: "#0A0616", accent: "#A855F7", text: "#F5F3FF", surfaceStyle: "glass", radius: 8 },
+  { id: "blood-circuit", label: "Blood Circuit", tagline: "Hard red grid panels with zero rounded edges", game: "pubg", motion: "pulse", pattern: "grid", base: "#120306", accent: "#EF4444", text: "#FFF1F2", surfaceStyle: "solid", radius: 0 },
+  { id: "solar-flare", label: "Solar Flare", tagline: "Golden rays and warm solar highlights", game: "freefire", motion: "rise", pattern: "rays", base: "#1A0F02", accent: "#FBBF24", text: "#FFF7E0", radius: 4 },
+  { id: "deep-ocean", label: "Deep Ocean", tagline: "Deep cyan waves with a polished glass surface", game: "universal", motion: "drift", pattern: "waves", base: "#03121A", accent: "#06B6D4", text: "#ECFEFF", surfaceStyle: "glass", radius: 14 },
+  { id: "magma-core", label: "Magma Core", tagline: "Molten orange mosaic with flashing energy", game: "pubg", motion: "flash", pattern: "mosaic", base: "#180604", accent: "#F97316", text: "#FFF7ED", radius: 2 },
+  { id: "steel-vanguard", label: "Steel Vanguard", tagline: "Cold steel diagonals built for military briefings", game: "pubg", motion: "slide", pattern: "diagonal", base: "#0B0F14", accent: "#94A3B8", text: "#F1F5F9", radius: 0, fontFamily: "Oswald, 'Arial Narrow', sans-serif" },
+  { id: "forest-recon", label: "Forest Recon", tagline: "Field-green hex cells with silent motion", game: "pubg", motion: "surge", pattern: "hex", base: "#05130B", accent: "#22C55E", text: "#F0FDF4", radius: 6 },
+  { id: "desert-storm-modern", label: "Desert Storm Modern", tagline: "Sandstone triangles and a sweeping heat haze", game: "pubg", motion: "sweep", pattern: "triangles", base: "#171007", accent: "#D97706", text: "#FFFBEB", radius: 0 },
+  { id: "frostbite", label: "Frostbite", tagline: "Frozen crosshatch glass with sharp blue numbers", game: "universal", motion: "zoom", pattern: "crosshatch", base: "#071018", accent: "#38BDF8", text: "#F0F9FF", surfaceStyle: "glass", radius: 10 },
+  { id: "void-pulse", label: "Void Pulse", tagline: "Dark violet rings that breathe around the board", game: "universal", motion: "pulse", pattern: "rings", base: "#05050A", accent: "#8B5CF6", text: "#FAF5FF", surfaceStyle: "glass", radius: 18 },
+  { id: "signal-red", label: "Signal Red", tagline: "Emergency broadcast scan lines in hot coral", game: "universal", motion: "glitch", pattern: "scan", base: "#100507", accent: "#FB7185", text: "#FFF1F2", radius: 0 },
+  { id: "gold-standard", label: "Gold Standard", tagline: "Championship stripes with cascading gold panels", game: "pubg", motion: "cascade", pattern: "stripes", base: "#0F0B02", accent: "#EAB308", text: "#FEFCE8", radius: 0 },
+  { id: "jade-protocol", label: "Jade Protocol", tagline: "Jade dots and calm tactical motion", game: "freefire", motion: "drift", pattern: "dots", base: "#03130F", accent: "#2DD4BF", text: "#F0FDFA", radius: 8 },
+  { id: "cobalt-strike", label: "Cobalt Strike", tagline: "Cobalt grid panels with a rising entrance", game: "universal", motion: "rise", pattern: "grid", base: "#050B1A", accent: "#3B82F6", text: "#EFF6FF", radius: 4 },
+  { id: "crimson-grid", label: "Crimson Grid", tagline: "Crimson circuitry and hard broadcast edges", game: "pubg", motion: "surge", pattern: "circuit", base: "#120409", accent: "#E11D48", text: "#FFF1F2", surfaceStyle: "solid", radius: 0 },
+  { id: "amethyst-arena", label: "Amethyst Arena", tagline: "Amethyst triangles on layered glass", game: "universal", motion: "zoom", pattern: "triangles", base: "#0C0617", accent: "#C084FC", text: "#FAF5FF", surfaceStyle: "glass", radius: 14 },
+  { id: "copper-clash", label: "Copper Clash", tagline: "Copper diagonals with a sturdy industrial cut", game: "pubg", motion: "slide", pattern: "diagonal", base: "#140B06", accent: "#B45309", text: "#FFF7ED", radius: 2 },
+  { id: "limestone", label: "Limestone", tagline: "Neutral stone crosshatch for clean broadcasts", game: "universal", motion: "cascade", pattern: "crosshatch", base: "#0D1012", accent: "#A3A3A3", text: "#FAFAFA", radius: 0, fontFamily: "Georgia, 'Times New Roman', serif" },
+  { id: "neon-lime", label: "Neon Lime", tagline: "High-voltage lime chevrons with flash accents", game: "freefire", motion: "flash", pattern: "chevron", base: "#071006", accent: "#84CC16", text: "#F7FEE7", radius: 4 },
+  { id: "midnight-blue", label: "Midnight Blue", tagline: "Midnight waves and a cool glass sheen", game: "universal", motion: "drift", pattern: "waves", base: "#030817", accent: "#60A5FA", text: "#EFF6FF", surfaceStyle: "glass", radius: 10 },
+  { id: "sakura-strike", label: "Sakura Strike", tagline: "Soft pink dots on a dark glass stage", game: "freefire", motion: "rise", pattern: "dots", base: "#150712", accent: "#F472B6", text: "#FDF2F8", surfaceStyle: "glass", radius: 12 },
+  { id: "titanium-edge", label: "Titanium Edge", tagline: "Brushed titanium stripes with military type", game: "pubg", motion: "sweep", pattern: "stripes", base: "#0A0D11", accent: "#CBD5E1", text: "#F8FAFC", radius: 0, fontFamily: "'Arial Black', Impact, sans-serif" },
+  { id: "acid-rush", label: "Acid Rush", tagline: "Acid mosaic tiles and glitch-driven energy", game: "freefire", motion: "glitch", pattern: "mosaic", base: "#0B1203", accent: "#BEF264", text: "#F7FEE7", radius: 2 },
+  { id: "blood-moon", label: "Blood Moon", tagline: "Crimson rings and a slow pulse under moonlight", game: "pubg", motion: "pulse", pattern: "rings", base: "#140306", accent: "#F43F5E", text: "#FFF1F2", radius: 6 },
+  { id: "storm-front", label: "Storm Front", tagline: "Storm-grey rays with a fast zoom entrance", game: "universal", motion: "zoom", pattern: "rays", base: "#081018", accent: "#64748B", text: "#F8FAFC", radius: 0 },
+];
+
+const LEGACY_BASE_COLORS: PointsTableColors = {
+  headerFrom: "#4D78D6",
+  headerTo: "#5A6EFF",
+  rankFrom: "#001FFF",
+  rankTo: "#5A96E6",
+  teamFrom: "#001FFF",
+  teamTo: "#5A96E6",
+  cellBg: "#FFFFFF",
+  border: "#3A3E5A",
+  borderSoft: "#E6EEFF",
+  accent: "#4D78D6",
+  aliveBar: "#0000FF",
+  deadBar: "#EF4444",
+  textPrimary: "#0F172A",
+  panelFrom: "#F5F8FF",
+  panelTo: "#EAF2FF",
+  placeColor: "#2563EB",
+  elimColor: "#D97706",
+  totalColor: "#0F172A",
+  danger: "#DC2626",
+  warning: "#F59E0B",
+  notificationFrom: "#FFFFFF",
+  notificationTo: "#EFF6FF",
+};
+
+const legacyPreset = (
   id: string,
   label: string,
   game: GameTheme,
-  colors: Partial<PointsTableColors>
+  colors: Record<string, string>
 ): TablePreset => ({
   id,
   label,
+  tagline: "Restored classic broadcast preset",
   game,
+  motion: "surge",
+  pattern: "grid",
   pointsTable: {
-    ...DEFAULT_POINTS_TABLE,
+    ...structuredClone(DEFAULT_POINTS_TABLE),
     preset: id,
-    colors: { ...DEFAULT_POINTS_TABLE.colors, ...colors },
+    colors: { ...LEGACY_BASE_COLORS, ...colors } as PointsTableColors,
+    typography: {
+      ...DEFAULT_POINTS_TABLE.typography,
+      fontFamily: "",
+      fontScale: 1,
+      uppercase: true,
+      letterSpacing: 0,
+    },
+    surface: {
+      ...DEFAULT_POINTS_TABLE.surface,
+      style: "transparent",
+      opacity: 0.92,
+      blur: 8,
+      radius: 12,
+      borderWidth: 1,
+      shadow: true,
+      scanline: false,
+      animate: true,
+      entrance: "fade-up",
+      entranceDuration: 420,
+      stagger: 30,
+      ambient: "float-shine",
+      backgroundImage: "",
+      backgroundImageOpacity: 0.25,
+      backgroundImageBlur: 0,
+      gradientFrom: "",
+      gradientTo: "",
+      gradientAngle: 140,
+    },
+    layout: {
+      ...DEFAULT_POINTS_TABLE.layout,
+      template: "classic",
+      width: 300,
+      rowHeight: 36,
+      fontScale: 1,
+      showTrophy: true,
+      gap: 0,
+    },
+    cards: {
+      winner: "editorial",
+      countdown: "editorial",
+      lowerThird: "editorial",
+    },
   },
 });
 
+export const LEGACY_TABLE_PRESETS: TablePreset[] = LEGACY_PRESET_DATA.map(
+  (preset) => legacyPreset(preset.id, preset.label, preset.game, preset.colors)
+);
+
 export const TABLE_PRESETS: TablePreset[] = [
-  // ---------------------------------------------------------------- Universal
-  preset("esports-blue", "Esports Blue", "universal", {}),
-  preset("dark-neon", "Dark Neon", "universal", {
-    headerFrom: "#1F2937",
-    headerTo: "#111827",
-    rankFrom: "#7C3AED",
-    rankTo: "#4F46E5",
-    teamFrom: "#0F172A",
-    teamTo: "#1E293B",
-    cellBg: "#111827",
-    border: "#374151",
-    borderSoft: "#1F2937",
-    accent: "#22D3EE",
-    aliveBar: "#22D3EE",
-    deadBar: "#F43F5E",
-    textPrimary: "#E5E7EB",
-    panelFrom: "#111827",
-    panelTo: "#0B1120",
-    placeColor: "#22D3EE",
-    elimColor: "#F472B6",
-    totalColor: "#E5E7EB",
-    danger: "#F43F5E",
-    warning: "#FBBF24",
-    notificationFrom: "#020617",
-    notificationTo: "#3B0764",
-  }),
-  preset("gold-rush", "Gold Rush", "universal", {
-    headerFrom: "#B45309",
-    headerTo: "#D97706",
-    rankFrom: "#78350F",
-    rankTo: "#B45309",
-    teamFrom: "#92400E",
-    teamTo: "#B45309",
-    cellBg: "#FFFBEB",
-    border: "#78350F",
-    borderSoft: "#FDE68A",
-    accent: "#F59E0B",
-    aliveBar: "#F59E0B",
-    deadBar: "#DC2626",
-    textPrimary: "#451A03",
-    panelFrom: "#FFFBEB",
-    panelTo: "#FEF3C7",
-    placeColor: "#B45309",
-    elimColor: "#DC2626",
-    totalColor: "#451A03",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-  }),
-  preset("crimson", "Crimson", "universal", {
-    headerFrom: "#991B1B",
-    headerTo: "#DC2626",
-    rankFrom: "#450A0A",
-    rankTo: "#991B1B",
-    teamFrom: "#7F1D1D",
-    teamTo: "#B91C1C",
-    cellBg: "#FEF2F2",
-    border: "#7F1D1D",
-    borderSoft: "#FECACA",
-    accent: "#EF4444",
-    aliveBar: "#EF4444",
-    deadBar: "#7F1D1D",
-    textPrimary: "#450A0A",
-    panelFrom: "#FEF2F2",
-    panelTo: "#FEE2E2",
-    placeColor: "#B91C1C",
-    elimColor: "#9A3412",
-    totalColor: "#450A0A",
-    danger: "#EF4444",
-    warning: "#F97316",
-  }),
-  preset("emerald", "Emerald", "universal", {
-    headerFrom: "#047857",
-    headerTo: "#10B981",
-    rankFrom: "#064E3B",
-    rankTo: "#059669",
-    teamFrom: "#065F46",
-    teamTo: "#047857",
-    cellBg: "#ECFDF5",
-    border: "#065F46",
-    borderSoft: "#A7F3D0",
-    accent: "#10B981",
-    aliveBar: "#22C55E",
-    deadBar: "#EF4444",
-    textPrimary: "#022C22",
-    panelFrom: "#ECFDF5",
-    panelTo: "#D1FAE5",
-    placeColor: "#047857",
-    elimColor: "#B45309",
-    totalColor: "#022C22",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-  }),
-  preset("midnight-purple", "Midnight Purple", "universal", {
-    headerFrom: "#4C1D95",
-    headerTo: "#7C3AED",
-    rankFrom: "#2E1065",
-    rankTo: "#6D28D9",
-    teamFrom: "#3B0764",
-    teamTo: "#5B21B6",
-    cellBg: "#F5F3FF",
-    border: "#4C1D95",
-    borderSoft: "#DDD6FE",
-    accent: "#8B5CF6",
-    aliveBar: "#A78BFA",
-    deadBar: "#F43F5E",
-    textPrimary: "#1E1B4B",
-    panelFrom: "#F5F3FF",
-    panelTo: "#EDE9FE",
-    placeColor: "#6D28D9",
-    elimColor: "#DB2777",
-    totalColor: "#1E1B4B",
-    danger: "#DB2777",
-    warning: "#F59E0B",
-  }),
-  preset("ice", "Ice", "universal", {
-    headerFrom: "#0E7490",
-    headerTo: "#22D3EE",
-    rankFrom: "#164E63",
-    rankTo: "#0891B2",
-    teamFrom: "#155E75",
-    teamTo: "#0E7490",
-    cellBg: "#ECFEFF",
-    border: "#155E75",
-    borderSoft: "#A5F3FC",
-    accent: "#06B6D4",
-    aliveBar: "#38BDF8",
-    deadBar: "#F43F5E",
-    textPrimary: "#083344",
-    panelFrom: "#ECFEFF",
-    panelTo: "#CFFAFE",
-    placeColor: "#0E7490",
-    elimColor: "#E11D48",
-    totalColor: "#083344",
-    danger: "#F43F5E",
-    warning: "#F59E0B",
-  }),
-  preset("sunset", "Sunset", "universal", {
-    headerFrom: "#C2410C",
-    headerTo: "#FB923C",
-    rankFrom: "#7C2D12",
-    rankTo: "#EA580C",
-    teamFrom: "#9A3412",
-    teamTo: "#C2410C",
-    cellBg: "#FFF7ED",
-    border: "#9A3412",
-    borderSoft: "#FED7AA",
-    accent: "#F97316",
-    aliveBar: "#FB923C",
-    deadBar: "#DC2626",
-    textPrimary: "#431407",
-    panelFrom: "#FFF7ED",
-    panelTo: "#FFEDD5",
-    placeColor: "#C2410C",
-    elimColor: "#BE123C",
-    totalColor: "#431407",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-  }),
-  preset("carbon", "Carbon", "universal", {
-    headerFrom: "#334155",
-    headerTo: "#0F172A",
-    rankFrom: "#1E293B",
-    rankTo: "#334155",
-    teamFrom: "#0F172A",
-    teamTo: "#1E293B",
-    cellBg: "#F1F5F9",
-    border: "#334155",
-    borderSoft: "#CBD5E1",
-    accent: "#64748B",
-    aliveBar: "#38BDF8",
-    deadBar: "#EF4444",
-    textPrimary: "#0F172A",
-    panelFrom: "#F8FAFC",
-    panelTo: "#E2E8F0",
-    placeColor: "#334155",
-    elimColor: "#B45309",
-    totalColor: "#0F172A",
-    danger: "#EF4444",
-    warning: "#F59E0B",
-  }),
-  preset("cyberpunk", "Cyberpunk", "universal", {
-    headerFrom: "#BE185D",
-    headerTo: "#7C3AED",
-    rankFrom: "#831843",
-    rankTo: "#BE185D",
-    teamFrom: "#2E1065",
-    teamTo: "#6D28D9",
-    cellBg: "#FDF2F8",
-    border: "#9D174D",
-    borderSoft: "#FBCFE8",
-    accent: "#EC4899",
-    aliveBar: "#22D3EE",
-    deadBar: "#F43F5E",
-    textPrimary: "#1E1B4B",
-    panelFrom: "#FDF2F8",
-    panelTo: "#FAE8FF",
-    placeColor: "#BE185D",
-    elimColor: "#7C3AED",
-    totalColor: "#1E1B4B",
-    danger: "#DB2777",
-    warning: "#FACC15",
-  }),
-
-  // --------------------------------------------------------------------- PUBG
-  preset("battlegrounds", "Battlegrounds", "pubg", {
-    headerFrom: "#3F4A2A",
-    headerTo: "#5C6B3A",
-    rankFrom: "#2A3116",
-    rankTo: "#4A5A2A",
-    teamFrom: "#3A4522",
-    teamTo: "#556231",
-    cellBg: "#F4F6EC",
-    border: "#3F4A2A",
-    borderSoft: "#CBD5A8",
-    accent: "#A3B565",
-    aliveBar: "#9ACD32",
-    deadBar: "#B91C1C",
-    textPrimary: "#242B12",
-    panelFrom: "#F7F8F0",
-    panelTo: "#E9EDDA",
-    placeColor: "#4A5A2A",
-    elimColor: "#B45309",
-    totalColor: "#242B12",
-    danger: "#DC2626",
-    warning: "#CA8A04",
-    notificationFrom: "#F7F8F0",
-    notificationTo: "#E4E9CE",
-  }),
-  preset("spetsnaz", "Spetsnaz", "pubg", {
-    headerFrom: "#3F3F46",
-    headerTo: "#18181B",
-    rankFrom: "#7F1D1D",
-    rankTo: "#DC2626",
-    teamFrom: "#27272A",
-    teamTo: "#3F3F46",
-    cellBg: "#F4F4F5",
-    border: "#27272A",
-    borderSoft: "#D4D4D8",
-    accent: "#EF4444",
-    aliveBar: "#F87171",
-    deadBar: "#71717A",
-    textPrimary: "#18181B",
-    panelFrom: "#FAFAFA",
-    panelTo: "#E4E4E7",
-    placeColor: "#B91C1C",
-    elimColor: "#B45309",
-    totalColor: "#18181B",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-    notificationFrom: "#FAFAFA",
-    notificationTo: "#FEE2E2",
-  }),
-  preset("airdrop", "Airdrop", "pubg", {
-    headerFrom: "#1E3A8A",
-    headerTo: "#2563EB",
-    rankFrom: "#7F1D1D",
-    rankTo: "#DC2626",
-    teamFrom: "#1E40AF",
-    teamTo: "#2563EB",
-    cellBg: "#EFF6FF",
-    border: "#1E3A8A",
-    borderSoft: "#BFDBFE",
-    accent: "#60A5FA",
-    aliveBar: "#3B82F6",
-    deadBar: "#DC2626",
-    textPrimary: "#172554",
-    panelFrom: "#EFF6FF",
-    panelTo: "#DBEAFE",
-    placeColor: "#1D4ED8",
-    elimColor: "#DC2626",
-    totalColor: "#172554",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-    notificationFrom: "#EFF6FF",
-    notificationTo: "#DBEAFE",
-  }),
-  preset("desert-storm", "Desert Storm", "pubg", {
-    headerFrom: "#92400E",
-    headerTo: "#B45309",
-    rankFrom: "#78350F",
-    rankTo: "#A16207",
-    teamFrom: "#854D0E",
-    teamTo: "#A16207",
-    cellBg: "#FFFBEB",
-    border: "#854D0E",
-    borderSoft: "#FDE68A",
-    accent: "#D97706",
-    aliveBar: "#EAB308",
-    deadBar: "#B91C1C",
-    textPrimary: "#451A03",
-    panelFrom: "#FFFBEB",
-    panelTo: "#FEF3C7",
-    placeColor: "#A16207",
-    elimColor: "#9A3412",
-    totalColor: "#451A03",
-    danger: "#DC2626",
-    warning: "#EAB308",
-    notificationFrom: "#FFFBEB",
-    notificationTo: "#FEF3C7",
-  }),
-  preset("jungle", "Jungle", "pubg", {
-    headerFrom: "#065F46",
-    headerTo: "#047857",
-    rankFrom: "#064E3B",
-    rankTo: "#059669",
-    teamFrom: "#065F46",
-    teamTo: "#047857",
-    cellBg: "#ECFDF5",
-    border: "#065F46",
-    borderSoft: "#A7F3D0",
-    accent: "#34D399",
-    aliveBar: "#22C55E",
-    deadBar: "#DC2626",
-    textPrimary: "#022C22",
-    panelFrom: "#ECFDF5",
-    panelTo: "#D1FAE5",
-    placeColor: "#047857",
-    elimColor: "#B45309",
-    totalColor: "#022C22",
-    danger: "#DC2626",
-    warning: "#F59E0B",
-    notificationFrom: "#ECFDF5",
-    notificationTo: "#D1FAE5",
-  }),
-  preset("mastery", "Mastery", "pubg", {
-    headerFrom: "#1E2A4A",
-    headerTo: "#2E4372",
-    rankFrom: "#7C5A0B",
-    rankTo: "#B8860B",
-    teamFrom: "#243258",
-    teamTo: "#2E4372",
-    cellBg: "#F8FAFC",
-    border: "#1E2A4A",
-    borderSoft: "#CBD5E1",
-    accent: "#F5B301",
-    aliveBar: "#F5B301",
-    deadBar: "#DC2626",
-    textPrimary: "#0F172A",
-    panelFrom: "#F8FAFC",
-    panelTo: "#E2E8F0",
-    placeColor: "#2E4372",
-    elimColor: "#B8860B",
-    totalColor: "#0F172A",
-    danger: "#DC2626",
-    warning: "#F5B301",
-    notificationFrom: "#F8FAFC",
-    notificationTo: "#E2E8F0",
-  }),
-  preset("rondo", "Rondo", "pubg", {
-    headerFrom: "#0F766E",
-    headerTo: "#14B8A6",
-    rankFrom: "#134E4A",
-    rankTo: "#0D9488",
-    teamFrom: "#115E59",
-    teamTo: "#0F766E",
-    cellBg: "#F0FDFA",
-    border: "#115E59",
-    borderSoft: "#99F6E4",
-    accent: "#2DD4BF",
-    aliveBar: "#14B8A6",
-    deadBar: "#F43F5E",
-    textPrimary: "#042F2E",
-    panelFrom: "#F0FDFA",
-    panelTo: "#CCFBF1",
-    placeColor: "#0F766E",
-    elimColor: "#E11D48",
-    totalColor: "#042F2E",
-    danger: "#F43F5E",
-    warning: "#F59E0B",
-    notificationFrom: "#F0FDFA",
-    notificationTo: "#CCFBF1",
-  }),
-
-  // ----------------------------------------------------------------- Free Fire
-  preset("booyah", "Booyah", "freefire", {
-    headerFrom: "#EA580C",
-    headerTo: "#F59E0B",
-    rankFrom: "#9A3412",
-    rankTo: "#EA580C",
-    teamFrom: "#C2410C",
-    teamTo: "#EA580C",
-    cellBg: "#FFF7ED",
-    border: "#9A3412",
-    borderSoft: "#FED7AA",
-    accent: "#FACC15",
-    aliveBar: "#FACC15",
-    deadBar: "#DC2626",
-    textPrimary: "#431407",
-    panelFrom: "#FFF7ED",
-    panelTo: "#FFEDD5",
-    placeColor: "#C2410C",
-    elimColor: "#B91C1C",
-    totalColor: "#431407",
-    danger: "#DC2626",
-    warning: "#FACC15",
-    notificationFrom: "#FFF7ED",
-    notificationTo: "#FFEDD5",
-  }),
-  preset("firestorm", "Firestorm", "freefire", {
-    headerFrom: "#7F1D1D",
-    headerTo: "#DC2626",
-    rankFrom: "#450A0A",
-    rankTo: "#991B1B",
-    teamFrom: "#991B1B",
-    teamTo: "#DC2626",
-    cellBg: "#FEF2F2",
-    border: "#7F1D1D",
-    borderSoft: "#FECACA",
-    accent: "#F97316",
-    aliveBar: "#FB923C",
-    deadBar: "#450A0A",
-    textPrimary: "#450A0A",
-    panelFrom: "#FEF2F2",
-    panelTo: "#FEE2E2",
-    placeColor: "#B91C1C",
-    elimColor: "#EA580C",
-    totalColor: "#450A0A",
-    danger: "#EF4444",
-    warning: "#F97316",
-    notificationFrom: "#FEF2F2",
-    notificationTo: "#FEE2E2",
-  }),
-  preset("cobra", "Cobra", "freefire", {
-    headerFrom: "#4C1D95",
-    headerTo: "#7C3AED",
-    rankFrom: "#3B0764",
-    rankTo: "#6D28D9",
-    teamFrom: "#4C1D95",
-    teamTo: "#7C3AED",
-    cellBg: "#F5F3FF",
-    border: "#4C1D95",
-    borderSoft: "#DDD6FE",
-    accent: "#A3E635",
-    aliveBar: "#84CC16",
-    deadBar: "#F43F5E",
-    textPrimary: "#1E1B4B",
-    panelFrom: "#F5F3FF",
-    panelTo: "#EDE9FE",
-    placeColor: "#6D28D9",
-    elimColor: "#65A30D",
-    totalColor: "#1E1B4B",
-    danger: "#DB2777",
-    warning: "#A3E635",
-    notificationFrom: "#F5F3FF",
-    notificationTo: "#EDE9FE",
-  }),
-  preset("winterlands", "Winterlands", "freefire", {
-    headerFrom: "#0EA5E9",
-    headerTo: "#38BDF8",
-    rankFrom: "#0369A1",
-    rankTo: "#0EA5E9",
-    teamFrom: "#0284C7",
-    teamTo: "#0EA5E9",
-    cellBg: "#F0F9FF",
-    border: "#075985",
-    borderSoft: "#BAE6FD",
-    accent: "#7DD3FC",
-    aliveBar: "#38BDF8",
-    deadBar: "#818CF8",
-    textPrimary: "#0C4A6E",
-    panelFrom: "#F0F9FF",
-    panelTo: "#E0F2FE",
-    placeColor: "#0369A1",
-    elimColor: "#6366F1",
-    totalColor: "#0C4A6E",
-    danger: "#6366F1",
-    warning: "#F59E0B",
-    notificationFrom: "#F0F9FF",
-    notificationTo: "#E0F2FE",
-  }),
-  preset("nexterra", "Nexterra", "freefire", {
-    headerFrom: "#0F172A",
-    headerTo: "#1E293B",
-    rankFrom: "#0891B2",
-    rankTo: "#22D3EE",
-    teamFrom: "#111827",
-    teamTo: "#1F2937",
-    cellBg: "#ECFEFF",
-    border: "#0E7490",
-    borderSoft: "#A5F3FC",
-    accent: "#22D3EE",
-    aliveBar: "#22D3EE",
-    deadBar: "#EC4899",
-    textPrimary: "#083344",
-    panelFrom: "#ECFEFF",
-    panelTo: "#CFFAFE",
-    placeColor: "#0891B2",
-    elimColor: "#DB2777",
-    totalColor: "#083344",
-    danger: "#EC4899",
-    warning: "#F0ABFC",
-    notificationFrom: "#0F172A",
-    notificationTo: "#155E75",
-  }),
-  preset("alok", "Alok", "freefire", {
-    headerFrom: "#5B21B6",
-    headerTo: "#7C3AED",
-    rankFrom: "#0891B2",
-    rankTo: "#22D3EE",
-    teamFrom: "#4C1D95",
-    teamTo: "#6D28D9",
-    cellBg: "#F5F3FF",
-    border: "#5B21B6",
-    borderSoft: "#DDD6FE",
-    accent: "#22D3EE",
-    aliveBar: "#22D3EE",
-    deadBar: "#F43F5E",
-    textPrimary: "#2E1065",
-    panelFrom: "#F5F3FF",
-    panelTo: "#EDE9FE",
-    placeColor: "#6D28D9",
-    elimColor: "#0891B2",
-    totalColor: "#2E1065",
-    danger: "#DB2777",
-    warning: "#FACC15",
-    notificationFrom: "#F5F3FF",
-    notificationTo: "#EDE9FE",
-  }),
-  preset("lone-wolf", "Lone Wolf", "freefire", {
-    headerFrom: "#0F172A",
-    headerTo: "#1D4ED8",
-    rankFrom: "#1E3A8A",
-    rankTo: "#2563EB",
-    teamFrom: "#0F172A",
-    teamTo: "#1E293B",
-    cellBg: "#F1F5F9",
-    border: "#1E293B",
-    borderSoft: "#CBD5E1",
-    accent: "#3B82F6",
-    aliveBar: "#60A5FA",
-    deadBar: "#EF4444",
-    textPrimary: "#0F172A",
-    panelFrom: "#F8FAFC",
-    panelTo: "#E2E8F0",
-    placeColor: "#1D4ED8",
-    elimColor: "#B45309",
-    totalColor: "#0F172A",
-    danger: "#EF4444",
-    warning: "#F59E0B",
-    notificationFrom: "#F8FAFC",
-    notificationTo: "#E2E8F0",
-  }),
+  ...LEGACY_TABLE_PRESETS,
+  ...THEME_DEFS.map(themePreset),
 ];
+
+export function getTablePreset(id?: string | null): TablePreset {
+  return (
+    TABLE_PRESETS.find((item) => item.id === id) ??
+    TABLE_PRESETS.find((item) => item.id === DEFAULT_POINTS_TABLE.preset) ??
+    TABLE_PRESETS[0]
+  );
+}
 
 export function mergePointsTable(
   input?: Partial<PointsTableSettings> | null
@@ -1028,6 +951,7 @@ export function mergePointsTable(
     columns: { ...DEFAULT_POINTS_TABLE.columns, ...(input.columns ?? {}) },
     header: { ...DEFAULT_POINTS_TABLE.header, ...(input.header ?? {}) },
     layout: { ...DEFAULT_POINTS_TABLE.layout, ...(input.layout ?? {}) },
+    cards: { ...DEFAULT_POINTS_TABLE.cards, ...(input.cards ?? {}) },
     notifications: {
       ...DEFAULT_POINTS_TABLE.notifications,
       ...(input.notifications ?? {}),

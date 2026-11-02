@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { GiPodium, GiTrophy } from "react-icons/gi";
+import { useActiveRound } from "@/hooks/useActiveRound";
 import { notifyError, ToastContainer } from "@/utils/ToastifyNotification";
 
 interface Team {
@@ -25,10 +26,19 @@ interface PositionData {
 
 export default function PositionUpdater() {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [roundNumber, setRoundNumber] = useState<number>(1);
+  const [roundNumber, setRoundNumber] = useState<number>(0);
+  const [roundTouched, setRoundTouched] = useState(false);
   const [positions, setPositions] = useState<PositionData>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { activeRound } = useActiveRound();
+
+  // Default to the live round until the scorer types a different one.
+  useEffect(() => {
+    if (!roundTouched && activeRound > 0) {
+      setRoundNumber(activeRound);
+    }
+  }, [activeRound, roundTouched]);
 
   const fetchTeams = async () => {
     try {
@@ -90,6 +100,9 @@ export default function PositionUpdater() {
     }
   };
 
+  const statsForRound = (team: Team) =>
+    team.rounds.find((round) => round.roundNumber === roundNumber);
+
   return (
     <div className="min-h-screen bg-gray-900 p-4 md:p-8">
       <ToastContainer />
@@ -102,13 +115,22 @@ export default function PositionUpdater() {
           </h1>
         </div>
         <div className="font-bold text-red-500 animate-pulse text-lg sm:text-2xl">Please verify round number before updating position</div>
+        <p className="text-center text-sm text-gray-300">
+          Live round:{" "}
+          <span className="font-semibold text-green-400">
+            {activeRound ? `Round ${activeRound}` : "not set"}
+          </span>
+        </p>
 
         {/* Round Input */}
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
           <input
             type="number"
-            value={roundNumber}
-            onChange={(e) => setRoundNumber(parseInt(e.target.value))}
+            value={roundNumber || ""}
+            onChange={(e) => {
+              setRoundTouched(true);
+              setRoundNumber(parseInt(e.target.value) || 0);
+            }}
             className="bg-gray-800 text-white px-4 py-3 rounded-lg border-2 border-blue-500/50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 w-full sm:w-40 text-center text-lg"
             placeholder="Round Number"
             min="1"
@@ -166,8 +188,8 @@ export default function PositionUpdater() {
                     min="1"
                   />
                   <span className="text-xs md:text-sm text-gray-400">
-                    Current Round:{" "}
-                    {team.rounds.length > 0 ? ` ${team.currentRound}` : "-"}
+                    Round {roundNumber || "—"}:{" "}
+                    {statsForRound(team) ? "created" : "not created"}
                   </span>
                 </div>
 
@@ -175,16 +197,12 @@ export default function PositionUpdater() {
                   <div>
 
                   Points:{" "}
-                  {team.rounds.length > 0
-                    ? team.rounds[team.rounds.length - 1].positionPoints
-                    : "0"}
+                  {statsForRound(team)?.positionPoints ?? 0}
                     </div>
                   <div>
 
                  Kill Points:{" "}
-                  {team.rounds.length > 0
-                    ? team.rounds[team.rounds.length - 1].killPoints
-                    : "0"}
+                  {statsForRound(team)?.killPoints ?? 0}
                     </div>
                 </div>
               </div>

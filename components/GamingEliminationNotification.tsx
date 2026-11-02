@@ -227,7 +227,7 @@ export default function GamingEliminationNotification({
 
     const [next, ...rest] = notificationQueue;
     setCurrentNotification(next);
-    setNotificationQueue(rest);
+    setNotificationQueue(rest.length > 1 ? rest.slice(0,1) : rest);
 
     timerRef.current = setTimeout(() => {
       setCurrentNotification(null);
@@ -256,7 +256,7 @@ export default function GamingEliminationNotification({
           exit={{
             opacity: 0,
             x: "-100%",
-            transition: { duration: 0.4, ease: "easeIn" },
+            transition: { duration: 0.2, ease: "easeIn" },
           }}
           transition={{ type: "spring", stiffness: 110, damping: 15 }}
           className={inline ? "relative z-[100]" : "z-[100]"}

@@ -8,15 +8,16 @@ import { api } from "@/lib/api";
 import { useTournament } from "@/components/providers/TournamentProvider";
 import {
   AMBIENT_LABELS,
+  CARD_STYLE_LABELS,
   COLOR_FIELDS,
   DEFAULT_POINTS_TABLE,
   ENTRANCE_LABELS,
   FONT_FAMILIES,
-  GAME_LABELS,
   SURFACE_STYLE_LABELS,
   TABLE_PRESETS,
   TEMPLATE_LABELS,
   WATERMARK_CORNER_LABELS,
+  isEditorialTemplate,
   mergePointsTable,
   type AmbientEffect,
   type EntranceAnimation,
@@ -24,14 +25,26 @@ import {
   type LeaderboardSettings,
   type MatchSettings,
   type NotificationSettings,
+  type OverlayCardStyle,
   type OverlaySurface,
-  type OverlayTemplate,
   type OverlayTypography,
   type OverlayWatermark,
   type PointsTableColors,
   type PointsTableSettings,
+  type TablePreset,
 } from "@/lib/tableSettings";
+import type {
+  CountdownState,
+  LowerThirdState,
+  WinnerState,
+} from "@/types/broadcast";
 import AnimatedTeamTable from "@/components/TeamTable2";
+import EditorialPointsTable from "@/components/overlays/EditorialPointsTable";
+import {
+  EditorialCountdown,
+  EditorialLowerThird,
+  EditorialWinner,
+} from "@/components/overlays/EditorialPanels";
 import GamingEliminationNotification from "@/components/GamingEliminationNotification";
 import SplitLeaderboard from "@/components/Leaderboard";
 import MatchTable from "@/components/MatchTable";
@@ -41,14 +54,52 @@ import {
   ToastContainer,
 } from "@/utils/ToastifyNotification";
 
-type TabKey = "table" | "notification" | "leaderboard" | "match";
+type TabKey = "table" | "cards" | "notification" | "leaderboard" | "match";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "table", label: "Points Table" },
+  { key: "cards", label: "Cards" },
   { key: "notification", label: "Notification" },
   { key: "leaderboard", label: "Leaderboard" },
   { key: "match", label: "Match Table" },
 ];
+
+const CARD_KEYS: { key: keyof PointsTableSettings["cards"]; label: string }[] = [
+  { key: "lowerThird", label: "Lower Third" },
+  { key: "countdown", label: "Countdown" },
+  { key: "winner", label: "Winner Splash" },
+];
+
+const PREVIEW_LOWER_THIRD: LowerThirdState = {
+  visible: true,
+  title: "Grand Finals",
+  subtitle: "Match 3 - Erangel",
+  eventLogoUrl: "/placeholder.svg",
+  sponsorLogos: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+  mapName: "Erangel",
+  mapImageUrl: "/placeholder.svg",
+};
+
+const PREVIEW_COUNTDOWN: CountdownState = {
+  visible: true,
+  running: true,
+  title: "Starting in",
+  durationSeconds: 300,
+  remainingSeconds: 125,
+  endsAt: null,
+};
+
+const PREVIEW_WINNER: WinnerState = {
+  visible: true,
+  teamId: "p1",
+  title: "Champions",
+  subtitle: "Grand Finals MVP",
+  auto: false,
+  backgroundImageUrl: "",
+  playerImageUrl: "/placeholder.svg",
+  playerName: "MVP",
+  teamLogoUrl: "/placeholder.svg",
+};
 
 const PREVIEW_TEAMS = [
   { _id: "p1", name: "TEAM ALPHA", logo: "/placeholder.svg", slot: 1, currentRound: 1, totalPoints: 16, rounds: [{ roundNumber: 1, kills: 6, killPoints: 6, position: 1, positionPoints: 10, eliminationCount: 0, eliminatedPlayers: [], status: "alive" }] },
@@ -108,6 +159,13 @@ export default function SettingsPage() {
     }));
   };
 
+  const updateCard = (key: keyof PointsTableSettings["cards"], value: OverlayCardStyle) => {
+    setDraft((prev) => ({
+      ...prev,
+      cards: { ...prev.cards, [key]: value },
+    }));
+  };
+
   const updateNotification = (
     key: keyof NotificationSettings,
     value: boolean | number
@@ -157,30 +215,6 @@ export default function SettingsPage() {
 
   const updateLayoutNumber = (key: "gap", value: number) => {
     setDraft((prev) => ({ ...prev, layout: { ...prev.layout, [key]: value } }));
-  };
-
-  const setTemplate = (
-    section: "table" | "notification" | "leaderboard" | "match",
-    value: OverlayTemplate
-  ) => {
-    setDraft((prev) => {
-      if (section === "table") {
-        return { ...prev, layout: { ...prev.layout, template: value } };
-      }
-      if (section === "notification") {
-        return {
-          ...prev,
-          notifications: { ...prev.notifications, template: value },
-        };
-      }
-      if (section === "leaderboard") {
-        return {
-          ...prev,
-          leaderboard: { ...prev.leaderboard, template: value },
-        };
-      }
-      return { ...prev, match: { ...prev.match, template: value } };
-    });
   };
 
   const updatePosition = (
@@ -295,11 +329,24 @@ export default function SettingsPage() {
     </div>
   );
 
-  const applyPreset = (presetSettings: PointsTableSettings) => {
+  const applyPreset = (presetSettings: TablePreset) => {
+    const theme = presetSettings.pointsTable;
     setDraft((prev) => ({
       ...prev,
-      preset: presetSettings.preset,
-      colors: presetSettings.colors,
+      preset: theme.preset,
+      colors: theme.colors,
+      typography: theme.typography,
+      surface: theme.surface,
+      layout: {
+        ...prev.layout,
+        template: theme.layout.template,
+        width: theme.layout.width,
+        rowHeight: theme.layout.rowHeight,
+        fontScale: theme.layout.fontScale,
+        showTrophy: theme.layout.showTrophy,
+        gap: theme.layout.gap,
+      },
+      cards: theme.cards,
     }));
   };
 
@@ -412,29 +459,6 @@ export default function SettingsPage() {
         ))}
       </select>
     </label>
-  );
-
-  const templatePicker = (
-    current: OverlayTemplate,
-    onPick: (v: OverlayTemplate) => void
-  ) => (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {TEMPLATE_LABELS.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onPick(t.key)}
-          className={`rounded-lg border-2 px-3 py-2 text-left transition-all ${
-            current === t.key
-              ? "border-red-500 bg-red-600/20"
-              : "border-red-500/20 hover:bg-red-600/10"
-          }`}
-        >
-          <div className="text-sm font-semibold text-white">{t.label}</div>
-          <div className="text-[11px] text-gray-400">{t.blurb}</div>
-        </button>
-      ))}
-    </div>
   );
 
   const renderAppearanceSections = () => (
@@ -726,12 +750,50 @@ export default function SettingsPage() {
       return (
         <>
           <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-red-400">
+                Layout Design
+              </h2>
+              <p className="mt-1 text-xs text-gray-400">
+                All restored designs are available again. Any theme can be
+                combined with any structural design.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {TEMPLATE_LABELS.map((template) => {
+                const active = draft.layout.template === template.key;
+                return (
+                  <button
+                    key={template.key}
+                    type="button"
+                    onClick={() =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        layout: { ...prev.layout, template: template.key },
+                      }))
+                    }
+                    className={`rounded-lg border-2 px-3 py-2 text-left transition-all ${
+                      active
+                        ? "border-red-500 bg-red-600/25"
+                        : "border-red-500/20 hover:border-red-400/60 hover:bg-red-600/10"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold text-white">
+                      {template.label}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] leading-4 text-gray-400">
+                      {template.blurb}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
             <h2 className="text-lg font-semibold text-red-400">
-              Design Template
+              Table Spacing
             </h2>
-            {templatePicker(draft.layout.template, (v) =>
-              setTemplate("table", v)
-            )}
             {rangeRow(
               "Row gap",
               draft.layout.gap,
@@ -872,15 +934,58 @@ export default function SettingsPage() {
       );
     }
 
+    if (tab === "cards") {
+      return (
+        <>
+          <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-red-400">
+                Lower Third, Countdown & Winner Splash
+              </h2>
+              <p className="mt-1 text-xs text-gray-400">
+                Each card can use its own structural design. Colors,
+                typography and surface are shared with the main theme.
+              </p>
+            </div>
+            {CARD_KEYS.map((card) => (
+              <div key={card.key} className="space-y-2">
+                <p className="text-sm font-semibold text-gray-200">
+                  {card.label}
+                </p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {CARD_STYLE_LABELS.map((style) => {
+                    const active = draft.cards[card.key] === style.key;
+                    return (
+                      <button
+                        key={style.key}
+                        type="button"
+                        onClick={() => updateCard(card.key, style.key)}
+                        className={`rounded-lg border-2 px-3 py-2 text-left transition-all ${
+                          active
+                            ? "border-red-500 bg-red-600/25"
+                            : "border-red-500/20 hover:border-red-400/60 hover:bg-red-600/10"
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold text-white">
+                          {style.label}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] leading-4 text-gray-400">
+                          {style.blurb}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </section>
+        </>
+      );
+    }
+
     if (tab === "notification") {
       return (
         <>
-        <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
-          <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
-          {templatePicker(draft.notifications.template, (v) =>
-            setTemplate("notification", v)
-          )}
-        </section>
         <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
           <h2 className="text-lg font-semibold text-red-400 mb-1">
             Elimination Notification
@@ -977,12 +1082,6 @@ export default function SettingsPage() {
     if (tab === "leaderboard") {
       return (
         <>
-        <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
-          <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
-          {templatePicker(draft.leaderboard.template, (v) =>
-            setTemplate("leaderboard", v)
-          )}
-        </section>
         <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
           <h2 className="text-lg font-semibold text-red-400 mb-1">
             Leaderboard
@@ -1087,10 +1186,6 @@ export default function SettingsPage() {
 
     return (
       <>
-      <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-3">
-        <h2 className="text-lg font-semibold text-red-400">Design Template</h2>
-        {templatePicker(draft.match.template, (v) => setTemplate("match", v))}
-      </section>
       <section className="bg-gray-800/60 rounded-xl p-5 border-2 border-red-500/20 space-y-4">
         <h2 className="text-lg font-semibold text-red-400 mb-1">
           Match Table
@@ -1160,10 +1255,59 @@ export default function SettingsPage() {
             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
           }}
         >
-          <AnimatedTeamTable
-            key={`table-preview-${previewNonce}`}
-            previewSettings={draft}
-          />
+          {isEditorialTemplate(draft.layout.template) ? (
+            <EditorialPointsTable
+              key={`table-preview-${previewNonce}`}
+              previewSettings={draft}
+              previewTeams={PREVIEW_TEAMS as never}
+              fitToHeight={false}
+            />
+          ) : (
+            <AnimatedTeamTable
+              key={`table-preview-${previewNonce}`}
+              previewSettings={draft}
+            />
+          )}
+        </div>
+      );
+    }
+    if (tab === "cards") {
+      return (
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-xl border-2 border-red-500/30 bg-[#0B0D10] p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
+              Lower Third
+            </p>
+            <EditorialLowerThird
+              state={PREVIEW_LOWER_THIRD}
+              preview
+              previewSettings={draft}
+              variant={draft.cards.lowerThird}
+            />
+          </div>
+          <div className="overflow-hidden rounded-xl border-2 border-red-500/30 bg-[#0B0D10] p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
+              Countdown
+            </p>
+            <EditorialCountdown
+              state={PREVIEW_COUNTDOWN}
+              preview
+              previewSettings={draft}
+              variant={draft.cards.countdown}
+            />
+          </div>
+          <div className="overflow-hidden rounded-xl border-2 border-red-500/30 bg-[#0B0D10] p-4">
+            <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-gray-400">
+              Winner Splash
+            </p>
+            <EditorialWinner
+              winner={PREVIEW_WINNER}
+              team={PREVIEW_TEAMS[0] as never}
+              preview
+              previewSettings={draft}
+              variant={draft.cards.winner}
+            />
+          </div>
         </div>
       );
     }
@@ -1253,43 +1397,71 @@ export default function SettingsPage() {
                     Preset Themes
                   </h2>
                   <p className="mb-3 text-xs text-gray-400">
-                    Pick a game to filter matching table designs, then fine-tune
-                    the colors below.
+                    {TABLE_PRESETS.length} overlay themes, including every
+                    original preset. One click changes the layout design,
+                    palette, typography, surface, motion and pattern
+                    everywhere.
                   </p>
-                  {GAME_LABELS.map((group) => {
-                    const presets = TABLE_PRESETS.filter(
-                      (p) => p.game === group.key
-                    );
-                    if (presets.length === 0) return null;
-                    return (
-                      <div key={group.key} className="mb-4 last:mb-0">
-                        <div className="mb-2 flex items-baseline gap-2">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-red-300">
-                            {group.label}
-                          </h3>
-                          <span className="text-[11px] text-gray-500">
-                            {group.blurb}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {presets.map((preset) => (
-                            <button
-                              key={preset.id}
-                              type="button"
-                              onClick={() => applyPreset(preset.pointsTable)}
-                              className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                                draft.preset === preset.id
-                                  ? "border-red-500 bg-red-600/40 text-white"
-                                  : "border-red-500/30 text-gray-200 hover:bg-red-600/30"
-                              }`}
-                            >
-                              {preset.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="grid max-h-[620px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                    {TABLE_PRESETS.map((preset) => {
+                      const colors = preset.pointsTable.colors;
+                      const active = draft.preset === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => applyPreset(preset)}
+                          className={`rounded-lg border-2 p-3 text-left transition-all ${
+                            active
+                              ? "border-red-500 bg-red-600/25"
+                              : "border-red-500/20 hover:border-red-400/60 hover:bg-red-600/10"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="h-9 w-9 shrink-0 border"
+                              style={{
+                                background: `linear-gradient(135deg, ${colors.panelFrom}, ${colors.panelTo})`,
+                                borderColor: colors.accent,
+                                boxShadow: active
+                                  ? `0 0 14px ${colors.accent}66`
+                                  : undefined,
+                              }}
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-white">
+                                {preset.label}
+                              </span>
+                              <span className="block truncate text-[10px] text-gray-400">
+                                {preset.tagline}
+                              </span>
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-1.5">
+                            {[
+                              colors.accent,
+                              colors.panelFrom,
+                              colors.textPrimary,
+                              colors.aliveBar,
+                            ].map((color, index) => (
+                              <span
+                                key={`${preset.id}-${index}`}
+                                className="h-2 flex-1"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                          <div className="mt-1.5 flex items-center justify-between gap-2 text-[8px] font-bold uppercase tracking-[0.16em] text-gray-500">
+                            <span>{preset.motion}</span>
+                            <span className="truncate text-gray-400">
+                              {preset.pointsTable.layout.template}
+                            </span>
+                            <span>{preset.pattern}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </section>
 
                 {renderControls()}

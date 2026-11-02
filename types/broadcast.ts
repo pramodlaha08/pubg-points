@@ -2,12 +2,17 @@ export interface BroadcastOverlays {
   pointsTable: boolean;
   leaderboard: boolean;
   killFeed: boolean;
+  notification: boolean;
 }
 
 export interface LowerThirdState {
   visible: boolean;
   title: string;
   subtitle: string;
+  eventLogoUrl: string;
+  sponsorLogos: string[];
+  mapName: string;
+  mapImageUrl: string;
 }
 
 export interface CountdownState {
@@ -24,7 +29,32 @@ export interface WinnerState {
   teamId: string | null;
   title: string;
   subtitle: string;
+  auto?: boolean;
+  backgroundImageUrl: string;
+  playerImageUrl: string;
+  playerName: string;
+  teamLogoUrl: string;
 }
+
+export interface BroadcastLayoutEntry {
+  x: number;
+  y: number;
+  width: number;
+  scale: number;
+}
+
+export type BroadcastLayoutKey =
+  | "pointsTable"
+  | "killFeed"
+  | "notification"
+  | "lowerThird"
+  | "countdown"
+  | "winner";
+
+export type BroadcastLayout = Record<
+  BroadcastLayoutKey,
+  BroadcastLayoutEntry
+>;
 
 export interface BroadcastState {
   tournamentId: string;
@@ -33,4 +63,5 @@ export interface BroadcastState {
   lowerThird: LowerThirdState;
   countdown: CountdownState;
   winner: WinnerState;
+  layout: BroadcastLayout;
 }
