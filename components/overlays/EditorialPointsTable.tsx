@@ -205,25 +205,25 @@ export default function EditorialPointsTable({
 
   const title = header.title || "Points Table";
   const wideWidth = Math.max(panelWidth, 660);
-  const statItems = (team: Team) => {
-    const items: { label: string; value: ReactNode }[] = [];
-    if (columns.alive) items.push({ label: "Alive", value: alivePips(team) });
-    if (columns.place) {
-      items.push({
-        label: "Place",
-        value: previousRoundPosition(team),
-      });
-    }
-    if (columns.pts) items.push({ label: "Pts", value: totalPointsFromRounds(team) });
-    if (columns.elims) items.push({ label: "Elims", value: currentElimPoints(team) });
-    return items;
-  };
+const statItems = (team: Team) => {
+      const items: { label: string; value: ReactNode }[] = [];
+      if (columns.alive) items.push({ label: "Alive", value: alivePips(team) });
+      if (columns.place) {
+        items.push({
+          label: "Place",
+          value: previousRoundPosition(team),
+        });
+      }
+      if (columns.elims) items.push({ label: "Elims", value: currentElimPoints(team) });
+      if (columns.pts) items.push({ label: "Pts", value: totalPointsFromRounds(team) });
+      return items;
+    };
 
   const statLabels = [
     columns.alive ? "Alive" : null,
     columns.place ? "Place" : null,
-    columns.pts ? "Pts" : null,
     columns.elims ? "Elims" : null,
+    columns.pts ? "Pts" : null,
   ].filter((label): label is string => Boolean(label));
 
   const rankBadge = (index: number, size = "md") => {
