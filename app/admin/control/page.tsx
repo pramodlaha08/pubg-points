@@ -22,6 +22,9 @@ import {
 import { api, getApiTournamentId } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useBroadcast } from "@/hooks/useBroadcast";
+import OverlayLayoutEditor from "@/components/admin/OverlayLayoutEditor";
+import { cloneLayout, DEFAULT_BROADCAST_LAYOUT } from "@/lib/broadcastLayout";
+import type { BroadcastLayout, BroadcastLayoutKey } from "@/types/broadcast";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,12 +62,31 @@ export default function ControlRoomPage() {
 
   const [lowerTitle, setLowerTitle] = useState("");
   const [lowerSubtitle, setLowerSubtitle] = useState("");
+  const [lowerEventLogo, setLowerEventLogo] = useState("");
+  const [lowerSponsorLogos, setLowerSponsorLogos] = useState<string[]>([
+    "",
+    "",
+    "",
+  ]);
+  const [lowerMapName, setLowerMapName] = useState("");
+  const [lowerMapImage, setLowerMapImage] = useState("");
   const [countdownTitle, setCountdownTitle] = useState("Starting in");
   const [countdownMinutes, setCountdownMinutes] = useState("5");
   const [winnerTeamId, setWinnerTeamId] = useState("");
   const [winnerTitle, setWinnerTitle] = useState("CHAMPIONS");
   const [winnerSubtitle, setWinnerSubtitle] = useState("");
+  const [winnerBackground, setWinnerBackground] = useState("");
+  const [winnerPlayerImage, setWinnerPlayerImage] = useState("");
+  const [winnerPlayerName, setWinnerPlayerName] = useState("");
+  const [winnerTeamLogo, setWinnerTeamLogo] = useState("");
   const [teams, setTeams] = useState<{ _id: string; name: string }[]>([]);
+  const [layoutDraft, setLayoutDraft] = useState<BroadcastLayout>(() =>
+    cloneLayout()
+  );
+  const [layoutDirty, setLayoutDirty] = useState(false);
+  const [layoutSaving, setLayoutSaving] = useState(false);
+  const [selectedBlock, setSelectedBlock] =
+    useState<BroadcastLayoutKey>("pointsTable");
 
   const [now, setNow] = useState(() => Date.now());
   const hydratedFor = useRef<string | null>(null);
@@ -87,6 +109,15 @@ export default function ControlRoomPage() {
     hydratedFor.current = broadcast.tournamentId;
     setLowerTitle(broadcast.lowerThird.title);
     setLowerSubtitle(broadcast.lowerThird.subtitle);
+    setLowerEventLogo(broadcast.lowerThird.eventLogoUrl || "");
+    setLowerSponsorLogos([
+      ...(broadcast.lowerThird.sponsorLogos || []).slice(0, 3),
+      "",
+      "",
+      "",
+    ].slice(0, 3));
+    setLowerMapName(broadcast.lowerThird.mapName || "");
+    setLowerMapImage(broadcast.lowerThird.mapImageUrl || "");
     setCountdownTitle(broadcast.countdown.title);
     setCountdownMinutes(
       String(Math.max(1, Math.round(broadcast.countdown.durationSeconds / 60)))
@@ -94,6 +125,12 @@ export default function ControlRoomPage() {
     setWinnerTeamId(broadcast.winner.teamId ?? "");
     setWinnerTitle(broadcast.winner.title || "CHAMPIONS");
     setWinnerSubtitle(broadcast.winner.subtitle || "");
+    setWinnerBackground(broadcast.winner.backgroundImageUrl || "");
+    setWinnerPlayerImage(broadcast.winner.playerImageUrl || "");
+    setWinnerPlayerName(broadcast.winner.playerName || "");
+    setWinnerTeamLogo(broadcast.winner.teamLogoUrl || "");
+    setLayoutDraft(cloneLayout(broadcast.layout));
+    setLayoutDirty(false);
   }, [broadcast]);
 
   useEffect(() => {
@@ -151,6 +188,20 @@ export default function ControlRoomPage() {
     }
   };
 
+  const saveLayout = async () => {
+    setLayoutSaving(true);
+    try {
+      await api.patch("/broadcast", { layout: layoutDraft });
+      await refresh();
+      setLayoutDirty(false);
+      notifySuccess("Overlay layout saved");
+    } catch (error) {
+      notifyError(errorMessage(error, "Could not save the overlay layout"));
+    } finally {
+      setLayoutSaving(false);
+    }
+  };
+
   const overlays = broadcast?.overlays;
   const lowerThird = broadcast?.lowerThird;
   const countdown = broadcast?.countdown;
@@ -175,6 +226,12 @@ export default function ControlRoomPage() {
           title: lowerTitle.trim(),
           subtitle: lowerSubtitle.trim(),
           visible: true,
+          eventLogoUrl: lowerEventLogo.trim(),
+          sponsorLogos: lowerSponsorLogos
+            .map((logo) => logo.trim())
+            .filter(Boolean),
+          mapName: lowerMapName.trim(),
+          mapImageUrl: lowerMapImage.trim(),
         },
       },
       "Lower third is live"
@@ -205,6 +262,10 @@ export default function ControlRoomPage() {
           teamId: winnerTeamId,
           title: winnerTitle.trim() || "CHAMPIONS",
           subtitle: winnerSubtitle.trim(),
+          backgroundImageUrl: winnerBackground.trim(),
+          playerImageUrl: winnerPlayerImage.trim(),
+          playerName: winnerPlayerName.trim(),
+          teamLogoUrl: winnerTeamLogo.trim(),
         },
       },
       "Winner splash is live"
@@ -214,7 +275,7 @@ export default function ControlRoomPage() {
   if (!ready || !canScore) {
     return (
       <div className="py-20 text-center text-sm text-[var(--adm-muted)]">
-        Checking permissions…
+        Checking permissions...
       </div>
     );
   }
@@ -222,27 +283,66 @@ export default function ControlRoomPage() {
   const overlayScenes = [
     {
       key: "pointsTable" as const,
-      name: "Points Table",
-      description: "Live standings panel for the OBS overlay",
+      name: "Editorial OBS Overlay",
+      description: "One editorial source for the table, feed, lower third, countdown and winner",
       path: "/pointstable",
       icon: ListOrdered,
       visible: overlays?.pointsTable !== false,
+      toggle: true,
     },
     {
       key: "leaderboard" as const,
       name: "Leaderboard",
-      description: "Full-screen standings with leader spotlight",
+      description: "Optional full-screen standings with leader spotlight",
       path: "/leaderboard",
       icon: Trophy,
       visible: overlays?.leaderboard !== false,
+      toggle: true,
     },
     {
       key: "killFeed" as const,
-      name: "Kill Feed",
-      description: "Recent eliminations sliding in from the right",
-      path: "/overlay/kill-feed",
+      name: "Kill Feed Layer",
+      description: "Recent eliminations inside the unified overlay",
+      path: "/pointstable",
       icon: Skull,
       visible: overlays?.killFeed !== false,
+      toggle: true,
+    },
+    {
+      key: "notification" as const,
+      name: "Elimination Notification",
+      description: "Drag-to-place team elimination card inside the overlay",
+      path: "/pointstable",
+      icon: Skull,
+      visible: overlays?.notification !== false,
+      toggle: true,
+    },
+    {
+      key: "lowerThird" as const,
+      name: "Lower Third",
+      description: "Standalone event, sponsor and map branded lower third",
+      path: "/overlay/lower-third",
+      icon: Type,
+      visible: Boolean(lowerThird?.visible),
+      toggle: false,
+    },
+    {
+      key: "countdown" as const,
+      name: "Countdown",
+      description: "Standalone match countdown scene",
+      path: "/overlay/countdown",
+      icon: Timer,
+      visible: Boolean(countdown?.visible),
+      toggle: false,
+    },
+    {
+      key: "winner" as const,
+      name: "Winner Splash",
+      description: "Standalone editable champion takeover scene",
+      path: "/overlay/winner",
+      icon: Crown,
+      visible: Boolean(winner?.visible),
+      toggle: false,
     },
   ];
 
@@ -289,23 +389,25 @@ export default function ControlRoomPage() {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant={scene.visible ? "outline" : "default"}
-                      disabled={saving}
-                      onClick={() =>
-                        patch({
-                          overlays: { [scene.key]: !scene.visible },
-                        })
-                      }
-                    >
-                      {scene.visible ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                      {scene.visible ? "Hide" : "Show"}
-                    </Button>
+                    {scene.toggle ? (
+                      <Button
+                        size="sm"
+                        variant={scene.visible ? "outline" : "default"}
+                        disabled={saving}
+                        onClick={() =>
+                          patch({
+                            overlays: { [scene.key]: !scene.visible },
+                          })
+                        }
+                      >
+                        {scene.visible ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                        {scene.visible ? "Hide" : "Show"}
+                      </Button>
+                    ) : null}
                     <a href={sceneUrl(scene.path)} target="_blank" rel="noreferrer">
                       <Button size="sm" variant="ghost">
                         <ExternalLink className="h-4 w-4" />
@@ -328,6 +430,57 @@ export default function ControlRoomPage() {
         </div>
       </div>
 
+      <Card>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-[var(--adm-fg)]">
+                  Overlay Layout Studio
+                </p>
+                <Badge variant={layoutDirty ? "warning" : "muted"}>
+                  {layoutDirty ? "UNSAVED" : "SAVED"}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-[var(--adm-muted)]">
+                Every block lives on the same OBS overlay. Drag it where you
+                want, then save - no fixed slots.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setLayoutDraft(cloneLayout(DEFAULT_BROADCAST_LAYOUT));
+                setLayoutDirty(true);
+              }}
+            >
+              <RotateCcw className="h-4 w-4" />
+              Default everything
+            </Button>
+          </div>
+          {broadcast ? (
+            <OverlayLayoutEditor
+              broadcast={broadcast}
+              layout={layoutDraft}
+              selectedKey={selectedBlock}
+              dirty={layoutDirty}
+              saving={layoutSaving}
+              onSelect={setSelectedBlock}
+              onChange={(next) => {
+                setLayoutDraft(next);
+                setLayoutDirty(true);
+              }}
+              onSave={saveLayout}
+              onReset={() => {
+                setLayoutDraft(cloneLayout(DEFAULT_BROADCAST_LAYOUT));
+                setLayoutDirty(true);
+              }}
+            />
+          ) : null}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardContent className="space-y-4">
@@ -348,7 +501,7 @@ export default function ControlRoomPage() {
                 value={lowerTitle}
                 maxLength={80}
                 onChange={(event) => setLowerTitle(event.target.value)}
-                placeholder="e.g. Match 3 — Erangel"
+                placeholder="e.g. Match 3 - Erangel"
               />
               <label className="block text-xs font-medium text-[var(--adm-muted)]">
                 Subtitle
@@ -359,6 +512,60 @@ export default function ControlRoomPage() {
                 onChange={(event) => setLowerSubtitle(event.target.value)}
                 placeholder="e.g. Presented by PMWC"
               />
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Event logo URL
+              </label>
+              <Input
+                value={lowerEventLogo}
+                maxLength={1000}
+                onChange={(event) => setLowerEventLogo(event.target.value)}
+                placeholder="https://.../event-logo.png"
+              />
+              <div className="grid gap-2 sm:grid-cols-3">
+                {lowerSponsorLogos.map((logo, index) => (
+                  <div key={index}>
+                    <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                      Sponsor {index + 1}
+                    </label>
+                    <Input
+                      value={logo}
+                      maxLength={1000}
+                      onChange={(event) =>
+                        setLowerSponsorLogos((current) =>
+                          current.map((value, slot) =>
+                            slot === index ? event.target.value : value
+                          )
+                        )
+                      }
+                      placeholder="Logo URL"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                    Map name
+                  </label>
+                  <Input
+                    value={lowerMapName}
+                    maxLength={60}
+                    onChange={(event) => setLowerMapName(event.target.value)}
+                    placeholder="e.g. Erangel"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                    Map image URL
+                  </label>
+                  <Input
+                    value={lowerMapImage}
+                    maxLength={1000}
+                    onChange={(event) => setLowerMapImage(event.target.value)}
+                    placeholder="https://.../map.png"
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" disabled={saving} onClick={applyLowerThird}>
@@ -537,10 +744,18 @@ export default function ControlRoomPage() {
                   Winner Splash
                 </p>
               </div>
-              <Badge variant={winner?.visible ? "success" : "muted"}>
-                {winner?.visible ? "ON AIR" : "OFF"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {winner?.auto ? <Badge variant="warning">AUTO</Badge> : null}
+                <Badge variant={winner?.visible ? "success" : "muted"}>
+                  {winner?.visible ? "ON AIR" : "OFF"}
+                </Badge>
+              </div>
             </div>
+
+            <p className="text-xs text-[var(--adm-muted)]">
+              The last surviving team shows automatically. Picking a team here
+              takes manual control, so the auto splash stops changing it.
+            </p>
 
             <div className="space-y-2">
               <label className="block text-xs font-medium text-[var(--adm-muted)]">
@@ -551,7 +766,7 @@ export default function ControlRoomPage() {
                 onChange={(event) => setWinnerTeamId(event.target.value)}
                 className="h-10 w-full rounded-lg border border-[var(--adm-border)] bg-[var(--adm-surface)] px-3 text-sm text-[var(--adm-fg)] focus:outline-none focus:ring-2 focus:ring-[var(--adm-ring)]"
               >
-                <option value="">Select a team…</option>
+                <option value="">Select a team...</option>
                 {teams.map((team) => (
                   <option key={team._id} value={team._id}>
                     {team.name}
@@ -576,6 +791,48 @@ export default function ControlRoomPage() {
                 onChange={(event) => setWinnerSubtitle(event.target.value)}
                 placeholder="e.g. PMWC 2026 Grand Final"
               />
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Background image URL
+              </label>
+              <Input
+                value={winnerBackground}
+                maxLength={1000}
+                onChange={(event) => setWinnerBackground(event.target.value)}
+                placeholder="https://.../winner-background.jpg"
+              />
+              <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                Team logo override URL
+              </label>
+              <Input
+                value={winnerTeamLogo}
+                maxLength={1000}
+                onChange={(event) => setWinnerTeamLogo(event.target.value)}
+                placeholder="Leave empty to use the team logo"
+              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                    Player / MVP name
+                  </label>
+                  <Input
+                    value={winnerPlayerName}
+                    maxLength={60}
+                    onChange={(event) => setWinnerPlayerName(event.target.value)}
+                    placeholder="e.g. MVP player"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--adm-muted)]">
+                    Player image URL
+                  </label>
+                  <Input
+                    value={winnerPlayerImage}
+                    maxLength={1000}
+                    onChange={(event) => setWinnerPlayerImage(event.target.value)}
+                    placeholder="https://.../player.png"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -618,8 +875,11 @@ export default function ControlRoomPage() {
       </div>
 
       <p className="text-xs text-[var(--adm-muted)]">
-        Add each URL as an OBS Browser Source at 1920×1080. Keep the source loaded
-        and use the toggles here to show or hide it instantly.
+        Use one OBS Browser Source at 1920x1080 pointing at
+        <span className="mx-1 font-semibold text-[var(--adm-fg)]">
+          /pointstable
+        </span>
+        for the full package. The leaderboard remains an optional extra source.
       </p>
     </div>
   );

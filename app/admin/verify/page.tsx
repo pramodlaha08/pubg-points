@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { isAxiosError } from "axios";
 import { Image as ImageIcon, RefreshCw, ScanText, Upload } from "lucide-react";
 import { api } from "@/lib/api";
 import { useTournament } from "@/components/providers/TournamentProvider";
+import { useActiveRound } from "@/hooks/useActiveRound";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,15 @@ export default function AutoScoringPage() {
   // Position-first events hide every kill control; only placement is scored.
   const trackKills = activeTournament?.scoring?.trackKills ?? false;
   const [roundNumber, setRoundNumber] = useState("1");
+  const [roundTouched, setRoundTouched] = useState(false);
+  const { activeRound } = useActiveRound();
+
+  // Start on the live round unless the scorer already picked another one.
+  useEffect(() => {
+    if (!roundTouched && activeRound > 0) {
+      setRoundNumber(String(activeRound));
+    }
+  }, [activeRound, roundTouched]);
 
   const [resultBusy, setResultBusy] = useState(false);
   const [resultHash, setResultHash] = useState("");
@@ -275,8 +285,14 @@ export default function AutoScoringPage() {
               type="number"
               min={1}
               value={roundNumber}
-              onChange={(event) => setRoundNumber(event.target.value)}
+              onChange={(event) => {
+                setRoundTouched(true);
+                setRoundNumber(event.target.value);
+              }}
             />
+            <p className="mt-1 text-[11px] text-[var(--adm-muted)]">
+              Live round: {activeRound ? `R${activeRound}` : "not set"}
+            </p>
           </div>
           <p className="mr-auto text-xs text-[var(--adm-muted)]">
             Verified results are stored per round. Pick the round before

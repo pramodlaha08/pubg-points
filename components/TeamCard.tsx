@@ -27,6 +27,7 @@ interface Team {
 
 interface TeamCardProps {
   readonly team: Team;
+  readonly activeRound?: number;
   readonly updateKills: (teamId: string, action: "add" | "decrease") => Promise<void>;
   readonly handleElimination: (teamId: string, playerIndex: number) => Promise<void>;
   readonly isRoundInfoExpanded: boolean;
@@ -35,24 +36,33 @@ interface TeamCardProps {
 
 export default function TeamCard({
   team,
+  activeRound,
   updateKills,
   handleElimination,
   isRoundInfoExpanded,
   toggleRoundInfo,
 }: TeamCardProps) {
+  // Score the round the scorer selected in the control bar. Older callers that
+  // don't pass one keep using the team's latest round.
+  const displayRound =
+    activeRound && activeRound > 0 ? activeRound : team.currentRound;
+
   const currentRound = team.rounds.find(
-    (r) => r.roundNumber === team.currentRound
+    (r) => r.roundNumber === displayRound
   );
 
   const { mapByRound } = useRoundInfo();
-  const currentMap = mapByRound[team.currentRound];
+  const currentMap = mapByRound[displayRound];
 
-  const isKillButtonsDisabled = currentRound?.eliminationCount === SQUAD_CONFIG.fullEliminationCount;
+  const isOut =
+    (currentRound?.eliminationCount ?? 0) ===
+    SQUAD_CONFIG.fullEliminationCount;
+  const isKillButtonsDisabled = !currentRound || isOut;
 
   return (
     <div
       className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-[clamp(0.5rem,4cqi,1.5rem)] border-2 transition-all duration-300 shadow-2xl relative overflow-hidden [container-type:inline-size] ${
-        team.isEliminated
+        isOut
           ? "border-gray-700 opacity-60 grayscale hover:opacity-80"
           : "border-red-500/30 hover:border-red-500/50 hover:shadow-red-500/20"
       }`}
@@ -68,7 +78,7 @@ export default function TeamCard({
             </span>
             <GiDeathSkull className="shrink-0 text-[clamp(0.9rem,6cqi,1.875rem)]" />
             <span className="min-w-0 break-words">{team.name}</span>
-            {team.isEliminated && (
+            {isOut && (
               <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[0.5rem] font-bold tracking-wide text-white">
                 OUT
               </span>
@@ -91,7 +101,8 @@ export default function TeamCard({
             <button
               key={playerIndex}
               onClick={() => handleElimination(team._id, playerIndex)}
-              className={`h-[clamp(2.25rem,5cqi,3rem)] w-[clamp(2.25rem,5cqi,3rem)] rounded-[clamp(0.25rem,1.5cqi,0.75rem)] text-[clamp(0.6rem,3cqi,0.875rem)] font-bold text-white transition-all duration-200 ${
+              disabled={!currentRound}
+              className={`h-[clamp(2.25rem,5cqi,3rem)] w-[clamp(2.25rem,5cqi,3rem)] rounded-[clamp(0.25rem,1.5cqi,0.75rem)] text-[clamp(0.6rem,3cqi,0.875rem)] font-bold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
                 currentRound?.eliminatedPlayers?.includes(playerIndex)
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-green-600 hover:bg-green-700"
@@ -135,6 +146,11 @@ export default function TeamCard({
         >
           <Flame className="h-[clamp(0.7rem,4cqi,1.25rem)] w-[clamp(0.7rem,4cqi,1.25rem)] shrink-0" />
           <span>Round Info</span>
+          {!currentRound && (
+            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[0.55rem] font-semibold text-amber-300">
+              R{displayRound} not created
+            </span>
+          )}
           {isRoundInfoExpanded ? (
             <ChevronUp className="h-[clamp(0.6rem,3.5cqi,1rem)] w-[clamp(0.6rem,3.5cqi,1rem)] shrink-0" />
           ) : (
@@ -151,7 +167,7 @@ export default function TeamCard({
       >
         <div className="flex justify-between gap-2">
           <div className="min-w-0 break-words text-gray-400">
-            <p>Current Round: {team.currentRound}</p>
+            <p>Active Round: {displayRound}</p>
             <p>Map: {currentMap || "—"}</p>
             <p>
               Eliminations: {currentRound?.eliminationCount ?? 0}/

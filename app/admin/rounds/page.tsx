@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { PUBG_MAPS } from "@/lib/maps";
 import type { RoundInfo } from "@/types/roundInfo";
+import { useActiveRound } from "@/hooks/useActiveRound";
 import {ToastContainer, notifyError, notifySuccess} from "@/utils/ToastifyNotification"
 
 interface Team {
@@ -47,6 +48,12 @@ export default function RoundManager() {
   const [loadingDelete, setLoadingDelete] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loadingActive, setLoadingActive] = useState(false);
+  const {
+    activeRound,
+    setActiveRound,
+    refresh: refreshActiveRound,
+  } = useActiveRound();
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -159,6 +166,22 @@ export default function RoundManager() {
     }
   };
 
+  const handleSetActiveRound = async (targetRound: number) => {
+    setLoadingActive(true);
+    setError("");
+    try {
+      await setActiveRound(targetRound);
+      notifySuccess(`Round ${targetRound} is now the live scoring round.`);
+      setSuccess(`Round ${targetRound} is now the live scoring round.`);
+      setTimeout(() => setSuccess(""), 5000);
+    } catch {
+      setError("Failed to set the active round");
+      notifyError("Failed to set the active round.");
+    } finally {
+      setLoadingActive(false);
+    }
+  };
+
   // Save the map name for the selected round
   const handleSaveMap = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,7 +223,7 @@ export default function RoundManager() {
       });
       setSuccess(`Round ${roundNumber} created successfully!`);
       notifySuccess(`Round ${roundNumber} created successfully!`);
-      await refresh();
+      await Promise.all([refresh(), refreshActiveRound()]);
       setSelectedSlots([]);
       setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
@@ -233,7 +256,7 @@ export default function RoundManager() {
       });
       setSuccess(`Round ${roundNumber} deleted successfully!`);
       notifySuccess(`Round ${roundNumber} deleted successfully!`);
-      await refresh();
+      await Promise.all([refresh(), refreshActiveRound()]);
       setSelectedSlots([]);
       setTimeout(() => setSuccess(""), 5000);
     } catch {
@@ -275,10 +298,10 @@ export default function RoundManager() {
             </div>
             <div className="bg-gray-700/50 rounded-lg p-4 text-center">
               <p className="text-2xl font-bold text-green-400">
-                {currentRound ? `R${currentRound}` : "—"}
+                {activeRound ? `R${activeRound}` : "—"}
               </p>
               <p className="text-xs text-gray-400 uppercase tracking-wide">
-                Current Round
+                Active Round
               </p>
             </div>
           </div>
@@ -360,7 +383,8 @@ export default function RoundManager() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl text-red-400">Rounds Overview</h2>
               <span className="text-sm text-gray-400">
-                {roundsOverview.length} round(s) • Current:{" "}
+                {roundsOverview.length} round(s) • Active:{" "}
+                {activeRound ? `R${activeRound}` : "—"} • Latest:{" "}
                 {currentRound ? `R${currentRound}` : "—"}
               </span>
             </div>
@@ -369,31 +393,41 @@ export default function RoundManager() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {roundsOverview.map((round) => {
-                  const isCurrent = round.roundNumber === currentRound;
+                  const isActive = round.roundNumber === activeRound;
+                  const isLatest = round.roundNumber === currentRound;
                   const isSelected = round.roundNumber === selectedRound;
                   return (
-                    <button
+                    <div
                       key={round.roundNumber}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setRoundNumber(String(round.roundNumber))}
-                      className={`text-left p-3 rounded-lg border-2 transition-all ${
-                        isCurrent
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setRoundNumber(String(round.roundNumber));
+                        }
+                      }}
+                      className={`text-left p-3 rounded-lg border-2 transition-all cursor-pointer ${
+                        isActive
                           ? "border-green-500 bg-green-500/10"
                           : "border-gray-700 hover:border-red-500/40"
                       } ${isSelected ? "ring-2 ring-red-500" : ""}`}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="text-white font-bold">
                           R{round.roundNumber}
                         </span>
                         <span
                           className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                            isCurrent
+                            isActive
                               ? "bg-green-500/20 text-green-300"
-                              : "bg-gray-600/50 text-gray-300"
+                              : isLatest
+                                ? "bg-blue-500/20 text-blue-300"
+                                : "bg-gray-600/50 text-gray-300"
                           }`}
                         >
-                          {isCurrent ? "CURRENT" : "CREATED"}
+                          {isActive ? "ACTIVE" : isLatest ? "LATEST" : "CREATED"}
                         </span>
                       </div>
                       <p className="text-gray-300 text-sm mt-1 truncate">
@@ -412,7 +446,22 @@ export default function RoundManager() {
                           </p>
                         )}
                       </div>
-                    </button>
+                      <button
+                        type="button"
+                        disabled={isActive || loadingActive}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleSetActiveRound(round.roundNumber);
+                        }}
+                        className={`mt-2 w-full rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
+                          isActive
+                            ? "cursor-default bg-green-500/20 text-green-300"
+                            : "bg-red-600/80 text-white hover:bg-red-600"
+                        } disabled:cursor-not-allowed disabled:opacity-70`}
+                      >
+                        {isActive ? "Live round" : "Set as live round"}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -464,7 +513,7 @@ export default function RoundManager() {
                               <span
                                 key={round.roundNumber}
                                 className={`text-[11px] px-2 py-0.5 rounded ${
-                                  round.roundNumber === currentRound
+                                  round.roundNumber === activeRound
                                     ? "bg-green-500/20 text-green-300"
                                     : "bg-gray-600/50 text-gray-300"
                                 }`}

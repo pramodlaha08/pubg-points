@@ -6,6 +6,7 @@ import { isAxiosError } from "axios";
 import { CheckCircle2, Network, Plus, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
 import { useTeams } from "@/hooks/useTeams";
+import { useActiveRound } from "@/hooks/useActiveRound";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +28,21 @@ const errorMessage = (error: unknown, fallback: string) =>
 
 export default function PlayerMappingPage() {
   const { teams } = useTeams();
-  const [roundNumber, setRoundNumber] = useState("1");
+  const { activeRound } = useActiveRound();
+  const [roundNumber, setRoundNumber] = useState("");
+  const [roundTouched, setRoundTouched] = useState(false);
   const [rows, setRows] = useState<LobbyRow[]>([]);
   const [imageHash, setImageHash] = useState("");
   const [rawText, setRawText] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Start on the live round unless the scorer already picked another one.
+  useEffect(() => {
+    if (!roundTouched && activeRound > 0) {
+      setRoundNumber(String(activeRound));
+    }
+  }, [activeRound, roundTouched]);
 
   const round = Number(roundNumber) || 0;
 
@@ -101,6 +111,9 @@ export default function PlayerMappingPage() {
     ]);
 
   const handleSave = async () => {
+    if (!round) {
+      return notifyError("Set a round number first");
+    }
     const players = rows
       .filter((row) => row.name.trim())
       .map((row) => ({
@@ -156,8 +169,14 @@ export default function PlayerMappingPage() {
               type="number"
               min={1}
               value={roundNumber}
-              onChange={(event) => setRoundNumber(event.target.value)}
+              onChange={(event) => {
+                setRoundTouched(true);
+                setRoundNumber(event.target.value);
+              }}
             />
+            <p className="mt-1 text-[11px] text-[var(--adm-muted)]">
+              Live round: {activeRound ? `R${activeRound}` : "not set"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={addRow}>
