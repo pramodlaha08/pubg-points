@@ -9,13 +9,19 @@ import type { WinnerTeam } from "@/components/overlays/BroadcastPanels";
 export default function WinnerOverlay() {
   const { broadcast } = useBroadcast();
   const winner = broadcast?.winner;
-  const { data: teams } = useSWR<WinnerTeam[]>(
+  const { data: teams, isLoading } = useSWR<WinnerTeam[]>(
     winner?.visible ? "/team" : null,
     fetcher,
     { revalidateOnFocus: false }
   );
 
   const team = teams?.find((item) => item._id === winner?.teamId) ?? null;
+
+  if (winner?.visible && isLoading) {
+    return (
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" />
+    );
+  }
 
   return (
     <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden">

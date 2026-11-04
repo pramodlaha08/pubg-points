@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
@@ -19,6 +19,10 @@ import {
   themeRowMotion,
 } from "@/lib/themeVisuals";
 import { displayName } from "@/lib/overlayTheme";
+import {
+  compareStandings,
+  getStandingsTotals,
+} from "@/lib/standings";
 import type { Team } from "@/types/team";
 
 const toRgba = (hex: string, alpha: number) => {
@@ -37,14 +41,6 @@ const toRgba = (hex: string, alpha: number) => {
   }, ${alpha})`;
 };
 
-const totalKills = (team: Team) =>
-  team.rounds.reduce((sum, round) => sum + (round.kills ?? 0), 0);
-
-const compareTeams = (a: Team, b: Team) =>
-  b.totalPoints - a.totalPoints ||
-  totalKills(b) - totalKills(a) ||
-  a.slot - b.slot;
-
 export default function EditorialPointsTable({
   fitToHeight = true,
   topPercent,
@@ -58,12 +54,18 @@ export default function EditorialPointsTable({
   previewSettings?: PointsTableSettings;
   previewTeams?: Team[];
 }) {
-  const { teams: liveTeams, isLoading: liveLoading } = useLiveTeams();
-  const { settings } = useSettings();
-  const { mapByRound } = useRoundInfo();
-  const { activeRound } = useActiveRound();
+  const { allTeams: liveTeams, isLoading: liveLoading } = useLiveTeams();
+  const { settings, isLoading: settingsLoading } = useSettings();
+  const { mapByRound, finalRound, isLoading: roundInfoLoading } =
+    useRoundInfo();
+  const { activeRound, isLoading: activeRoundLoading } = useActiveRound();
   const teams = previewTeams ?? liveTeams;
-  const isLoading = previewTeams ? false : liveLoading;
+  const isLoading = previewTeams
+    ? false
+    : liveLoading ||
+      settingsLoading ||
+      roundInfoLoading ||
+      activeRoundLoading;
   const rootRef = useRef<HTMLDivElement>(null);
   const [availableHeight, setAvailableHeight] = useState<number | null>(null);
 
@@ -106,7 +108,9 @@ export default function EditorialPointsTable({
   const roundNumber =
     activeRound || (teams.length ? teams[0].currentRound : 0);
   const mapName = roundNumber ? mapByRound[roundNumber] : "";
-  const sorted = [...teams].sort(compareTeams);
+  const sorted = [...teams].sort((a, b) =>
+    compareStandings(a, b, roundNumber, finalRound)
+  );
   const fittedRow =
     fitToHeight && availableHeight
       ? Math.max(
@@ -150,22 +154,8 @@ export default function EditorialPointsTable({
 
   const teamRound = (team: Team) =>
     team.rounds.find((item) => item.roundNumber === roundNumber);
-  const currentElimPoints = (team: Team) => {
-    const round = teamRound(team);
-    return round?.killPoints ?? 0;
-  };
-  const previousRoundPosition = (team: Team) => {
-    const ar = activeRound ?? 0;
-    if (ar <= 1) return "-";
-    const prev = ar - 1;
-    const r = team.rounds.find((rt) => rt.roundNumber === prev);
-    return r?.position ?? "-";
-  };
-  const totalPointsFromRounds = (team: Team) =>
-    team.rounds.reduce(
-      (sum, rt) => sum + (rt.killPoints ?? 0) + (rt.positionPoints ?? 0),
-      0
-    );
+  const totalsFor = (team: Team) =>
+    getStandingsTotals(team, roundNumber, finalRound);
   const teamOut = (team: Team) =>
     (teamRound(team)?.eliminationCount ?? 0) >=
     SQUAD_CONFIG.fullEliminationCount;
@@ -211,11 +201,15 @@ const statItems = (team: Team) => {
       if (columns.place) {
         items.push({
           label: "Place",
-          value: previousRoundPosition(team),
+          value: totalsFor(team).placementPoints,
         });
       }
-      if (columns.elims) items.push({ label: "Elims", value: currentElimPoints(team) });
-      if (columns.pts) items.push({ label: "Pts", value: totalPointsFromRounds(team) });
+      if (columns.elims) {
+        items.push({ label: "Elims", value: totalsFor(team).eliminationPoints });
+      }
+      if (columns.pts) {
+        items.push({ label: "Pts", value: totalsFor(team).totalPoints });
+      }
       return items;
     };
 
@@ -772,9 +766,7 @@ const statItems = (team: Team) => {
                   className="min-w-8 text-center text-[11px] font-semibold tabular-nums"
                   style={{ color: muted }}
                 >
-                  {teamRound(team)?.position
-                    ? String(teamRound(team)?.position).padStart(2, "0")
-                    : "-"}
+                  {totalsFor(team).placementPoints}
                 </span>
               ) : null}
               {columns.elims ? (
@@ -782,7 +774,7 @@ const statItems = (team: Team) => {
                   className="min-w-8 text-center text-[11px] font-bold tabular-nums"
                   style={{ color: palette.elimColor }}
                 >
-                  {totalKills(team)}
+                  {totalsFor(team).eliminationPoints}
                 </span>
               ) : null}
               {columns.pts ? (
@@ -795,7 +787,7 @@ const statItems = (team: Team) => {
                       : undefined,
                   }}
                 >
-                  {team.totalPoints}
+                  {totalsFor(team).totalPoints}
                 </span>
               ) : null}
             </motion.div>
@@ -874,7 +866,7 @@ const statItems = (team: Team) => {
                             : undefined,
                         }}
                       >
-                        {team.totalPoints}
+                        {totalsFor(team).totalPoints}
                       </p>
                       <p
                         className="mt-0.5 text-[7px] font-bold uppercase tracking-[0.22em]"
@@ -997,7 +989,7 @@ const statItems = (team: Team) => {
                 }`}
                 style={{ color: accent }}
               >
-                {team.totalPoints}
+                {totalsFor(team).totalPoints}
               </p>
             ) : null}
           </div>
@@ -1131,7 +1123,7 @@ const statItems = (team: Team) => {
                         className="text-[15px] font-black tabular-nums"
                         style={{ color: isTop ? accent : paper }}
                       >
-                        {team.totalPoints}
+                        {totalsFor(team).totalPoints}
                       </span>
                     ) : null}
                   </motion.div>
@@ -1216,9 +1208,7 @@ const statItems = (team: Team) => {
                   className="w-10 text-center text-[10px] font-semibold tabular-nums"
                   style={{ color: muted }}
                 >
-                  {teamRound(team)?.position
-                    ? String(teamRound(team)?.position).padStart(2, "0")
-                    : "-"}
+                  {totalsFor(team).placementPoints}
                 </span>
               ) : null}
               {columns.elims ? (
@@ -1226,7 +1216,7 @@ const statItems = (team: Team) => {
                   className="w-10 text-center text-[10px] font-bold tabular-nums"
                   style={{ color: palette.elimColor }}
                 >
-                  {totalKills(team)}
+                  {totalsFor(team).eliminationPoints}
                 </span>
               ) : null}
               {columns.pts ? (
@@ -1234,7 +1224,7 @@ const statItems = (team: Team) => {
                   className="min-w-12 text-right text-[19px] font-black tabular-nums"
                   style={{ color: isTop ? accent : paper }}
                 >
-                  {team.totalPoints}
+                  {totalsFor(team).totalPoints}
                 </span>
               ) : null}
             </motion.div>
@@ -1244,6 +1234,8 @@ const statItems = (team: Team) => {
       {customFooter("Ticker")}
     </div>
   );
+
+  if (isLoading) return null;
 
   if (template === "editorial") return renderEditorialBoard();
   if (template === "editorial-minimal") return renderEditorialMinimal();
@@ -1429,28 +1421,13 @@ const statItems = (team: Team) => {
           {columns.place ? (
             <span className="w-12 text-center">Place</span>
           ) : null}
-          {columns.pts ? <span className="w-12 text-center">Pts</span> : null}
           {columns.elims ? (
-            <span className="w-12 pr-1 text-right">Elims</span>
+            <span className="w-12 text-center">Elims</span>
           ) : null}
+          {columns.pts ? <span className="w-12 text-right">Pts</span> : null}
         </div>
 
-        {isLoading && !sorted.length ? (
-          <div
-            className="flex h-28 items-center justify-center gap-3 text-[10px] uppercase tracking-[0.28em]"
-            style={{ color: muted }}
-          >
-            <motion.span
-              animate={{ opacity: [0.25, 1, 0.25] }}
-              transition={{ duration: 1.2, repeat: Infinity }}
-              className="h-1.5 w-1.5"
-              style={{ backgroundColor: accent }}
-            />
-            Loading standings
-          </div>
-        ) : null}
-
-        {!isLoading && !sorted.length ? (
+        {!sorted.length ? (
           <div
             className="flex h-28 items-center justify-center text-[10px] uppercase tracking-[0.28em]"
             style={{ color: muted }}
@@ -1460,7 +1437,6 @@ const statItems = (team: Team) => {
         ) : null}
 
         {sorted.map((team, index) => {
-          const round = teamRound(team);
           const eliminated = teamOut(team);
           const isTop = index < 3;
           const isLeader = index === 0;
@@ -1585,33 +1561,33 @@ const statItems = (team: Team) => {
                 <span
                   className="w-12 text-center text-[12px] font-semibold tabular-nums"
                   style={{
-                    color: round?.position ? palette.placeColor : muted,
+                    color: totalsFor(team).placementPoints
+                      ? palette.placeColor
+                      : muted,
                   }}
                 >
-                  {round?.position
-                    ? String(round.position).padStart(2, "0")
-                    : "-"}
-                </span>
-              ) : null}
-
-              {columns.pts ? (
-                <span
-                  className="w-12 text-center text-[17px] font-black tabular-nums"
-                  style={{
-                    color: isTop ? palette.totalColor : paper,
-                    textShadow: isTop ? `0 0 18px ${toRgba(accent, 0.3)}` : undefined,
-                  }}
-                >
-                  {team.totalPoints}
+                  {totalsFor(team).placementPoints}
                 </span>
               ) : null}
 
               {columns.elims ? (
                 <span
-                  className="w-12 pr-1 text-right text-[12px] font-bold tabular-nums"
+                  className="w-12 text-center text-[12px] font-bold tabular-nums"
                   style={{ color: eliminated ? muted : palette.elimColor }}
                 >
-                  {totalKills(team)}
+                  {totalsFor(team).eliminationPoints}
+                </span>
+              ) : null}
+
+              {columns.pts ? (
+                <span
+                  className="w-12 text-right text-[17px] font-black tabular-nums"
+                  style={{
+                    color: isTop ? palette.totalColor : paper,
+                    textShadow: isTop ? `0 0 18px ${toRgba(accent, 0.3)}` : undefined,
+                  }}
+                >
+                  {totalsFor(team).totalPoints}
                 </span>
               ) : null}
             </motion.div>
@@ -1643,3 +1619,4 @@ const statItems = (team: Team) => {
     </div>
   );
 }
+

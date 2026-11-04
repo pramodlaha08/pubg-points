@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
 import { useSettings } from "@/hooks/useSettings";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
@@ -19,6 +20,7 @@ import {
 } from "@/lib/overlayTheme";
 import { GAMING_FX_CSS, Shine, fxPan } from "@/components/GamingFx";
 import { SurfaceBackground, Watermark } from "@/components/OverlayChrome";
+import { getStandingsTotals } from "@/lib/standings";
 
 interface Team {
   _id: string;
@@ -69,25 +71,19 @@ interface LeaderboardPanelProps {
   readonly endIndex: number;
   readonly settings: PointsTableSettings;
   readonly template: OverlayTemplate;
+  readonly activeRound?: number;
+  readonly finalRound?: number;
 }
 
 interface SplitLeaderboardProps {
   readonly teams: Team[];
   readonly themeColor?: string;
   readonly settings?: PointsTableSettings;
+  readonly activeRound?: number;
 }
 
 const getChickenCount = (team: Team) =>
   team.rounds.filter((round) => round.position === 1).length;
-
-const getTotals = (team: Team) =>
-  team.rounds.reduce(
-    (acc, round) => ({
-      placePoints: acc.placePoints + (round.positionPoints || 0),
-      elimPoints: acc.elimPoints + (round.killPoints || 0),
-    }),
-    { placePoints: 0, elimPoints: 0 }
-  );
 
 const LeaderboardPanel = ({
   teams,
@@ -95,6 +91,8 @@ const LeaderboardPanel = ({
   endIndex,
   settings,
   template,
+  activeRound,
+  finalRound,
 }: LeaderboardPanelProps) => {
   const slicedTeams = teams.slice(startIndex, endIndex);
   const { colors, leaderboard, layout, typography, surface, watermark } =
@@ -126,8 +124,11 @@ const LeaderboardPanel = ({
     const actualRank = startIndex + index + 1;
     const topRankStyle = topRankStyles[(actualRank - 1) as 0 | 1 | 2];
     const chickenCount = getChickenCount(team);
-    const { placePoints, elimPoints } = getTotals(team);
-    const totalPoints = placePoints + elimPoints;
+    const {
+      placementPoints: placePoints,
+      eliminationPoints: elimPoints,
+      totalPoints,
+    } = getStandingsTotals(team, activeRound, finalRound);
     const nameText = displayName(team.name, typography);
     const edgeColor = topRankStyle ? topRankStyle.edge : palette.accent;
     const fontSize = (isBig ? 16 : 12) * layout.fontScale * typography.fontScale;
@@ -459,8 +460,10 @@ const LeaderboardPanel = ({
 export default function SplitLeaderboard({
   teams,
   settings: settingsProp,
+  activeRound,
 }: SplitLeaderboardProps) {
   const { settings: remoteSettings } = useSettings();
+  const { finalRound } = useRoundInfo();
 
   const settings = useMemo<PointsTableSettings>(
     () =>
@@ -472,6 +475,7 @@ export default function SplitLeaderboard({
 
   const template = settings.leaderboard.template;
 
+
   if (template === "classic") {
     const midpoint = Math.ceil(teams.length / 2);
     return (
@@ -482,6 +486,8 @@ export default function SplitLeaderboard({
           endIndex={midpoint}
           settings={settings}
           template="classic"
+          activeRound={activeRound}
+          finalRound={finalRound}
         />
         <LeaderboardPanel
           teams={teams}
@@ -489,6 +495,8 @@ export default function SplitLeaderboard({
           endIndex={teams.length}
           settings={settings}
           template="classic"
+          activeRound={activeRound}
+          finalRound={finalRound}
         />
       </div>
     );
@@ -502,7 +510,10 @@ export default function SplitLeaderboard({
         endIndex={teams.length}
         settings={settings}
         template={template}
+        activeRound={activeRound}
+        finalRound={finalRound}
       />
     </div>
   );
 }
+

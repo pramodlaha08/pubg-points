@@ -38,12 +38,12 @@ export function useLiveTeams() {
       void mutate(
         (current) => {
           if (!current) return current;
-          if (updated.absent) {
-            return current.filter((team) => team._id !== updated._id);
-          }
-          return current.map((team) =>
-            team._id === updated._id ? { ...team, ...updated } : team
-          );
+          const exists = current.some((team) => team._id === updated._id);
+          return exists
+            ? current.map((team) =>
+                team._id === updated._id ? { ...team, ...updated } : team
+              )
+            : [...current, updated];
         },
         false
       );
@@ -77,6 +77,7 @@ export function useLiveTeams() {
 
   return {
     teams: (data ?? []).filter((team) => !team.absent),
+    allTeams: data ?? [],
     isLoading,
     refresh: mutate,
   };

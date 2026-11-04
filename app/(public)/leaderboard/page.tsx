@@ -7,12 +7,14 @@ import { motion } from "framer-motion";
 import { GiChickenOven } from "react-icons/gi";
 import { useSettings } from "@/hooks/useSettings";
 import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useActiveRound } from "@/hooks/useActiveRound";
 import { useBroadcast } from "@/hooks/useBroadcast";
 import { useBranding } from "@/components/providers/BrandingProvider";
 import {
   DEFAULT_POINTS_TABLE,
   mergePointsTable,
 } from "@/lib/tableSettings";
+import { compareStandings, getStandingsTotals } from "@/lib/standings";
 
 interface Team {
   _id: string;
@@ -36,7 +38,8 @@ interface Team {
 export default function LeaderboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const { settings: remoteSettings } = useSettings();
-  const { mapByRound } = useRoundInfo();
+  const { mapByRound, finalRound } = useRoundInfo();
+  const { activeRound } = useActiveRound();
   const { branding } = useBranding();
   const { broadcast } = useBroadcast();
   const showLeaderboard = broadcast?.overlays.leaderboard !== false;
@@ -69,36 +72,7 @@ export default function LeaderboardPage() {
         const response = await api.get("/team");
         const data = response.data;
         if (data.success) {
-          const roundsOf = (team: Team) => team.rounds ?? [];
-          const totalsOf = (team: Team) => {
-            let placePoints = 0;
-            let killPoints = 0;
-            for (const round of roundsOf(team)) {
-              placePoints += round.positionPoints || 0;
-              killPoints += round.killPoints || 0;
-            }
-            return { total: placePoints + killPoints, placePoints, killPoints };
-          };
-          const bestPlaceOf = (team: Team) => {
-            const positions = roundsOf(team)
-              .map((round) => round.position)
-              .filter((position) => position > 0 && position < 9999);
-            return positions.length ? Math.min(...positions) : 9999;
-          };
-          const sortedTeams = data.data.sort((a: Team, b: Team) => {
-            const aStats = totalsOf(a);
-            const bStats = totalsOf(b);
-            if (bStats.total !== aStats.total) return bStats.total - aStats.total;
-            if (bStats.placePoints !== aStats.placePoints)
-              return bStats.placePoints - aStats.placePoints;
-            if (bStats.killPoints !== aStats.killPoints)
-              return bStats.killPoints - aStats.killPoints;
-            const aBest = bestPlaceOf(a);
-            const bBest = bestPlaceOf(b);
-            if (aBest !== bBest) return aBest - bBest;
-            return (a.slot ?? 0) - (b.slot ?? 0);
-          });
-          setTeams(sortedTeams);
+          setTeams(data.data);
         }
       } catch {
         console.error("Error fetching teams:");
@@ -110,23 +84,40 @@ export default function LeaderboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const firstTeam = teams.length > 0 ? teams[0] : null;
+  const sortedTeams = useMemo(
+    () =>
+      [...teams].sort((a, b) =>
+        compareStandings(a, b, activeRound, finalRound)
+      ),
+    [teams, activeRound, finalRound]
+  );
+
+  const firstTeam = sortedTeams.length > 0 ? sortedTeams[0] : null;
   const totalStats = firstTeam
-    ? firstTeam.rounds.reduce(
-        (acc, round) => ({
-          placePoints: acc.placePoints + (round.positionPoints || 0),
-          killPoints: acc.killPoints + (round.killPoints || 0),
-          chickenCount: acc.chickenCount + (round.position === 1 ? 1 : 0),
-        }),
-        { placePoints: 0, killPoints: 0, chickenCount: 0 },
-      )
+    ? (() => {
+        const totals = getStandingsTotals(
+          firstTeam,
+          activeRound,
+          finalRound
+        );
+        return {
+          placePoints: totals.placementPoints,
+          killPoints: totals.eliminationPoints,
+          chickenCount: firstTeam.rounds.filter(
+            (round) => round.position === 1
+          ).length,
+        };
+      })()
     : null;
 
+  const standingsRound = activeRound || firstTeam?.currentRound || 0;
   const totalRounds = Math.max(
     Object.keys(mapByRound).length,
-    firstTeam?.currentRound ?? 0
+    standingsRound
   );
-  const currentMap = firstTeam ? mapByRound[firstTeam.currentRound] : undefined;
+  const currentMap = standingsRound
+    ? mapByRound[standingsRound]
+    : undefined;
 
   return (
     <main className="broadcast-page fixed inset-0 z-[60] h-screen w-screen overflow-hidden">
@@ -200,7 +191,7 @@ export default function LeaderboardPage() {
                   className="text-xl font-black"
                   style={{ color: palette.textPrimary }}
                 >
-                  {firstTeam?.currentRound ?? "-"}/{totalRounds}
+                  {standingsRound || "-"}/{totalRounds}
                 </p>
               </div>
 
@@ -398,7 +389,11 @@ export default function LeaderboardPage() {
               </p>
             </div>
             <div className="w-full">
-              <SplitLeaderboard teams={teams} settings={settings} />
+              <SplitLeaderboard
+                teams={sortedTeams}
+                settings={settings}
+                activeRound={activeRound}
+              />
             </div>
           </div>
         </div>

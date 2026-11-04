@@ -256,7 +256,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_POINTS_TABLE: PointsTableSettings = {
-  preset: "neon-apex",
+  preset: "esports-blue",
   colors: {
     headerFrom: "#050A14",
     headerTo: "#0B1424",
@@ -431,21 +431,6 @@ export const TEMPLATE_LABELS: {
   label: string;
   blurb: string;
 }[] = [
-  {
-    key: "editorial",
-    label: "Editorial Board",
-    blurb: "Premium hairline table with a cinematic broadcast feel",
-  },
-  {
-    key: "editorial-cards",
-    label: "Editorial Cards",
-    blurb: "Two-column cards with strong team identity and stats",
-  },
-  {
-    key: "editorial-podium",
-    label: "Editorial Podium",
-    blurb: "Top three spotlight cards above a compact standings list",
-  },
   {
     key: "editorial-minimal",
     label: "Editorial Minimal",
@@ -800,38 +785,7 @@ const themePreset = (def: ThemePresetDef, index: number): TablePreset => {
   };
 };
 
-const THEME_DEFS: ThemePresetDef[] = [
-  { id: "neon-apex", label: "Neon Apex", tagline: "Cyan circuit lines with a cold arena glow", game: "pubg", motion: "surge", pattern: "grid", base: "#050A14", accent: "#22D3EE", text: "#E8FAFF", radius: 2 },
-  { id: "ember-ops", label: "Ember Ops", tagline: "Warm tactical panels with aggressive orange edges", game: "pubg", motion: "pulse", pattern: "chevron", base: "#120805", accent: "#FF7A18", text: "#FFF3E6", radius: 4 },
-  { id: "arctic-signal", label: "Arctic Signal", tagline: "Ice-blue telemetry with a clean broadcast scan", game: "universal", motion: "sweep", pattern: "scan", base: "#061018", accent: "#7DD3FC", text: "#F0FBFF", surfaceStyle: "glass", radius: 10 },
-  { id: "royal-arena", label: "Royal Arena", tagline: "Championship gold on deep obsidian plates", game: "pubg", motion: "glitch", pattern: "hex", base: "#0C0903", accent: "#F5C542", text: "#FFF9E8", radius: 0 },
-  { id: "toxic-strike", label: "Toxic Strike", tagline: "Acid green accents with a hostile field scan", game: "freefire", motion: "glitch", pattern: "grid", base: "#050F08", accent: "#A3E635", text: "#F4FFE7", radius: 2 },
-  { id: "cyber-violet", label: "Cyber Violet", tagline: "Violet circuitry and glassy neon depth", game: "universal", motion: "glitch", pattern: "circuit", base: "#0A0616", accent: "#A855F7", text: "#F5F3FF", surfaceStyle: "glass", radius: 8 },
-  { id: "blood-circuit", label: "Blood Circuit", tagline: "Hard red grid panels with zero rounded edges", game: "pubg", motion: "pulse", pattern: "grid", base: "#120306", accent: "#EF4444", text: "#FFF1F2", surfaceStyle: "solid", radius: 0 },
-  { id: "solar-flare", label: "Solar Flare", tagline: "Golden rays and warm solar highlights", game: "freefire", motion: "rise", pattern: "rays", base: "#1A0F02", accent: "#FBBF24", text: "#FFF7E0", radius: 4 },
-  { id: "deep-ocean", label: "Deep Ocean", tagline: "Deep cyan waves with a polished glass surface", game: "universal", motion: "drift", pattern: "waves", base: "#03121A", accent: "#06B6D4", text: "#ECFEFF", surfaceStyle: "glass", radius: 14 },
-  { id: "magma-core", label: "Magma Core", tagline: "Molten orange mosaic with flashing energy", game: "pubg", motion: "flash", pattern: "mosaic", base: "#180604", accent: "#F97316", text: "#FFF7ED", radius: 2 },
-  { id: "steel-vanguard", label: "Steel Vanguard", tagline: "Cold steel diagonals built for military briefings", game: "pubg", motion: "slide", pattern: "diagonal", base: "#0B0F14", accent: "#94A3B8", text: "#F1F5F9", radius: 0, fontFamily: "Oswald, 'Arial Narrow', sans-serif" },
-  { id: "forest-recon", label: "Forest Recon", tagline: "Field-green hex cells with silent motion", game: "pubg", motion: "surge", pattern: "hex", base: "#05130B", accent: "#22C55E", text: "#F0FDF4", radius: 6 },
-  { id: "desert-storm-modern", label: "Desert Storm Modern", tagline: "Sandstone triangles and a sweeping heat haze", game: "pubg", motion: "sweep", pattern: "triangles", base: "#171007", accent: "#D97706", text: "#FFFBEB", radius: 0 },
-  { id: "frostbite", label: "Frostbite", tagline: "Frozen crosshatch glass with sharp blue numbers", game: "universal", motion: "zoom", pattern: "crosshatch", base: "#071018", accent: "#38BDF8", text: "#F0F9FF", surfaceStyle: "glass", radius: 10 },
-  { id: "void-pulse", label: "Void Pulse", tagline: "Dark violet rings that breathe around the board", game: "universal", motion: "pulse", pattern: "rings", base: "#05050A", accent: "#8B5CF6", text: "#FAF5FF", surfaceStyle: "glass", radius: 18 },
-  { id: "signal-red", label: "Signal Red", tagline: "Emergency broadcast scan lines in hot coral", game: "universal", motion: "glitch", pattern: "scan", base: "#100507", accent: "#FB7185", text: "#FFF1F2", radius: 0 },
-  { id: "gold-standard", label: "Gold Standard", tagline: "Championship stripes with cascading gold panels", game: "pubg", motion: "cascade", pattern: "stripes", base: "#0F0B02", accent: "#EAB308", text: "#FEFCE8", radius: 0 },
-  { id: "jade-protocol", label: "Jade Protocol", tagline: "Jade dots and calm tactical motion", game: "freefire", motion: "drift", pattern: "dots", base: "#03130F", accent: "#2DD4BF", text: "#F0FDFA", radius: 8 },
-  { id: "cobalt-strike", label: "Cobalt Strike", tagline: "Cobalt grid panels with a rising entrance", game: "universal", motion: "rise", pattern: "grid", base: "#050B1A", accent: "#3B82F6", text: "#EFF6FF", radius: 4 },
-  { id: "crimson-grid", label: "Crimson Grid", tagline: "Crimson circuitry and hard broadcast edges", game: "pubg", motion: "surge", pattern: "circuit", base: "#120409", accent: "#E11D48", text: "#FFF1F2", surfaceStyle: "solid", radius: 0 },
-  { id: "amethyst-arena", label: "Amethyst Arena", tagline: "Amethyst triangles on layered glass", game: "universal", motion: "zoom", pattern: "triangles", base: "#0C0617", accent: "#C084FC", text: "#FAF5FF", surfaceStyle: "glass", radius: 14 },
-  { id: "copper-clash", label: "Copper Clash", tagline: "Copper diagonals with a sturdy industrial cut", game: "pubg", motion: "slide", pattern: "diagonal", base: "#140B06", accent: "#B45309", text: "#FFF7ED", radius: 2 },
-  { id: "limestone", label: "Limestone", tagline: "Neutral stone crosshatch for clean broadcasts", game: "universal", motion: "cascade", pattern: "crosshatch", base: "#0D1012", accent: "#A3A3A3", text: "#FAFAFA", radius: 0, fontFamily: "Georgia, 'Times New Roman', serif" },
-  { id: "neon-lime", label: "Neon Lime", tagline: "High-voltage lime chevrons with flash accents", game: "freefire", motion: "flash", pattern: "chevron", base: "#071006", accent: "#84CC16", text: "#F7FEE7", radius: 4 },
-  { id: "midnight-blue", label: "Midnight Blue", tagline: "Midnight waves and a cool glass sheen", game: "universal", motion: "drift", pattern: "waves", base: "#030817", accent: "#60A5FA", text: "#EFF6FF", surfaceStyle: "glass", radius: 10 },
-  { id: "sakura-strike", label: "Sakura Strike", tagline: "Soft pink dots on a dark glass stage", game: "freefire", motion: "rise", pattern: "dots", base: "#150712", accent: "#F472B6", text: "#FDF2F8", surfaceStyle: "glass", radius: 12 },
-  { id: "titanium-edge", label: "Titanium Edge", tagline: "Brushed titanium stripes with military type", game: "pubg", motion: "sweep", pattern: "stripes", base: "#0A0D11", accent: "#CBD5E1", text: "#F8FAFC", radius: 0, fontFamily: "'Arial Black', Impact, sans-serif" },
-  { id: "acid-rush", label: "Acid Rush", tagline: "Acid mosaic tiles and glitch-driven energy", game: "freefire", motion: "glitch", pattern: "mosaic", base: "#0B1203", accent: "#BEF264", text: "#F7FEE7", radius: 2 },
-  { id: "blood-moon", label: "Blood Moon", tagline: "Crimson rings and a slow pulse under moonlight", game: "pubg", motion: "pulse", pattern: "rings", base: "#140306", accent: "#F43F5E", text: "#FFF1F2", radius: 6 },
-  { id: "storm-front", label: "Storm Front", tagline: "Storm-grey rays with a fast zoom entrance", game: "universal", motion: "zoom", pattern: "rays", base: "#081018", accent: "#64748B", text: "#F8FAFC", radius: 0 },
-];
+const THEME_DEFS: ThemePresetDef[] = [];
 
 const LEGACY_BASE_COLORS: PointsTableColors = {
   headerFrom: "#4D78D6",
@@ -950,7 +904,15 @@ export function mergePointsTable(
     surface: { ...DEFAULT_POINTS_TABLE.surface, ...(input.surface ?? {}) },
     columns: { ...DEFAULT_POINTS_TABLE.columns, ...(input.columns ?? {}) },
     header: { ...DEFAULT_POINTS_TABLE.header, ...(input.header ?? {}) },
-    layout: { ...DEFAULT_POINTS_TABLE.layout, ...(input.layout ?? {}) },
+    layout: {
+      ...DEFAULT_POINTS_TABLE.layout,
+      ...(input.layout ?? {}),
+      template:
+        input.layout?.template &&
+        !TEMPLATE_LABELS.some(({ key }) => key === input.layout?.template)
+          ? DEFAULT_POINTS_TABLE.layout.template
+          : input.layout?.template ?? DEFAULT_POINTS_TABLE.layout.template,
+    },
     cards: { ...DEFAULT_POINTS_TABLE.cards, ...(input.cards ?? {}) },
     notifications: {
       ...DEFAULT_POINTS_TABLE.notifications,
