@@ -6,6 +6,8 @@ import { io, Socket } from "socket.io-client";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import { api, getApiTournamentId } from "@/lib/api";
 import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useActiveRound } from "@/hooks/useActiveRound";
+import { compareStandings, getStandingsTotals } from "@/lib/standings";
 import {
   DEFAULT_POINTS_TABLE,
   hexToRgba,
@@ -42,31 +44,6 @@ interface Team {
 }
 
 type RoundStat = Team["rounds"][number] | undefined;
-
-const totalKillsFor = (team: Team) =>
-  team.rounds.reduce((sum, round) => sum + (round.kills ?? 0), 0);
-
-const placementPointsFor = (team: Team) =>
-  team.rounds.reduce((sum, round) => sum + (round.positionPoints ?? 0), 0);
-
-const bestPlacementFor = (team: Team) => {
-  const positions = team.rounds
-    .map((round) => round.position)
-    .filter((position) => position > 0);
-  return positions.length ? Math.min(...positions) : 9999;
-};
-
-// Standings: total points, then placement points, then eliminations, then best
-// placement, then slot so equal scores always keep a stable order.
-const compareStandings = (a: Team, b: Team) =>
-  b.totalPoints - a.totalPoints ||
-  placementPointsFor(b) - placementPointsFor(a) ||
-  totalKillsFor(b) - totalKillsFor(a) ||
-  bestPlacementFor(a) - bestPlacementFor(b) ||
-  a.slot - b.slot;
-
-const formatPlace = (position?: number) =>
-  position && position > 0 ? position : "—";
 
 const trophyVariants = {
   initial: { rotate: 0, scale: 1, textShadow: "0 0 0px rgba(255, 165, 0, 0)" },
@@ -220,13 +197,15 @@ export default function AnimatedTeamTable({
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [settingsReady, setSettingsReady] = useState(Boolean(previewSettings));
   const [isConnected, setIsConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<string>("-");
   const [lastSyncAt, setLastSyncAt] = useState<string>("-");
   const [updateCount, setUpdateCount] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
-  const { mapByRound, refresh: refreshRoundInfo } = useRoundInfo();
+  const { mapByRound, finalRound, refresh: refreshRoundInfo } = useRoundInfo();
+  const { activeRound } = useActiveRound();
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -238,6 +217,8 @@ export default function AnimatedTeamTable({
         }
       } catch {
         console.error("Error fetching table settings:");
+      } finally {
+        setSettingsReady(true);
       }
     };
 
@@ -247,9 +228,9 @@ export default function AnimatedTeamTable({
         const data = response.data;
         if (data.success) {
           setTeams(
-            data.data
-              .filter((team: Team) => !team.absent)
-              .sort(compareStandings)
+            [...data.data].sort((a, b) =>
+              compareStandings(a, b, activeRound, finalRound)
+            )
           );
           setLastSyncAt(new Date().toLocaleTimeString());
         }
@@ -266,16 +247,15 @@ export default function AnimatedTeamTable({
     const applyTeamUpdate = (updated: Team) => {
       if (!updated?._id) return;
       setTeams((prev) => {
-        if (updated.absent) {
-          return prev.filter((team) => team._id !== updated._id);
-        }
         const exists = prev.some((team) => team._id === updated._id);
         const next = exists
           ? prev.map((team) =>
               team._id === updated._id ? { ...team, ...updated } : team
             )
           : [...prev, updated];
-        return next.sort(compareStandings);
+        return next.sort((a, b) =>
+          compareStandings(a, b, activeRound, finalRound)
+        );
       });
       setLastEvent("team_updated");
       setUpdateCount((prev) => prev + 1);
@@ -342,9 +322,11 @@ export default function AnimatedTeamTable({
       if (refreshTimer) clearTimeout(refreshTimer);
       socket.disconnect();
     };
-  }, [previewSettings, refreshRoundInfo]);
+  }, [previewSettings, refreshRoundInfo, activeRound, finalRound]);
 
-  const currentRoundNo = teams[0]?.currentRound;
+  const currentRoundNo = activeRound || teams[0]?.currentRound;
+  const totalsFor = (team: Team) =>
+    getStandingsTotals(team, currentRoundNo, finalRound);
   const currentMap = currentRoundNo ? mapByRound[currentRoundNo] : "";
   const showTitleStrip = Boolean(
     header.title || header.subtitle || header.logoUrl || currentMap
@@ -612,20 +594,20 @@ export default function AnimatedTeamTable({
             PLACE
           </div>
         ) : null}
-        {columns.pts ? (
+        {columns.elims ? (
           <div
             className="relative flex w-11 items-center justify-center tracking-wide"
             style={{ color: cellColor }}
           >
-            PTS
+            ELIMS
           </div>
         ) : null}
-        {columns.elims ? (
+        {columns.pts ? (
           <div
             className="relative flex w-11 items-center justify-center pr-1 tracking-wide"
             style={{ color: cellColor }}
           >
-            ELIMS
+            PTS
           </div>
         ) : null}
       </div>
@@ -633,7 +615,7 @@ export default function AnimatedTeamTable({
   };
 
   const renderCardRow = (team: Team, index: number, isEliminated: boolean) => {
-    const round = team.rounds.find((r) => r.roundNumber === team.currentRound);
+    const round = team.rounds.find((r) => r.roundNumber === currentRoundNo);
     const topRankStyle = topRankStyles[index as 0 | 1 | 2];
     const edgeColor = isEliminated
       ? palette.deadBar
@@ -699,17 +681,7 @@ export default function AnimatedTeamTable({
               className="font-black"
               style={{ color: palette.placeColor, fontSize: rowFontSize * 1.1 }}
             >
-              {formatPlace(round?.position)}
-            </span>
-          </div>
-        ) : null}
-        {columns.pts ? (
-          <div className="flex flex-col items-center px-1.5">
-            <span className="text-[8px] font-bold uppercase tracking-widest text-white/70">
-              PTS
-            </span>
-            <span className="font-black text-white" style={{ fontSize: rowFontSize * 1.1 }}>
-              {team.totalPoints}
+              {totalsFor(team).placementPoints}
             </span>
           </div>
         ) : null}
@@ -722,7 +694,17 @@ export default function AnimatedTeamTable({
               className="font-black"
               style={{ color: palette.aliveBar, fontSize: rowFontSize * 1.1 }}
             >
-              {totalKillsFor(team)}
+              {totalsFor(team).eliminationPoints}
+            </span>
+          </div>
+        ) : null}
+        {columns.pts ? (
+          <div className="flex flex-col items-center px-1.5">
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/70">
+              PTS
+            </span>
+            <span className="font-black text-white" style={{ fontSize: rowFontSize * 1.1 }}>
+              {totalsFor(team).totalPoints}
             </span>
           </div>
         ) : null}
@@ -731,7 +713,7 @@ export default function AnimatedTeamTable({
   };
 
   const renderColumnRow = (team: Team, index: number, isEliminated: boolean) => {
-    const round = team.rounds.find((r) => r.roundNumber === team.currentRound);
+    const round = team.rounds.find((r) => r.roundNumber === currentRoundNo);
     const topRankStyle = topRankStyles[index as 0 | 1 | 2];
     const edgeColor = isEliminated
       ? palette.deadBar
@@ -856,20 +838,7 @@ export default function AnimatedTeamTable({
               color: isEliminated ? undefined : palette.placeColor,
             }}
           >
-            {formatPlace(round?.position)}
-          </div>
-        ) : null}
-
-        {columns.pts ? (
-          <div
-            className="relative z-10 flex w-12 items-center justify-center font-black"
-            style={{
-              background: isEliminated ? "transparent" : palette.cellBg,
-              borderLeft: `1px solid ${palette.borderSoft}`,
-              color: isEliminated ? undefined : palette.totalColor,
-            }}
-          >
-            {team.totalPoints}
+            {totalsFor(team).placementPoints}
           </div>
         ) : null}
 
@@ -882,7 +851,20 @@ export default function AnimatedTeamTable({
               color: isEliminated ? undefined : palette.elimColor,
             }}
           >
-            {totalKillsFor(team)}
+            {totalsFor(team).eliminationPoints}
+          </div>
+        ) : null}
+
+        {columns.pts ? (
+          <div
+            className="relative z-10 flex w-12 items-center justify-center font-black"
+            style={{
+              background: isEliminated ? "transparent" : palette.cellBg,
+              borderLeft: `1px solid ${palette.borderSoft}`,
+              color: isEliminated ? undefined : palette.totalColor,
+            }}
+          >
+            {totalsFor(team).totalPoints}
           </div>
         ) : null}
 
@@ -903,13 +885,15 @@ export default function AnimatedTeamTable({
   };
 
   const renderTeam = (team: Team, index: number) => {
-    const round = team.rounds.find((r) => r.roundNumber === team.currentRound);
+    const round = team.rounds.find((r) => r.roundNumber === currentRoundNo);
     const isEliminated =
       (round?.eliminationCount ?? 0) >= SQUAD_CONFIG.fullEliminationCount;
     return isCard
       ? renderCardRow(team, index, isEliminated)
       : renderColumnRow(team, index, isEliminated);
   };
+
+  if (isLoading || !settingsReady) return null;
 
   return (
     <div ref={rootRef} className="flex items-center justify-center">

@@ -19,9 +19,19 @@ export function useRoundInfo() {
     return map;
   }, [data]);
 
+  const finalRound = useMemo(
+    () =>
+      (data ?? []).reduce(
+        (max, item) => Math.max(max, Number(item.roundNumber) || 0),
+        0
+      ),
+    [data]
+  );
+
   return {
     roundInfo: data ?? [],
     mapByRound,
+    finalRound,
     error,
     isLoading,
     refresh: mutate,

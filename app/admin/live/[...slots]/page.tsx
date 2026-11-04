@@ -6,6 +6,7 @@ import { GiCrossedSabres } from "react-icons/gi";
 import { useParams } from "next/navigation";
 import TeamCard from "@/components/TeamCard";
 import { useActiveRound } from "@/hooks/useActiveRound";
+import { useTeamMutationQueue } from "@/hooks/useTeamMutationQueue";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 
 interface Team {
@@ -63,6 +64,8 @@ export default function FilteredTeamsPage() {
     });
   };
 
+  const enqueueTeamMutation = useTeamMutationQueue<Team>(upsertTeam);
+
   const fetchTeams = async () => {
     try {
       const response = await api.get("/team");
@@ -79,38 +82,119 @@ export default function FilteredTeamsPage() {
     fetchTeams();
   }, []); // Removed params from dependencies
 
+  const applyOptimisticKills = (teamId: string, action: "add" | "decrease") => {
+    const delta = action === "add" ? 1 : -1;
+    setTeams((prev) =>
+      prev.map((team) =>
+        team._id !== teamId
+          ? team
+          : {
+              ...team,
+              rounds: team.rounds.map((round) =>
+                round.roundNumber === activeRound
+                  ? { ...round, kills: Math.max(0, round.kills + delta) }
+                  : round,
+              ),
+            },
+      ),
+    );
+  };
+
+  const applyOptimisticElimination = (teamId: string, playerIndex: number) => {
+    const full = SQUAD_CONFIG.fullEliminationCount;
+    setTeams((prev) =>
+      prev.map((team) => {
+        if (team._id !== teamId) return team;
+        const rounds = team.rounds.map((round) => {
+          if (round.roundNumber !== activeRound) return round;
+          const alreadyOut = round.eliminatedPlayers.includes(playerIndex);
+          const eliminatedPlayers = alreadyOut
+            ? round.eliminatedPlayers.filter((p) => p !== playerIndex)
+            : [...round.eliminatedPlayers, playerIndex];
+          const eliminationCount = Math.max(
+            0,
+            Math.min(full, round.eliminationCount + (alreadyOut ? -1 : 1)),
+          );
+          return {
+            ...round,
+            eliminatedPlayers,
+            eliminationCount,
+            status: eliminationCount === full ? "eliminated" : "alive",
+          };
+        });
+        if (activeRound !== team.currentRound) {
+          return { ...team, rounds };
+        }
+        const current = rounds.find((r) => r.roundNumber === activeRound);
+        return {
+          ...team,
+          rounds,
+          isEliminated: (current?.eliminationCount ?? 0) === full,
+        };
+      }),
+    );
+  };
+
+  const applyOptimisticWipe = (teamId: string) => {
+    const full = SQUAD_CONFIG.fullEliminationCount;
+    const allPlayers = SQUAD_CONFIG.playerIndices();
+    setTeams((prev) =>
+      prev.map((team) => {
+        if (team._id !== teamId) return team;
+        const rounds = team.rounds.map((round) =>
+          round.roundNumber === activeRound
+            ? {
+                ...round,
+                eliminatedPlayers: allPlayers,
+                eliminationCount: full,
+                status: "eliminated",
+              }
+            : round,
+        );
+        if (activeRound !== team.currentRound) {
+          return { ...team, rounds };
+        }
+        return { ...team, rounds, isEliminated: true };
+      }),
+    );
+  };
+
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     if (!activeRound) return;
-    try {
-      const endpoint = `/team/${teamId}/${action}-kill`;
-      const response = await api.post(endpoint, { roundNumber: activeRound });
-      const updatedTeam = response?.data?.data as Team | undefined;
-      if (updatedTeam) {
-        upsertTeam(updatedTeam);
-      } else {
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing kills:`, error);
-    }
+    const roundNumber = activeRound;
+    applyOptimisticKills(teamId, action);
+    enqueueTeamMutation(teamId, async () => {
+      const response = await api.post(`/team/${teamId}/${action}-kill`, {
+        roundNumber,
+      });
+      return response?.data?.data as Team | undefined;
+    });
   };
 
   const handleElimination = async (teamId: string, playerIndex: number) => {
     if (!activeRound) return;
-    try {
+    const roundNumber = activeRound;
+    applyOptimisticElimination(teamId, playerIndex);
+    enqueueTeamMutation(teamId, async () => {
       const response = await api.put(`/team/${teamId}/elimination`, {
         playerIndex,
-        roundNumber: activeRound,
+        roundNumber,
       });
-      const updatedTeam = response?.data?.data as Team | undefined;
-      if (updatedTeam) {
-        upsertTeam(updatedTeam);
-      } else {
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error("Error updating elimination:", error);
-    }
+      return response?.data?.data as Team | undefined;
+    });
+  };
+
+  const handleWipeTeam = async (teamId: string) => {
+    if (!activeRound) return;
+    const roundNumber = activeRound;
+    applyOptimisticWipe(teamId);
+    enqueueTeamMutation(teamId, async () => {
+      const response = await api.put(`/team/${teamId}/elimination`, {
+        all: true,
+        roundNumber,
+      });
+      return response?.data?.data as Team | undefined;
+    });
   };
 
   // Parse slot numbers from the URL
@@ -142,6 +226,7 @@ export default function FilteredTeamsPage() {
               activeRound={activeRound}
               updateKills={updateKills}
               handleElimination={handleElimination}
+              handleWipeTeam={handleWipeTeam}
               isRoundInfoExpanded={isRoundInfoExpanded}
               toggleRoundInfo={toggleRoundInfo}
             />

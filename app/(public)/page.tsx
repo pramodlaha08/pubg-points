@@ -7,6 +7,9 @@ import { motion } from "framer-motion";
 import { api, getApiTournamentId } from "@/lib/api";
 import { useBranding } from "@/components/providers/BrandingProvider";
 import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { useActiveRound } from "@/hooks/useActiveRound";
+import { compareStandings, getStandingsTotals } from "@/lib/standings";
+import type { Team } from "@/types/team";
 import {
   GiChickenOven,
   GiCrossedSabres,
@@ -17,19 +20,6 @@ import {
 } from "react-icons/gi";
 import { ArrowRight, MapPin, Users } from "lucide-react";
 import { GAMING_FX_CSS, Shine } from "@/components/GamingFx";
-
-interface Team {
-  _id: string;
-  name: string;
-  logo: string;
-  slot: number;
-  currentRound: number;
-  totalPoints: number;
-  rounds: {
-    positionPoints: number;
-    killPoints: number;
-  }[];
-}
 
 const NAV = [
   {
@@ -79,18 +69,16 @@ const podiumStyles = [
   },
 ];
 
-const totalOf = (team: Team) =>
-  typeof team.totalPoints === "number"
-    ? team.totalPoints
-    : (team.rounds ?? []).reduce(
-        (sum, round) =>
-          sum + (round.positionPoints || 0) + (round.killPoints || 0),
-        0
-      );
+const totalOf = (
+  team: Team,
+  activeRound?: number,
+  finalRound?: number
+) => getStandingsTotals(team, activeRound, finalRound).totalPoints;
 
 export default function HomePage() {
   const { branding } = useBranding();
-  const { mapByRound } = useRoundInfo();
+  const { mapByRound, finalRound } = useRoundInfo();
+  const { activeRound } = useActiveRound();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [tournamentName, setTournamentName] = useState("");
@@ -102,7 +90,7 @@ export default function HomePage() {
         const response = await api.get("/team");
         if (!active) return;
         const data: Team[] = response.data?.data ?? [];
-        setTeams([...data].sort((a, b) => totalOf(b) - totalOf(a)));
+        setTeams(data);
       } catch {
         if (active) setTeams([]);
       } finally {
@@ -132,10 +120,18 @@ export default function HomePage() {
     };
   }, []);
 
-  const leader = teams[0] ?? null;
-  const currentRound = leader?.currentRound;
+  const sortedTeams = useMemo(
+    () =>
+      [...teams].sort((a, b) =>
+        compareStandings(a, b, activeRound, finalRound)
+      ),
+    [teams, activeRound, finalRound]
+  );
+
+  const leader = sortedTeams[0] ?? null;
+  const currentRound = activeRound || leader?.currentRound;
   const currentMap = currentRound ? mapByRound[currentRound] : undefined;
-  const podium = teams.slice(0, 3);
+  const podium = sortedTeams.slice(0, 3);
 
   const stats = useMemo(
     () => [
@@ -372,7 +368,7 @@ export default function HomePage() {
                         {style.label}
                       </span>
                       <span className="text-2xl font-black text-white">
-                        {totalOf(team)}
+                        {totalOf(team, activeRound, finalRound)}
                         <span className="ml-1 text-xs font-bold text-slate-500">
                           PTS
                         </span>

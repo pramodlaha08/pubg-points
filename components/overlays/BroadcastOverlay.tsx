@@ -178,20 +178,23 @@ export default function BroadcastOverlay({
   const editorial = design === "editorial";
   const activeLayout = normalizeLayout(layout ?? broadcast.layout);
   const { events } = useKillFeed();
-  const { settings, refresh: refreshSettings } = useSettings();
+  const {
+    settings,
+    isLoading: settingsLoading,
+    refresh: refreshSettings,
+  } = useSettings();
   const tableSettings = mergePointsTable(settings?.pointsTable);
-  const { teams: liveTeams } = useLiveTeams();
-  const { activeRound } = useActiveRound();
+  const { allTeams, isLoading: teamsLoading } = useLiveTeams();
+  const { activeRound, isLoading: activeRoundLoading } = useActiveRound();
   const editorialTable =
     editorial &&
     isEditorialTemplate(tableSettings.layout.template);
-  const roundNumber =
-    activeRound || liveTeams[0]?.currentRound || 0;
+  const roundNumber = activeRound || allTeams[0]?.currentRound || 0;
   const roundTeams = roundNumber
-    ? liveTeams.filter((team) =>
+    ? allTeams.filter((team) =>
         team.rounds.some((round) => round.roundNumber === roundNumber)
       )
-    : liveTeams;
+    : allTeams;
   const finalists = roundTeams.filter((team) => {
     const round = team.rounds.find(
       (item) => item.roundNumber === roundNumber
@@ -245,6 +248,19 @@ export default function BroadcastOverlay({
   );
   const winnerTeam =
     teams?.find((team) => team._id === broadcast.winner?.teamId) ?? null;
+  const winnerTeamsLoading = shouldFetchWinnerTeam && !teams;
+  const overlayLoading =
+    !editing &&
+    (settingsLoading ||
+      teamsLoading ||
+      activeRoundLoading ||
+      winnerTeamsLoading);
+
+  if (overlayLoading) {
+    return (
+      <main className="broadcast-page fixed inset-0 h-screen w-full overflow-hidden" />
+    );
+  }
 
   const pointsVisible = broadcast.overlays.pointsTable !== false;
   const killFeedVisible = broadcast.overlays.killFeed !== false;

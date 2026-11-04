@@ -19,7 +19,7 @@ interface WinnerTeam {
 export default function WinnerOverlay() {
   const { broadcast } = useBroadcast();
   const winner = broadcast?.winner;
-  const { data: teams } = useSWR<WinnerTeam[]>(
+  const { data: teams, isLoading } = useSWR<WinnerTeam[]>(
     winner?.visible ? "/team" : null,
     fetcher,
     { revalidateOnFocus: false }
@@ -28,6 +28,12 @@ export default function WinnerOverlay() {
   const team = teams?.find((item) => item._id === winner?.teamId);
   const elims =
     team?.rounds?.reduce((sum, round) => sum + (round.kills ?? 0), 0) ?? 0;
+
+  if (winner?.visible && isLoading) {
+    return (
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" />
+    );
+  }
 
   return (
     <AnimatePresence>

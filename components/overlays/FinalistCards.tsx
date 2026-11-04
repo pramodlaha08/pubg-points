@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useSettings } from "@/hooks/useSettings";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import {
   getTablePreset,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/tableSettings";
 import { themeCut, themePatternStyle } from "@/lib/themeVisuals";
 import { displayName } from "@/lib/overlayTheme";
+import { getStandingsTotals } from "@/lib/standings";
 import type { Team } from "@/types/team";
 
 const toRgba = (hex: string, alpha: number) => {
@@ -67,6 +69,7 @@ export default function FinalistCards({
   previewSettings?: PointsTableSettings;
 }) {
   const { settings } = useSettings();
+  const { finalRound } = useRoundInfo();
   const merged = mergePointsTable(previewSettings ?? settings?.pointsTable);
   const theme = getTablePreset(merged.preset);
   const palette = merged.colors;
@@ -214,7 +217,7 @@ export default function FinalistCards({
                     className="text-[20px] font-black leading-none tabular-nums"
                     style={{ color: palette.accent }}
                   >
-                    {team.totalPoints}
+                    {getStandingsTotals(team, roundNumber, finalRound).totalPoints}
                   </p>
                 </div>
                 <div

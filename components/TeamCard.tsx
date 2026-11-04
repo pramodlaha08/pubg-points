@@ -4,6 +4,7 @@ import { GiDeathSkull } from "react-icons/gi";
 import { Flame, ChevronDown, ChevronUp } from "lucide-react";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { getStandingsTotals } from "@/lib/standings";
 
 interface Team {
   _id: string;
@@ -30,6 +31,7 @@ interface TeamCardProps {
   readonly activeRound?: number;
   readonly updateKills: (teamId: string, action: "add" | "decrease") => Promise<void>;
   readonly handleElimination: (teamId: string, playerIndex: number) => Promise<void>;
+  readonly handleWipeTeam: (teamId: string) => Promise<void>;
   readonly isRoundInfoExpanded: boolean;
   readonly toggleRoundInfo: () => void;
 }
@@ -39,6 +41,7 @@ export default function TeamCard({
   activeRound,
   updateKills,
   handleElimination,
+  handleWipeTeam,
   isRoundInfoExpanded,
   toggleRoundInfo,
 }: TeamCardProps) {
@@ -51,13 +54,13 @@ export default function TeamCard({
     (r) => r.roundNumber === displayRound
   );
 
-  const { mapByRound } = useRoundInfo();
+  const { mapByRound, finalRound } = useRoundInfo();
   const currentMap = mapByRound[displayRound];
 
   const isOut =
     (currentRound?.eliminationCount ?? 0) ===
     SQUAD_CONFIG.fullEliminationCount;
-  const isKillButtonsDisabled = !currentRound || isOut;
+  const isKillButtonsDisabled = !currentRound;
 
   return (
     <div
@@ -87,7 +90,7 @@ export default function TeamCard({
         </div>
         <div className="shrink-0 text-right">
           <p className="text-[clamp(0.9rem,7cqi,1.875rem)] font-bold leading-none text-red-500">
-            {team.totalPoints}
+            {getStandingsTotals(team, displayRound, finalRound).totalPoints}
           </p>
           <p className="text-[clamp(0.45rem,2.6cqi,0.875rem)] text-gray-400">
             Total Points
@@ -96,21 +99,30 @@ export default function TeamCard({
       </div>
 
       <div className="flex flex-wrap items-center gap-[clamp(0.3rem,2.5cqi,1.5rem)]">
-        <div className="grid shrink-0 grid-cols-2 gap-[clamp(0.2rem,1.2cqi,0.5rem)]">
-          {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
-            <button
-              key={playerIndex}
-              onClick={() => handleElimination(team._id, playerIndex)}
-              disabled={!currentRound}
-              className={`h-[clamp(2.25rem,5cqi,3rem)] w-[clamp(2.25rem,5cqi,3rem)] rounded-[clamp(0.25rem,1.5cqi,0.75rem)] text-[clamp(0.6rem,3cqi,0.875rem)] font-bold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
-                currentRound?.eliminatedPlayers?.includes(playerIndex)
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-            >
-              {SQUAD_CONFIG.getPlayerLabel(playerIndex)}
-            </button>
-          ))}
+        <div className="flex shrink-0 flex-col gap-[clamp(0.2rem,1.2cqi,0.5rem)]">
+          <div className="grid grid-cols-2 gap-[clamp(0.2rem,1.2cqi,0.5rem)]">
+            {SQUAD_CONFIG.playerIndices().map((playerIndex) => (
+              <button
+                key={playerIndex}
+                onClick={() => handleElimination(team._id, playerIndex)}
+                disabled={!currentRound}
+                className={`h-[clamp(2.25rem,5cqi,3rem)] w-[clamp(2.25rem,5cqi,3rem)] rounded-[clamp(0.25rem,1.5cqi,0.75rem)] text-[clamp(0.6rem,3cqi,0.875rem)] font-bold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  currentRound?.eliminatedPlayers?.includes(playerIndex)
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {SQUAD_CONFIG.getPlayerLabel(playerIndex)}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => handleWipeTeam(team._id)}
+            disabled={!currentRound || isOut}
+            className="h-[clamp(1.35rem,3.2cqi,1.9rem)] w-full rounded-[clamp(0.25rem,1.5cqi,0.75rem)] bg-red-700 px-1 text-[clamp(0.45rem,2.2cqi,0.7rem)] font-black uppercase tracking-wide text-white shadow-md transition-all duration-200 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Wipe All {SQUAD_CONFIG.fullEliminationCount}
+          </button>
         </div>
 
         <div className="flex min-w-0 flex-1 basis-[6.5rem] items-center justify-center gap-[clamp(0.15rem,1cqi,0.4rem)]">

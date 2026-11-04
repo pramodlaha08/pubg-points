@@ -5,7 +5,6 @@ import Link from "next/link";
 import { isAxiosError } from "axios";
 import { Image as ImageIcon, RefreshCw, ScanText, Upload } from "lucide-react";
 import { api } from "@/lib/api";
-import { useTournament } from "@/components/providers/TournamentProvider";
 import { useActiveRound } from "@/hooks/useActiveRound";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -54,9 +53,7 @@ const errorMessage = (error: unknown, fallback: string) =>
     : undefined) || fallback;
 
 export default function AutoScoringPage() {
-  const { activeTournament } = useTournament();
-  // Position-first events hide every kill control; only placement is scored.
-  const trackKills = activeTournament?.scoring?.trackKills ?? false;
+  const trackKills = true;
   const [roundNumber, setRoundNumber] = useState("1");
   const [roundTouched, setRoundTouched] = useState(false);
   const { activeRound } = useActiveRound();

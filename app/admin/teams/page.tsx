@@ -6,6 +6,9 @@ import { isAxiosError } from "axios";
 import { Pencil, Plus, Search, Trash2, Users, ListPlus } from "lucide-react";
 import { api } from "@/lib/api";
 import { useTeams } from "@/hooks/useTeams";
+import { useActiveRound } from "@/hooks/useActiveRound";
+import { useRoundInfo } from "@/hooks/useRoundInfo";
+import { getStandingsTotals } from "@/lib/standings";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +22,8 @@ import type { Team } from "@/types/team";
 
 export default function TeamsPage() {
   const { teams, isLoading, refresh } = useTeams();
+  const { activeRound } = useActiveRound();
+  const { finalRound } = useRoundInfo();
   const [query, setQuery] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -138,7 +143,7 @@ export default function TeamsPage() {
                       </div>
                     </TD>
                     <TD className="text-right font-bold tabular-nums">
-                      {team.totalPoints}
+                      {getStandingsTotals(team, activeRound, finalRound).totalPoints}
                     </TD>
                     <TD className="text-right tabular-nums">
                       {team.rounds.length}

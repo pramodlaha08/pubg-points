@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownUp,
   Crown,
@@ -21,6 +21,7 @@ import TeamCard from "@/components/TeamCard";
 import SQUAD_CONFIG from "@/lib/squadConfig";
 import { useActiveRound } from "@/hooks/useActiveRound";
 import { useBroadcast } from "@/hooks/useBroadcast";
+import { useTeamMutationQueue } from "@/hooks/useTeamMutationQueue";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 interface Team {
@@ -109,6 +110,8 @@ export default function TeamsPage() {
       );
     });
   };
+
+  const enqueueTeamMutation = useTeamMutationQueue<Team>(upsertTeam);
 
   const fetchTeams = async () => {
     try {
@@ -224,10 +227,6 @@ export default function TeamsPage() {
           ? "1rem"
           : "1.5rem";
 
-  // Latest in-flight request per team, so a slow/out-of-order response can
-  // never overwrite a newer optimistic change.
-  const requestSeqRef = useRef<Record<string, number>>({});
-
   const applyOptimisticKills = (teamId: string, action: "add" | "decrease") => {
     const delta = action === "add" ? 1 : -1;
     setTeams((prev) =>
@@ -281,48 +280,66 @@ export default function TeamsPage() {
     );
   };
 
+  const applyOptimisticWipe = (teamId: string) => {
+    const full = SQUAD_CONFIG.fullEliminationCount;
+    const allPlayers = SQUAD_CONFIG.playerIndices();
+    setTeams((prev) =>
+      prev.map((team) => {
+        if (team._id !== teamId) return team;
+        const rounds = team.rounds.map((round) =>
+          round.roundNumber === activeRound
+            ? {
+                ...round,
+                eliminatedPlayers: allPlayers,
+                eliminationCount: full,
+                status: "eliminated",
+              }
+            : round,
+        );
+        if (activeRound !== team.currentRound) {
+          return { ...team, rounds };
+        }
+        return { ...team, rounds, isEliminated: true };
+      }),
+    );
+  };
+
   const updateKills = async (teamId: string, action: "add" | "decrease") => {
     if (!activeRound) return;
+    const roundNumber = activeRound;
     applyOptimisticKills(teamId, action);
-    const seq = (requestSeqRef.current[teamId] ?? 0) + 1;
-    requestSeqRef.current[teamId] = seq;
-    try {
-      const endpoint = `/team/${teamId}/${action}-kill`;
-      const response = await api.post(endpoint, { roundNumber: activeRound });
-      if (requestSeqRef.current[teamId] !== seq) return;
-      const updatedTeam = response?.data?.data as Team | undefined;
-      if (updatedTeam) {
-        upsertTeam(updatedTeam);
-      } else {
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing kills:`, error);
-      if (requestSeqRef.current[teamId] === seq) fetchTeams();
-    }
+    enqueueTeamMutation(teamId, async () => {
+      const response = await api.post(`/team/${teamId}/${action}-kill`, {
+        roundNumber,
+      });
+      return response?.data?.data as Team | undefined;
+    });
   };
 
   const handleElimination = async (teamId: string, playerIndex: number) => {
     if (!activeRound) return;
+    const roundNumber = activeRound;
     applyOptimisticElimination(teamId, playerIndex);
-    const seq = (requestSeqRef.current[teamId] ?? 0) + 1;
-    requestSeqRef.current[teamId] = seq;
-    try {
+    enqueueTeamMutation(teamId, async () => {
       const response = await api.put(`/team/${teamId}/elimination`, {
         playerIndex,
-        roundNumber: activeRound,
+        roundNumber,
       });
-      if (requestSeqRef.current[teamId] !== seq) return;
-      const updatedTeam = response?.data?.data as Team | undefined;
-      if (updatedTeam) {
-        upsertTeam(updatedTeam);
-      } else {
-        fetchTeams();
-      }
-    } catch (error) {
-      console.error("Error updating elimination:", error);
-      if (requestSeqRef.current[teamId] === seq) fetchTeams();
-    }
+      return response?.data?.data as Team | undefined;
+    });
+  };
+
+  const handleWipeTeam = async (teamId: string) => {
+    if (!activeRound) return;
+    const roundNumber = activeRound;
+    applyOptimisticWipe(teamId);
+    enqueueTeamMutation(teamId, async () => {
+      const response = await api.put(`/team/${teamId}/elimination`, {
+        all: true,
+        roundNumber,
+      });
+      return response?.data?.data as Team | undefined;
+    });
   };
 
   // Toggle round info for all cards
@@ -619,13 +636,14 @@ export default function TeamsPage() {
             gap: gridGap,
           }}
         >
-          {[...teams].filter((team) => !team.absent).sort(sortTeams).map((team) => (
+          {[...teams].sort(sortTeams).map((team) => (
               <TeamCard
                 key={team._id}
                 team={team}
                 activeRound={activeRound}
                 updateKills={updateKills}
                 handleElimination={handleElimination}
+                handleWipeTeam={handleWipeTeam}
                 isRoundInfoExpanded={isRoundInfoExpanded}
                 toggleRoundInfo={toggleRoundInfo}
               />

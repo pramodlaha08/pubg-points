@@ -335,18 +335,6 @@ export default function SettingsPage() {
       ...prev,
       preset: theme.preset,
       colors: theme.colors,
-      typography: theme.typography,
-      surface: theme.surface,
-      layout: {
-        ...prev.layout,
-        template: theme.layout.template,
-        width: theme.layout.width,
-        rowHeight: theme.layout.rowHeight,
-        fontScale: theme.layout.fontScale,
-        showTrophy: theme.layout.showTrophy,
-        gap: theme.layout.gap,
-      },
-      cards: theme.cards,
     }));
   };
 
@@ -366,6 +354,11 @@ export default function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveAndPreview = async () => {
+    await handleSave();
+    setPreviewNonce((n) => n + 1);
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -1343,7 +1336,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-900 p-4 md:p-8">
       <ToastContainer />
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto max-w-[1600px]">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <GiGears className="text-4xl text-red-500 animate-spin" />
@@ -1371,7 +1364,7 @@ export default function SettingsPage() {
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2 mb-6">
+            <div className="sticky top-0 z-40 -mx-4 mb-6 flex flex-wrap items-center gap-2 border-b border-red-500/10 bg-gray-900/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
               {TABS.map((t) => (
                 <button
                   key={t.key}
@@ -1386,9 +1379,17 @@ export default function SettingsPage() {
                   {t.label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={handleSaveAndPreview}
+                disabled={saving}
+                className="ml-auto px-5 py-2 rounded-lg font-bold border-2 border-red-400/60 bg-red-600/20 text-white hover:bg-red-600/40 transition-all disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save & Preview"}
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:gap-6">
               {/* Controls */}
               <div className="space-y-6">
                 {/* Presets */}
@@ -1397,10 +1398,10 @@ export default function SettingsPage() {
                     Preset Themes
                   </h2>
                   <p className="mb-3 text-xs text-gray-400">
-                    {TABLE_PRESETS.length} overlay themes, including every
-                    original preset. One click changes the layout design,
-                    palette, typography, surface, motion and pattern
-                    everywhere.
+                    {TABLE_PRESETS.length} color palettes, including every
+                    original preset. Selecting a preset only updates the
+                    palette; layout, typography, surface and card settings
+                    stay as you configured them.
                   </p>
                   <div className="grid max-h-[620px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
                     {TABLE_PRESETS.map((preset) => {
@@ -1452,11 +1453,10 @@ export default function SettingsPage() {
                             ))}
                           </div>
                           <div className="mt-1.5 flex items-center justify-between gap-2 text-[8px] font-bold uppercase tracking-[0.16em] text-gray-500">
-                            <span>{preset.motion}</span>
+                            <span>{preset.game}</span>
                             <span className="truncate text-gray-400">
-                              {preset.pointsTable.layout.template}
+                              palette only
                             </span>
-                            <span>{preset.pattern}</span>
                           </div>
                         </button>
                       );
@@ -1533,11 +1533,13 @@ export default function SettingsPage() {
               </div>
 
               {/* Live preview */}
-              <div className="space-y-3">
+              <div className="space-y-3 xl:sticky xl:top-24 xl:self-start">
                 <h2 className="text-lg font-semibold text-red-400">
                   Live Preview
                 </h2>
-                <div className="sticky top-8 overflow-auto">{renderPreview()}</div>
+                <div className="max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
+                  {renderPreview()}
+                </div>
                 <p className="text-xs text-gray-400">
                   One shared theme drives every overlay. Save to push it to all
                   viewers instantly.
